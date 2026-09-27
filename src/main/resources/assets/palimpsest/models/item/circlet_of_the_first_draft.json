@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "palimpsest:item/circlet_of_the_first_draft"
+  }
+}

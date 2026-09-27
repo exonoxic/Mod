@@ -1,0 +1,37 @@
+{
+  "display": {
+    "icon": {
+      "item": "palimpsest:scriptorium_desk"
+    },
+    "title": {
+      "translate": "advancements.palimpsest.the_desk.title"
+    },
+    "description": {
+      "translate": "advancements.palimpsest.the_desk.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "has": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "palimpsest:scriptorium_desk"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has"
+    ]
+  ],
+  "parent": "palimpsest:marginalia"
+}

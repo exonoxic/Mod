@@ -1,0 +1,37 @@
+{
+  "display": {
+    "icon": {
+      "item": "palimpsest:illumine_leaf"
+    },
+    "title": {
+      "translate": "advancements.palimpsest.illuminated.title"
+    },
+    "description": {
+      "translate": "advancements.palimpsest.illuminated.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "has": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "palimpsest:illumine_leaf"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has"
+    ]
+  ],
+  "parent": "palimpsest:the_undertext"
+}

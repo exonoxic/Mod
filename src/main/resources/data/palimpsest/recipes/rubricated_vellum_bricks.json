@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "BBB",
+    "BVB",
+    "BBB"
+  ],
+  "key": {
+    "B": {
+      "item": "palimpsest:vellum_bricks"
+    },
+    "V": {
+      "item": "palimpsest:vermilion"
+    }
+  },
+  "result": {
+    "item": "palimpsest:rubricated_vellum_bricks",
+    "count": 8
+  }
+}

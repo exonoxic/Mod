@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "palimpsest:ink_well",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "salt": 71117011,
+    "spacing": 26,
+    "separation": 9
+  }
+}

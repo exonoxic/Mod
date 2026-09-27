@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "palimpsest:scraped_stone"
+  },
+  "result": "palimpsest:vellum_bricks",
+  "count": 1
+}

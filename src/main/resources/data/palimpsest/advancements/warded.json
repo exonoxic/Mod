@@ -1,0 +1,37 @@
+{
+  "display": {
+    "icon": {
+      "item": "palimpsest:rubric_ward"
+    },
+    "title": {
+      "translate": "advancements.palimpsest.warded.title"
+    },
+    "description": {
+      "translate": "advancements.palimpsest.warded.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "has": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "palimpsest:rubric_ward"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has"
+    ]
+  ],
+  "parent": "palimpsest:rubrication"
+}

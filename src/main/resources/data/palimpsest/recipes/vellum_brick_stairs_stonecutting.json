@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "palimpsest:vellum_bricks"
+  },
+  "result": "palimpsest:vellum_brick_stairs",
+  "count": 1
+}

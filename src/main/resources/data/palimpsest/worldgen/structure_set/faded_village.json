@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "palimpsest:faded_village",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "salt": 71117009,
+    "spacing": 26,
+    "separation": 8
+  }
+}

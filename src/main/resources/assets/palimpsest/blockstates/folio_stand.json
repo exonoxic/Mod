@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "palimpsest:block/folio_stand"
+    },
+    "facing=east": {
+      "model": "palimpsest:block/folio_stand",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "palimpsest:block/folio_stand",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "palimpsest:block/folio_stand",
+      "y": 270
+    }
+  }
+}

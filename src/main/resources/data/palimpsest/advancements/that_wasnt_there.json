@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "item": "palimpsest:misprint"
+    },
+    "title": {
+      "translate": "advancements.palimpsest.that_wasnt_there.title"
+    },
+    "description": {
+      "translate": "advancements.palimpsest.that_wasnt_there.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "granted": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "granted"
+    ]
+  ],
+  "parent": "palimpsest:bleed_through"
+}

@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "palimpsest:wray_cabin",
+    "palimpsest:hollow_chapel",
+    "palimpsest:copying_house",
+    "palimpsest:survey_station",
+    "palimpsest:broken_gate"
+  ]
+}

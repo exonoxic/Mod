@@ -1,0 +1,16 @@
+{
+  "type": "palimpsest:configurable_features",
+  "biomes": [
+    "minecraft:dark_forest",
+    "minecraft:taiga",
+    "minecraft:old_growth_pine_taiga",
+    "minecraft:old_growth_spruce_taiga",
+    "minecraft:swamp",
+    "minecraft:birch_forest"
+  ],
+  "toggle": "plants",
+  "features": [
+    "palimpsest:candlewort_patch"
+  ],
+  "step": "vegetal_decoration"
+}

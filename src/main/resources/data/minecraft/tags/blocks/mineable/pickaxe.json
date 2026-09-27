@@ -1,0 +1,29 @@
+{
+  "replace": false,
+  "values": [
+    "palimpsest:palimpsest_stone",
+    "palimpsest:deepslate_palimpsest_stone",
+    "palimpsest:scraped_stone",
+    "palimpsest:cinnabar_ore",
+    "palimpsest:deepslate_cinnabar_ore",
+    "palimpsest:rubric_ward",
+    "palimpsest:rubric_altar",
+    "palimpsest:vellum_bricks",
+    "palimpsest:vellum_brick_stairs",
+    "palimpsest:vellum_brick_slab",
+    "palimpsest:vellum_brick_wall",
+    "palimpsest:rubricated_vellum_bricks",
+    "palimpsest:scraped_vellum_bricks",
+    "palimpsest:gall_iron_block",
+    "palimpsest:illumine_block",
+    "palimpsest:inkstone",
+    "palimpsest:cobbled_inkstone",
+    "palimpsest:polished_inkstone",
+    "palimpsest:inkstone_bricks",
+    "palimpsest:inkstone_brick_stairs",
+    "palimpsest:inkstone_brick_slab",
+    "palimpsest:inkstone_brick_wall",
+    "palimpsest:illumine_ore",
+    "palimpsest:illumined_lantern"
+  ]
+}

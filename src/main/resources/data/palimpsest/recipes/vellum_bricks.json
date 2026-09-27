@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SS",
+    "SS"
+  ],
+  "key": {
+    "S": {
+      "item": "palimpsest:scraped_stone"
+    }
+  },
+  "result": {
+    "item": "palimpsest:vellum_bricks",
+    "count": 4
+  }
+}

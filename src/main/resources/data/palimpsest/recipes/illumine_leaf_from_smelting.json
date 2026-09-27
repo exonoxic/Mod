@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "ingredient": {
+    "item": "palimpsest:raw_illumine"
+  },
+  "result": "palimpsest:illumine_leaf",
+  "experience": 1.0,
+  "cookingtime": 200
+}

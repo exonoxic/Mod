@@ -1,0 +1,24 @@
+{
+  "type": "palimpsest:ritual",
+  "offerings": [
+    {
+      "item": "palimpsest:sealing_wax"
+    },
+    {
+      "item": "palimpsest:vermilion"
+    },
+    {
+      "item": "palimpsest:candlewort"
+    },
+    {
+      "item": "palimpsest:candlewort"
+    }
+  ],
+  "catalyst": {
+    "item": "minecraft:water_bucket"
+  },
+  "effect": "purify",
+  "consume_catalyst": false,
+  "duration": 140,
+  "bleed": 5
+}

@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "palimpsest:iron_rasorium",
+    "palimpsest:rasure_edge",
+    "palimpsest:gall_iron_sword",
+    "palimpsest:gall_iron_axe",
+    "palimpsest:gall_iron_pickaxe",
+    "palimpsest:illumined_censer"
+  ]
+}

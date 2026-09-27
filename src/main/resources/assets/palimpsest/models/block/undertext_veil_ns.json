@@ -1,0 +1,31 @@
+{
+  "parent": "minecraft:block/block",
+  "render_type": "minecraft:translucent",
+  "textures": {
+    "particle": "palimpsest:block/undertext_veil",
+    "veil": "palimpsest:block/undertext_veil"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        7.5
+      ],
+      "to": [
+        16,
+        16,
+        8.5
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#veil"
+        },
+        "south": {
+          "texture": "#veil"
+        }
+      }
+    }
+  ]
+}

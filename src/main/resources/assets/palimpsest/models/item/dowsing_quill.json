@@ -1,0 +1,26 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "palimpsest:item/dowsing_quill_0"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "palimpsest:strength": 0.3
+      },
+      "model": "palimpsest:item/dowsing_quill_1"
+    },
+    {
+      "predicate": {
+        "palimpsest:strength": 0.6
+      },
+      "model": "palimpsest:item/dowsing_quill_2"
+    },
+    {
+      "predicate": {
+        "palimpsest:strength": 0.95
+      },
+      "model": "palimpsest:item/dowsing_quill_3"
+    }
+  ]
+}

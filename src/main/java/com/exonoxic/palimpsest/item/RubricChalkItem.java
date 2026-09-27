@@ -24,6 +24,12 @@ public class RubricChalkItem extends BlockItem {
         super(block, properties);
     }
 
+    /** The stick is "Rubric Chalk"; the mark it leaves is the block. */
+    @Override
+    public String getDescriptionId() {
+        return getOrCreateDescriptionId();
+    }
+
     @Override
     public InteractionResult useOn(UseOnContext context) {
         BlockPlaceContext place = new BlockPlaceContext(context);

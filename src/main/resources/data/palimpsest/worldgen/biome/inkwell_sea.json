@@ -1,0 +1,71 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.5,
+  "downfall": 0.0,
+  "effects": {
+    "fog_color": 10261122,
+    "water_color": 1314841,
+    "water_fog_color": 525835,
+    "ambient_sound": "palimpsest:ambient.undertext.loop",
+    "mood_sound": {
+      "sound": "palimpsest:ambient.undertext.mood",
+      "tick_delay": 6000,
+      "block_search_extent": 8,
+      "offset": 2.0
+    },
+    "additions_sound": {
+      "sound": "palimpsest:ambient.undertext.additions",
+      "tick_chance": 0.008
+    },
+    "music": {
+      "sound": "palimpsest:music.undertext",
+      "min_delay": 12000,
+      "max_delay": 24000,
+      "replace_current_music": false
+    },
+    "sky_color": 12103320,
+    "grass_color_modifier": "none",
+    "grass_color": 12103320,
+    "foliage_color": 1446940,
+    "particle": {
+      "options": {
+        "type": "palimpsest:ash_fleck"
+      },
+      "probability": 0.001
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "palimpsest:blotling",
+        "weight": 30,
+        "minCount": 1,
+        "maxCount": 2
+      }
+    ],
+    "creature": [],
+    "ambient": [],
+    "water_creature": [],
+    "underground_water_creature": [],
+    "water_ambient": [],
+    "misc": [],
+    "axolotls": []
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "palimpsest:undertext_page_pillar"
+    ],
+    []
+  ]
+}

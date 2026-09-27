@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/fence_post",
+  "textures": {
+    "texture": "palimpsest:block/blotwood_planks"
+  }
+}

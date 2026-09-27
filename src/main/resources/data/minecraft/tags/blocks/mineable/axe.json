@@ -1,0 +1,16 @@
+{
+  "replace": false,
+  "values": [
+    "palimpsest:scriptorium_desk",
+    "palimpsest:reading_stand",
+    "palimpsest:blotwood_log",
+    "palimpsest:stripped_blotwood_log",
+    "palimpsest:blotwood_planks",
+    "palimpsest:blotwood_stairs",
+    "palimpsest:blotwood_slab",
+    "palimpsest:blotwood_fence",
+    "palimpsest:blotwood_door",
+    "palimpsest:blotwood_trapdoor",
+    "palimpsest:stitched_tome"
+  ]
+}

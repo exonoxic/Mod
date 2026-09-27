@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "item": "palimpsest:seal_of_closing"
+    },
+    "title": {
+      "translate": "advancements.palimpsest.the_tear.title"
+    },
+    "description": {
+      "translate": "advancements.palimpsest.the_tear.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "granted": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "granted"
+    ]
+  ],
+  "parent": "palimpsest:bleed_through"
+}

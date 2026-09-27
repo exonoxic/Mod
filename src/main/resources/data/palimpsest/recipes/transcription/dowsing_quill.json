@@ -1,0 +1,16 @@
+{
+  "type": "palimpsest:transcription",
+  "result": {
+    "item": "palimpsest:dowsing_quill"
+  },
+  "time": 200,
+  "surface": {
+    "item": "minecraft:string"
+  },
+  "ink": {
+    "item": "palimpsest:iron_gall_ink"
+  },
+  "subject": {
+    "item": "palimpsest:black_quill"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " G ",
+    "IBI"
+  ],
+  "key": {
+    "G": {
+      "item": "minecraft:gunpowder"
+    },
+    "I": {
+      "item": "palimpsest:iron_gall_ink"
+    },
+    "B": {
+      "item": "palimpsest:blot_residue"
+    }
+  },
+  "result": {
+    "item": "palimpsest:ink_bomb",
+    "count": 3
+  }
+}

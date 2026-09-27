@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:entity",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "palimpsest:misprint",
+          "weight": 1
+        }
+      ]
+    }
+  ],
+  "random_sequence": "palimpsest:entities/erratum"
+}

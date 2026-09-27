@@ -1,0 +1,178 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:written_book",
+          "functions": [
+            {
+              "function": "minecraft:set_nbt",
+              "tag": "{title:\"Station Four Log\",author:\"A.T.S.\",resolved:1b,pages:[\"{\\\"text\\\": \\\"ANOMALOUS TERRAIN SURVEY\\\\nStation Four\\\\nDaily log\\\\n\\\\nDay 1. Arrived. Wray's cabin located 2km north. Contents consistent with the rumours. Folios recovered: 3.\\\"}\",\"{\\\"text\\\": \\\"Day 6. Livestock count: 14. Should be 13. Recounted: 13. Harlan insists he counted 14. The extra one never grazed.\\\"}\",\"{\\\"text\\\": \\\"Day 9. Knocking at the hatch, 0300. Three, then three. Protocol: do not open. Nobody opened. By dawn it had gone.\\\\n\\\\nThere was a streak down the hatch cover. Pale. Long.\\\"}\",\"{\\\"text\\\": \\\"Day 14. The tall one again, at the edge of the lamplight. It is only ever where we are not looking. Reyes says in the dark we are not looking anywhere. She has started carrying two lamps.\\\"}\",\"{\\\"text\\\": \\\"Day 17. The frame in the east room is complete. Vermilion bricks per Wray, VII-VIII. We do not have a Folio. We are not going to write one.\\\\n\\\\nWe have bricked it up from this side.\\\"}\",\"{\\\"text\\\": \\\"Day 18. Something is knocking on the bricks.\\\"}\"]}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:written_book",
+          "functions": [
+            {
+              "function": "minecraft:set_nbt",
+              "tag": "{title:\"A Note\",author:\"A.T.S.\",resolved:1b,pages:[\"{\\\"text\\\": \\\"To whoever relieves us:\\\\n\\\\nDo not unbrick the east room.\\\\nDo not count the livestock at night.\\\\nIf you hear footsteps behind you, they are behind you.\\\\n\\\\nWe have gone to find Wray. We took the red chalk.\\\\n\\\\n- A.T.S.\\\"}\"]}"
+            }
+          ]
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:random_chance",
+          "chance": 0.5
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "palimpsest:torn_folio",
+          "weight": 2,
+          "functions": [
+            {
+              "function": "minecraft:set_nbt",
+              "tag": "{Folio:8}"
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "palimpsest:torn_folio",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "minecraft:set_nbt",
+              "tag": "{Folio:7}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": {
+        "type": "minecraft:uniform",
+        "min": 4,
+        "max": 8
+      },
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:iron_ingot",
+          "weight": 8,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 2,
+                "max": 6
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:bread",
+          "weight": 8,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 2,
+                "max": 5
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:torch",
+          "weight": 8,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 4,
+                "max": 12
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "palimpsest:rubric_chalk",
+          "weight": 5
+        },
+        {
+          "type": "minecraft:item",
+          "name": "palimpsest:vermilion",
+          "weight": 5,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 2,
+                "max": 4
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:lantern",
+          "weight": 4
+        },
+        {
+          "type": "minecraft:item",
+          "name": "palimpsest:undertext_fragment",
+          "weight": 4,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1,
+                "max": 3
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "palimpsest:iron_gall_ink",
+          "weight": 4,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1,
+                "max": 2
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "random_sequence": "palimpsest:chests/survey_station"
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "BBB",
+    "BBB"
+  ],
+  "key": {
+    "B": {
+      "item": "palimpsest:inkstone_bricks"
+    }
+  },
+  "result": {
+    "item": "palimpsest:inkstone_brick_wall",
+    "count": 6
+  }
+}

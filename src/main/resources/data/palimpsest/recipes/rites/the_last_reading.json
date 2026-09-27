@@ -1,0 +1,37 @@
+{
+  "type": "palimpsest:ritual",
+  "offerings": [
+    {
+      "item": "palimpsest:redaction_strip"
+    },
+    {
+      "item": "palimpsest:redaction_strip"
+    },
+    {
+      "item": "palimpsest:bookbinder_needle"
+    },
+    {
+      "item": "palimpsest:illumine_leaf"
+    },
+    {
+      "item": "palimpsest:vermilion"
+    },
+    {
+      "item": "palimpsest:vermilion"
+    },
+    {
+      "item": "palimpsest:undertext_fragment"
+    },
+    {
+      "item": "palimpsest:faded_page"
+    }
+  ],
+  "catalyst": {
+    "item": "palimpsest:spine_key"
+  },
+  "effect": "summon_rasure",
+  "consume_catalyst": false,
+  "dimension": "palimpsest:undertext",
+  "duration": 200,
+  "bleed": 30
+}

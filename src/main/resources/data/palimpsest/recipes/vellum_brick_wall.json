@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "BBB",
+    "BBB"
+  ],
+  "key": {
+    "B": {
+      "item": "palimpsest:vellum_bricks"
+    }
+  },
+  "result": {
+    "item": "palimpsest:vellum_brick_wall",
+    "count": 6
+  }
+}

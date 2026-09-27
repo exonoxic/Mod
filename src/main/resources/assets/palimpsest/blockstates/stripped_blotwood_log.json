@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "palimpsest:block/stripped_blotwood_log"
+    },
+    "axis=z": {
+      "model": "palimpsest:block/stripped_blotwood_log_horizontal",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "palimpsest:block/stripped_blotwood_log_horizontal",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

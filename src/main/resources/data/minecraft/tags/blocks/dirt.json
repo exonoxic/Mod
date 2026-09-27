@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "palimpsest:ruled_vellum",
+    "palimpsest:vellum_soil",
+    "palimpsest:faded_grass_block"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "type": "palimpsest:transcription",
+  "result": {
+    "item": "palimpsest:rubric_robe"
+  },
+  "time": 300,
+  "surface": {
+    "item": "palimpsest:blank_vellum"
+  },
+  "ink": {
+    "item": "palimpsest:vermilion"
+  },
+  "subject": {
+    "item": "minecraft:leather_chestplate"
+  },
+  "keep_nbt": true
+}

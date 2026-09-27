@@ -1,0 +1,142 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "palimpsest:torn_folio",
+          "weight": 3,
+          "functions": [
+            {
+              "function": "minecraft:set_nbt",
+              "tag": "{Folio:6}"
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "palimpsest:torn_folio",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "minecraft:set_nbt",
+              "tag": "{Folio:5}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:written_book",
+          "functions": [
+            {
+              "function": "minecraft:set_nbt",
+              "tag": "{title:\"The Blank Hymnal\",author:\"Unknown\",resolved:1b,pages:[\"{\\\"text\\\": \\\"THE BLANK HYMNAL\\\\n\\\\n(Every verse has been scraped away. Only the red headings are left.)\\\\n\\\\nFOR THE TURNING OF THE PAGE\\\\n\\\\nFOR THOSE WHO WERE WRITTEN BEFORE\\\\n\\\\nFOR THE KNIFE, THAT IT REST\\\"}\",\"{\\\"text\\\": \\\"FOR THE RED STEP AT EVERY DOOR\\\\n\\\\nFOR THE ONES WHO COUNT THEIR ANIMALS TWICE\\\\n\\\\nAT THE ALTAR: THE CANDLE, THE RED, THE STONE WITH WORDS UNDER IT, READ TOGETHER.\\\"}\"]}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": {
+        "type": "minecraft:uniform",
+        "min": 3,
+        "max": 6
+      },
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "palimpsest:vermilion",
+          "weight": 8,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1,
+                "max": 3
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:candle",
+          "weight": 10,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 2,
+                "max": 5
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "palimpsest:blank_vellum",
+          "weight": 8,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1,
+                "max": 4
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "palimpsest:sealing_wax",
+          "weight": 5,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1,
+                "max": 2
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "palimpsest:rubric_ward",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "palimpsest:rubric_chalk",
+          "weight": 4
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:gold_nugget",
+          "weight": 6,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 2,
+                "max": 6
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "random_sequence": "palimpsest:chests/hollow_chapel"
+}

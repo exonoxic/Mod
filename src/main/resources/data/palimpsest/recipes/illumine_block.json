@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "III",
+    "III",
+    "III"
+  ],
+  "key": {
+    "I": {
+      "item": "palimpsest:illumine_leaf"
+    }
+  },
+  "result": {
+    "item": "palimpsest:illumine_block",
+    "count": 1
+  }
+}

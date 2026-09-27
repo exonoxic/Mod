@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SS",
+    "SS"
+  ],
+  "key": {
+    "S": {
+      "item": "palimpsest:vellum_scrap"
+    }
+  },
+  "result": {
+    "item": "palimpsest:blank_vellum",
+    "count": 1
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "type": "palimpsest:ritual",
+  "offerings": [
+    {
+      "item": "palimpsest:illumine_leaf"
+    },
+    {
+      "item": "palimpsest:illumine_leaf"
+    },
+    {
+      "item": "minecraft:blaze_powder"
+    },
+    {
+      "item": "palimpsest:candlewort"
+    },
+    {
+      "item": "palimpsest:gall_iron_ingot"
+    }
+  ],
+  "catalyst": {
+    "item": "minecraft:chain"
+  },
+  "result": {
+    "item": "palimpsest:illumined_censer",
+    "count": 1
+  },
+  "duration": 160,
+  "bleed": 8
+}

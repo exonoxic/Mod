@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "palimpsest:block/undertext_veil_ns"
+    },
+    "axis=z": {
+      "model": "palimpsest:block/undertext_veil_ew"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "type": "palimpsest:configurable_features",
+  "biomes": "#minecraft:is_overworld",
+  "toggle": "ores",
+  "features": [
+    "palimpsest:palimpsest_stone_ore",
+    "palimpsest:cinnabar_ore"
+  ],
+  "step": "underground_ores"
+}

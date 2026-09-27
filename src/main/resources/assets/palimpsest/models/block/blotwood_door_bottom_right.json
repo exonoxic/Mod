@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/door_bottom_right",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "bottom": "palimpsest:block/blotwood_door_bottom",
+    "top": "palimpsest:block/blotwood_door_top"
+  }
+}
