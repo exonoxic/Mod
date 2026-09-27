@@ -82,7 +82,8 @@ public final class ClientForgeEvents {
             float dark = ClientConfig.DARKNESS_INTENSITY.get().floatValue();
             float limit = 110F - 62F * dark;
             far = Math.min(far, limit);
-            near = Math.min(near, far * 0.05F);
+            // Clear for a few blocks, then a steady fade: close threats stay readable, distance does not.
+            near = Math.min(near, far * 0.12F);
             changed = true;
         }
         float vision = Visions.fog(partial);
