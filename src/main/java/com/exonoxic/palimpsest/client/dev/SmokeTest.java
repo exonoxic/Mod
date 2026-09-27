@@ -6,17 +6,28 @@ import com.exonoxic.palimpsest.client.screen.EndingScreen;
 import com.exonoxic.palimpsest.client.screen.LoreScreen;
 import com.exonoxic.palimpsest.registry.ModBlocks;
 import com.exonoxic.palimpsest.registry.ModEntities;
+import com.exonoxic.palimpsest.world.ModStructures;
 import com.exonoxic.palimpsest.world.dimension.ModDimensions;
+import com.mojang.datafixers.util.Pair;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
+import net.minecraft.client.tutorial.TutorialSteps;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderSet;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.BiomeTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.MenuProvider;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -26,14 +37,20 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelSettings;
 import net.minecraft.world.level.WorldDataConfiguration;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.levelgen.structure.Structure;
+import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -45,15 +62,16 @@ import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Development-only visual smoke test. Inert unless the game is started with
  * {@code -Dpalimpsest.smokeTest=true} (CI does this under a virtual display).
  * <p>
- * It creates a fresh world, lays out every block, every item and every creature in front of
- * the camera, raises the Bleed, visits the Undertext and opens the mod's screens, taking a
- * screenshot of each, then quits. A crash anywhere along the way fails the CI job, and the
- * screenshots are the only way to look at the art without a human at a keyboard.
+ * It creates a fresh world, lays out every block, item and creature in front of the camera,
+ * raises the Bleed, visits every Undertext biome and a copy of every structure, and opens the
+ * mod's screens, taking a screenshot at each stop, then quits. A crash anywhere fails the CI
+ * job, and the screenshots are the only way to look at the game without a person playing it.
  */
 @Mod.EventBusSubscriber(modid = Palimpsest.MODID, value = Dist.CLIENT)
 public final class SmokeTest {
@@ -61,6 +79,7 @@ public final class SmokeTest {
     private static final boolean ENABLED = Boolean.getBoolean("palimpsest.smokeTest");
     private static final String WORLD = "palimpsest_smoke";
     private static final int Y = 200;
+    private static final int SETTLE = 260;
 
     private record Step(int delay, Runnable action) {}
 
@@ -107,6 +126,7 @@ public final class SmokeTest {
         worldRequested = true;
         mc.options.pauseOnLostFocus = false;
         mc.options.hideGui = true;
+        mc.getTutorial().setStep(TutorialSteps.NONE);
         try {
             FileUtils.deleteDirectory(mc.getLevelSource().getBaseDir().resolve(WORLD).toFile());
         } catch (Exception e) {
@@ -126,119 +146,143 @@ public final class SmokeTest {
             command(srv, p, "gamerule doDaylightCycle false");
             command(srv, p, "gamerule doMobSpawning false");
             command(srv, p, "gamerule doWeatherCycle false");
+            command(srv, p, "gamerule announceAdvancements false");
             command(srv, p, "weather clear");
             command(srv, p, "time set 6000");
-            p.getAbilities().flying = true;
-            p.onUpdateAbilities();
+            p.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 1_000_000, 0, false, false));
         }));
 
-        // Every block.
-        step(160, () -> server((srv, p) -> {
+        // Every block, spaced out on a platform in the sky.
+        step(SETTLE, () -> server((srv, p) -> {
             ServerLevel level = p.serverLevel();
-            clear(level, -12, Y - 1, -12, 12, Y + 12, 20, Blocks.SMOOTH_STONE.defaultBlockState());
-            List<Block> blocks = new ArrayList<>();
-            for (Block b : ForgeRegistries.BLOCKS.getValues()) {
-                if (Palimpsest.MODID.equals(ForgeRegistries.BLOCKS.getKey(b).getNamespace())) blocks.add(b);
-            }
+            clear(level, -12, Y - 1, -12, 12, Y + 12, 24, Blocks.SMOOTH_STONE.defaultBlockState());
             int i = 0;
-            for (Block b : blocks) {
-                int x = -6 + (i % 12), z = i / 12;
-                BlockState state = b.defaultBlockState();
-                level.setBlock(new BlockPos(x, Y, z), state, Block.UPDATE_CLIENTS);
+            for (Block b : ForgeRegistries.BLOCKS.getValues()) {
+                if (!Palimpsest.MODID.equals(ForgeRegistries.BLOCKS.getKey(b).getNamespace())) continue;
+                level.setBlock(new BlockPos(-8 + (i % 9) * 2, Y, (i / 9) * 2), b.defaultBlockState(), Block.UPDATE_CLIENTS);
                 i++;
             }
-            LOG.info("[smoke] placed {} blocks", blocks.size());
-            p.teleportTo(level, 0.0, Y + 5.0, -4.5, 0F, 45F);
+            LOG.info("[smoke] placed {} blocks", i);
+            moveTo(p, level, 0.5, Y + 8.0, -5.0, 0F, 50F);
         }));
         shot("blocks");
 
         // Every item, in frames on a wall.
         step(120, () -> server((srv, p) -> {
             ServerLevel level = p.serverLevel();
-            clear(level, -12, Y - 1, -12, 12, Y + 12, 20, Blocks.SMOOTH_STONE.defaultBlockState());
+            clear(level, -12, Y - 1, -12, 12, Y + 12, 24, Blocks.SMOOTH_STONE.defaultBlockState());
             fill(level, -9, Y, 8, 9, Y + 8, 8, Blocks.SMOOTH_STONE.defaultBlockState());
-            List<Item> items = new ArrayList<>();
-            for (Item item : ForgeRegistries.ITEMS.getValues()) {
-                if (Palimpsest.MODID.equals(ForgeRegistries.ITEMS.getKey(item).getNamespace()) && !(item instanceof BlockItem)) items.add(item);
-            }
             int i = 0;
-            for (Item item : items) {
-                int x = -8 + (i % 17), y = Y + 7 - i / 17;
-                ItemFrame frame = new ItemFrame(level, new BlockPos(x, y, 7), Direction.NORTH);
+            for (Item item : ForgeRegistries.ITEMS.getValues()) {
+                if (!Palimpsest.MODID.equals(ForgeRegistries.ITEMS.getKey(item).getNamespace()) || item instanceof BlockItem) continue;
+                ItemFrame frame = new ItemFrame(level, new BlockPos(-8 + (i % 17), Y + 7 - i / 17, 7), Direction.NORTH);
                 frame.setItem(new ItemStack(item), false);
                 frame.setInvisible(true);
                 level.addFreshEntity(frame);
                 i++;
             }
-            LOG.info("[smoke] framed {} items", items.size());
-            p.teleportTo(level, 0.0, Y + 3.5, -2.5, 0F, 0F);
+            LOG.info("[smoke] framed {} items", i);
+            moveTo(p, level, 0.5, Y + 2.5, 1.5, 0F, 0F);
         }));
         shot("items");
 
-        // The smaller creatures.
-        step(80, () -> server((srv, p) -> {
+        // One close-up per creature.
+        List<EntityType<?>> creatures = List.of(ModEntities.FOXING_MOTH.get(), ModEntities.BLOTLING.get(), ModEntities.SMUDGE.get(),
+                ModEntities.MARGIN_CRAWLER.get(), ModEntities.QUILLCROW.get(), ModEntities.PALE_STAG.get(), ModEntities.INKHOUND.get(),
+                ModEntities.RUBRICATOR.get(), ModEntities.KNOCKER.get(), ModEntities.COPYIST.get(), ModEntities.LONGHAND.get(),
+                ModEntities.REDACTED.get(), ModEntities.FAIR_COPY.get(), ModEntities.ERRATUM.get(), ModEntities.BOOKBINDER.get(),
+                ModEntities.RASURE.get(), ModEntities.PALEHAND.get());
+        for (EntityType<?> type : creatures) {
+            String name = ForgeRegistries.ENTITY_TYPES.getKey(type).getPath();
+            boolean palehand = type == ModEntities.PALEHAND.get();
+            step(palehand ? 100 : 40, () -> server((srv, p) -> {
+                ServerLevel level = p.serverLevel();
+                killMobs(level);
+                clear(level, -12, Y - 1, -12, 12, Y + 12, 24, Blocks.SMOOTH_STONE.defaultBlockState());
+                Entity e = type.create(level);
+                if (e == null) return;
+                double z = palehand ? 60.5 : 0.5;
+                e.moveTo(0.5, Y, z, 180F, 0F);
+                e.setYHeadRot(180F);
+                if (e instanceof Mob mob) {
+                    mob.setNoAi(true);
+                    mob.setPersistenceRequired();
+                    mob.yBodyRot = 180F;
+                }
+                level.addFreshEntity(e);
+                double h = Math.max(0.6, e.getBbHeight());
+                double dist = palehand ? 70.0 : Math.max(2.4, Math.max(h, e.getBbWidth()) * 1.35 + e.getBbWidth() / 2);
+                double eye = palehand ? 6.0 : h * 0.6;
+                moveTo(p, level, 0.5, Y + eye - 1.62, z - dist, 0F, palehand ? -12F : 4F);
+            }));
+            shot("creature_" + name);
+        }
+
+        // Night and a high Bleed, somewhere on land, with the HUD and overlays showing.
+        step(40, () -> server((srv, p) -> {
             ServerLevel level = p.serverLevel();
             killMobs(level);
-            clear(level, -12, Y - 1, -12, 12, Y + 12, 20, Blocks.SMOOTH_STONE.defaultBlockState());
-            List<EntityType<?>> small = List.of(ModEntities.FOXING_MOTH.get(), ModEntities.BLOTLING.get(), ModEntities.SMUDGE.get(),
-                    ModEntities.MARGIN_CRAWLER.get(), ModEntities.QUILLCROW.get(), ModEntities.INKHOUND.get(), ModEntities.COPYIST.get(),
-                    ModEntities.ERRATUM.get(), ModEntities.REDACTED.get(), ModEntities.FAIR_COPY.get());
-            lineUp(level, small, 2.2, 5.0);
-            p.teleportTo(level, 0.0, Y + 1.6, -3.0, 0F, 8F);
-        }));
-        shot("creatures_small");
-
-        // The larger ones.
-        step(80, () -> server((srv, p) -> {
-            ServerLevel level = p.serverLevel();
-            killMobs(level);
-            List<EntityType<?>> big = List.of(ModEntities.PALE_STAG.get(), ModEntities.RUBRICATOR.get(), ModEntities.KNOCKER.get(),
-                    ModEntities.LONGHAND.get(), ModEntities.BOOKBINDER.get(), ModEntities.RASURE.get());
-            lineUp(level, big, 4.0, 9.0);
-            p.teleportTo(level, 0.0, Y + 3.0, -6.0, 0F, 5F);
-        }));
-        shot("creatures_large");
-
-        step(60, () -> server((srv, p) -> {
-            ServerLevel level = p.serverLevel();
-            killMobs(level);
-            lineUp(level, List.of(ModEntities.PALEHAND.get()), 0, 30.0);
-            p.teleportTo(level, 0.0, Y + 8.0, -30.0, 0F, -18F);
-        }));
-        step(40, () -> {});
-        shot("palehand");
-
-        // Night, high Bleed, with the HUD and overlays showing.
-        step(60, () -> server((srv, p) -> {
-            killMobs(p.serverLevel());
             command(srv, p, "time set 18000");
             command(srv, p, "palimpsest bleed set @s 960");
-            BlockPos ground = p.serverLevel().getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, new BlockPos(40, 0, 40));
-            p.teleportTo(p.serverLevel(), 40.5, ground.getY() + 1.7, 40.5, 30F, 0F);
+            BlockPos land = findBiome(level, BiomeTags.IS_FOREST, p.blockPosition());
+            level.getChunk(land.getX() >> 4, land.getZ() >> 4);
+            BlockPos ground = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, land);
+            moveTo(p, level, land.getX() + 0.5, ground.getY() + 0.2, land.getZ() + 0.5, 30F, 0F);
+            p.removeEffect(MobEffects.NIGHT_VISION);
         }));
-        step(200, () -> Minecraft.getInstance().options.hideGui = false);
+        step(SETTLE, () -> Minecraft.getInstance().options.hideGui = false);
         shot("overworld_night_bleed");
-
-        // The Undertext.
-        step(40, () -> {
+        step(10, () -> {
             Minecraft.getInstance().options.hideGui = true;
-            server((srv, p) -> teleportUndertext(srv, p, 0, 0, 2.0, 0F, 5F));
+            server((srv, p) -> {
+                command(srv, p, "time set 6000");
+                command(srv, p, "palimpsest bleed set @s 0");
+                p.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 1_000_000, 0, false, false));
+            });
         });
-        step(300, () -> {});
-        shot("undertext_ground");
-        step(20, () -> server((srv, p) -> teleportUndertext(srv, p, 0, 0, 45.0, 30F, 25F)));
-        step(300, () -> {});
-        shot("undertext_high");
-        step(20, () -> server((srv, p) -> teleportUndertext(srv, p, 700, -400, 3.0, 200F, 0F)));
-        step(300, () -> {});
-        shot("undertext_far");
+
+        // A copy of every Overworld structure.
+        for (ResourceKey<Structure> key : List.of(ModStructures.WRAY_CABIN, ModStructures.SCRAPED_OBELISK, ModStructures.HOLLOW_CHAPEL,
+                ModStructures.COPYING_HOUSE, ModStructures.CROW_ROOST, ModStructures.DOUBLED_HOUSE, ModStructures.SURVEY_STATION,
+                ModStructures.BROKEN_GATE)) {
+            step(SETTLE, () -> server((srv, p) -> visitStructure(srv, p, Level.OVERWORLD, key)));
+            shot("structure_" + key.location().getPath());
+        }
+
+        // Every Undertext biome, then every Undertext structure.
+        for (String biome : List.of("scraped_expanse", "blotwood", "the_gutter", "inkwell_sea", "rubric_wastes", "marginalia")) {
+            step(SETTLE, () -> server((srv, p) -> {
+                ServerLevel undertext = srv.getLevel(ModDimensions.UNDERTEXT);
+                if (undertext == null) {
+                    LOG.error("[smoke] SMOKE_FAIL the Undertext is not loaded");
+                    return;
+                }
+                ResourceKey<Biome> key = ResourceKey.create(Registries.BIOME, Palimpsest.id(biome));
+                Pair<BlockPos, Holder<Biome>> found = undertext.findClosestBiome3d(h -> h.is(key), new BlockPos(0, 64, 0), 3000, 32, 64);
+                if (found == null) {
+                    LOG.error("[smoke] SMOKE_FAIL biome {} not found within 3000 blocks", biome);
+                    return;
+                }
+                BlockPos at = found.getFirst();
+                undertext.getChunk(at.getX() >> 4, at.getZ() >> 4);
+                int top = undertext.getHeight(Heightmap.Types.MOTION_BLOCKING, at.getX(), at.getZ());
+                LOG.info("[smoke] biome {} at {} {} {}", biome, at.getX(), top, at.getZ());
+                moveTo(p, undertext, at.getX() + 0.5, top + 1.0, at.getZ() + 0.5, 45F, 8F);
+            }));
+            shot("biome_" + biome);
+        }
+        for (ResourceKey<Structure> key : List.of(ModStructures.FADED_VILLAGE, ModStructures.MARGINALIA_SPIRE, ModStructures.INK_WELL,
+                ModStructures.SCRAP_SHRINE, ModStructures.BINDERY, ModStructures.LAST_FOLIO)) {
+            step(SETTLE, () -> server((srv, p) -> visitStructure(srv, p, ModDimensions.UNDERTEXT, key)));
+            shot("structure_" + key.location().getPath());
+        }
 
         // Screens.
         step(20, () -> {
-            Minecraft mc = Minecraft.getInstance();
-            mc.options.hideGui = false;
-            mc.setScreen(new CodexScreen());
+            Minecraft.getInstance().options.hideGui = false;
+            server((srv, p) -> command(srv, p, "palimpsest codex unlockall"));
         });
+        step(20, () -> Minecraft.getInstance().setScreen(new CodexScreen()));
         shot("screen_codex");
         step(20, () -> Minecraft.getInstance().setScreen(new LoreScreen("folio", 1)));
         shot("screen_folio");
@@ -274,6 +318,7 @@ public final class SmokeTest {
     }
 
     private static void shot(String name) {
+        step(2, () -> Minecraft.getInstance().getToasts().clear());
         step(30, () -> {
             Minecraft mc = Minecraft.getInstance();
             Screenshot.grab(mc.gameDirectory, "smoke_" + name + ".png", mc.getMainRenderTarget(), msg -> {});
@@ -304,34 +349,53 @@ public final class SmokeTest {
         srv.getCommands().performPrefixedCommand(p.createCommandSourceStack().withPermission(4).withSuppressedOutput(), command);
     }
 
-    private static void teleportUndertext(MinecraftServer srv, ServerPlayer p, int x, int z, double above, float yaw, float pitch) {
-        ServerLevel undertext = srv.getLevel(ModDimensions.UNDERTEXT);
-        if (undertext == null) {
-            LOG.error("[smoke] SMOKE_FAIL the Undertext is not loaded");
-            return;
-        }
-        undertext.getChunk(x >> 4, z >> 4);
-        int top = undertext.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
-        p.teleportTo(undertext, x + 0.5, top + above, z + 0.5, yaw, pitch);
+    /** Teleports and keeps the player flying (vanilla cancels creative flight on touching ground). */
+    private static void moveTo(ServerPlayer p, ServerLevel level, double x, double y, double z, float yaw, float pitch) {
+        p.teleportTo(level, x, y, z, yaw, pitch);
         p.getAbilities().flying = true;
         p.onUpdateAbilities();
-        LOG.info("[smoke] in the Undertext at {} {} {} biome {}", x, top, z,
-                undertext.getBiome(new BlockPos(x, top, z)).unwrapKey().map(k -> k.location().toString()).orElse("?"));
     }
 
-    private static void lineUp(ServerLevel level, List<EntityType<?>> types, double spacing, double distance) {
-        double start = -spacing * (types.size() - 1) / 2.0;
-        for (int i = 0; i < types.size(); i++) {
-            Entity e = types.get(i).create(level);
-            if (e == null) continue;
-            e.moveTo(start + i * spacing, Y, distance, 180F, 0F);
-            e.setYHeadRot(180F);
-            if (e instanceof Mob mob) {
-                mob.setNoAi(true);
-                mob.setPersistenceRequired();
-                mob.yBodyRot = 180F;
-            }
-            level.addFreshEntity(e);
+    private static BlockPos findBiome(ServerLevel level, TagKey<Biome> tag, BlockPos from) {
+        Pair<BlockPos, Holder<Biome>> found = level.findClosestBiome3d(h -> h.is(tag), from, 4000, 32, 64);
+        return found != null ? found.getFirst() : from;
+    }
+
+    private static void visitStructure(MinecraftServer srv, ServerPlayer p, ResourceKey<Level> dimension, ResourceKey<Structure> key) {
+        ServerLevel level = srv.getLevel(dimension);
+        if (level == null) return;
+        Optional<Holder.Reference<Structure>> holder = level.registryAccess().registryOrThrow(Registries.STRUCTURE).getHolder(key);
+        if (holder.isEmpty()) {
+            LOG.error("[smoke] SMOKE_FAIL structure {} not registered", key.location());
+            return;
+        }
+        Pair<BlockPos, Holder<Structure>> found = level.getChunkSource().getGenerator()
+                .findNearestMapStructure(level, HolderSet.direct(holder.get()), new BlockPos(0, 64, 0), 100, false);
+        if (found == null) {
+            LOG.error("[smoke] SMOKE_FAIL structure {} not found within 100 chunks", key.location());
+            return;
+        }
+        BlockPos at = found.getFirst();
+        ChunkAccess chunk = level.getChunk(at.getX() >> 4, at.getZ() >> 4);
+        StructureStart start = chunk.getStartForStructure(holder.get().value());
+        if (start == null || !start.isValid()) {
+            LOG.warn("[smoke] structure {} start missing at {}", key.location(), at);
+            moveTo(p, level, at.getX() + 0.5, level.getHeight(Heightmap.Types.MOTION_BLOCKING, at.getX(), at.getZ()) + 12, at.getZ() - 14.5, 0F, 35F);
+            return;
+        }
+        BoundingBox box = start.getBoundingBox();
+        for (int cx = box.minX() >> 4; cx <= box.maxX() >> 4; cx++) {
+            for (int cz = box.minZ() >> 4; cz <= box.maxZ() >> 4; cz++) level.getChunk(cx, cz);
+        }
+        BlockPos c = box.getCenter();
+        boolean buried = level.getHeight(Heightmap.Types.WORLD_SURFACE, c.getX(), c.getZ()) > box.maxY() + 2;
+        LOG.info("[smoke] structure {} at {} (box {}..{}), {}", key.location(), c, box.minY(), box.maxY(), buried ? "buried" : "surface");
+        if (buried) {
+            // Underground: stand inside the first room, looking along it.
+            moveTo(p, level, c.getX() + 0.5, box.minY() + 1.2, box.minZ() + 1.5, 0F, 10F);
+        } else {
+            double back = Math.max(box.getXSpan(), box.getZSpan()) * 0.9 + 6;
+            moveTo(p, level, c.getX() + 0.5, box.maxY() + back * 0.45, box.minZ() - back * 0.55, 0F, 32F);
         }
     }
 

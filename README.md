@@ -129,10 +129,12 @@ Everything else uses vanilla controls: use items, place blocks, open containers.
 Operator commands (permission level 2):
 
 ```
-/palimpsest bleed get|set|add <player> [amount]
-/palimpsest event <player> <event id>     # trigger a horror event (testing / showcases)
-/palimpsest codex unlockall <player>
-/palimpsest reset <player>                 # clear Bleed, codex, ending and flags
+/palimpsest bleed get [player]
+/palimpsest bleed set <players> <0-1000>
+/palimpsest bleed add <players> <amount>
+/palimpsest event <event id> [player]      # trigger a horror event (testing / showcases)
+/palimpsest codex unlockall [player]
+/palimpsest reset <players>                # clear Bleed, codex, ending and flags
 ```
 
 ## Configuration
