@@ -122,8 +122,15 @@ public final class BleedEvents {
             return;
         }
         if (!graceOver || sp.isCreative() && data.getBleed() == 0F) return;
-        // The page thins on its own, slowly, until the player starts to look closer.
-        if (data.getBleed() < BleedStage.GHOSTING.threshold) BleedManager.add(sp, 0.05F);
+        // The page thins on its own, slowly, up to Bleed-through; past that it takes a reason.
+        // Roughly: Faint Trace an hour after the grace period, Ghosting a few hours later.
+        float drift = data.getBleed() < BleedStage.GHOSTING.threshold ? 0.4F
+                : data.getBleed() < BleedStage.BLEED_THROUGH.threshold ? 0.15F : 0F;
+        if (drift > 0F) {
+            boolean underSky = sp.level().canSeeSky(sp.blockPosition());
+            if (underSky && sp.level().isNight() || !underSky && sp.getY() < 0) drift *= 1.5F;
+            BleedManager.add(sp, drift);
+        }
         int sinceRest = sp.getStats().getValue(Stats.CUSTOM.get(Stats.TIME_SINCE_REST));
         if (sinceRest > 72000 && data.getStage().atLeast(BleedStage.FAINT_TRACE)) {
             BleedManager.add(sp, 0.5F);
