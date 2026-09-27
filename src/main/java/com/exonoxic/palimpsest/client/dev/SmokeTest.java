@@ -10,6 +10,10 @@ import com.exonoxic.palimpsest.codex.CodexEntry;
 import com.exonoxic.palimpsest.entity.FairCopyEntity;
 import com.exonoxic.palimpsest.entity.LonghandEntity;
 import com.exonoxic.palimpsest.entity.PalehandEntity;
+import com.exonoxic.palimpsest.horror.EventContext;
+import com.exonoxic.palimpsest.horror.HorrorDirector;
+import com.exonoxic.palimpsest.horror.HorrorEvent;
+import com.exonoxic.palimpsest.horror.HorrorEvents;
 import com.exonoxic.palimpsest.registry.ModBlocks;
 import com.exonoxic.palimpsest.registry.ModEntities;
 import com.exonoxic.palimpsest.world.ModStructures;
@@ -49,6 +53,8 @@ import net.minecraft.world.level.WorldDataConfiguration;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -263,6 +269,15 @@ public final class SmokeTest {
         }));
         step(SETTLE, () -> Minecraft.getInstance().options.hideGui = false);
         shot("overworld_night_bleed");
+
+        // Every Overworld horror event, fired directly, with something nearby for each to act on.
+        step(20, () -> server((srv, p) -> furnishForEvents(p)));
+        for (HorrorEvent event : HorrorEvents.ALL) {
+            if (event.undertextOnly) continue;
+            step(VISUAL_EVENTS.contains(event.id) ? 25 : 50, () -> server((srv, p) -> fireEvent(p, event)));
+            if (VISUAL_EVENTS.contains(event.id)) shot("event_" + event.id);
+        }
+        step(200, () -> server((srv, p) -> killMobs(p.serverLevel())));
         step(10, () -> {
             Minecraft.getInstance().options.hideGui = true;
             server((srv, p) -> {
@@ -319,6 +334,10 @@ public final class SmokeTest {
             }));
             shot("biome_" + biome);
         }
+        for (HorrorEvent event : HorrorEvents.ALL) {
+            if (!event.undertextOnly) continue;
+            step(50, () -> server((srv, p) -> fireEvent(p, event)));
+        }
         for (ResourceKey<Structure> key : List.of(ModStructures.FADED_VILLAGE, ModStructures.MARGINALIA_SPIRE, ModStructures.INK_WELL,
                 ModStructures.SCRAP_SHRINE, ModStructures.BINDERY, ModStructures.LAST_FOLIO)) {
             step(SETTLE, () -> server((srv, p) -> visitStructure(srv, p, ModDimensions.UNDERTEXT, key)));
@@ -364,6 +383,45 @@ public final class SmokeTest {
     }
 
     // ------------------------------------------------------------------ helpers
+
+    /** Events with something to look at: a screenshot is taken shortly after each fires. */
+    private static final List<String> VISUAL_EVENTS = List.of("fog_bank", "other_page", "vignette_face", "fading", "ink_rain",
+            "lights_out", "tear_opens", "sky_glimpse", "palehand", "fair_copy", "scraping", "longhand_sighting", "stag_glimpse");
+
+    private static void fireEvent(ServerPlayer p, HorrorEvent event) {
+        try {
+            boolean fired = HorrorDirector.fire(event, new EventContext(p, p.serverLevel(), BleedCapability.get(p)));
+            LOG.info("[smoke] event {} -> {}", event.id, fired ? "fired" : "nothing suitable nearby");
+        } catch (Throwable t) {
+            LOG.error("[smoke] SMOKE_FAIL event {} threw", event.id, t);
+        }
+    }
+
+    /** A doorway, torches, a sign, a chest and a few cows around the player, for events to use. */
+    private static void furnishForEvents(ServerPlayer p) {
+        ServerLevel level = p.serverLevel();
+        BlockPos base = p.blockPosition();
+        fill(level, base.getX() - 4, base.getY() - 1, base.getZ() - 4, base.getX() + 4, base.getY() - 1, base.getZ() + 4,
+                Blocks.COBBLESTONE.defaultBlockState());
+        fill(level, base.getX() - 4, base.getY(), base.getZ() - 4, base.getX() + 4, base.getY() + 3, base.getZ() + 4,
+                Blocks.AIR.defaultBlockState());
+        BlockPos door = base.offset(0, 0, 3);
+        fill(level, door.getX() - 1, door.getY(), door.getZ(), door.getX() + 1, door.getY() + 2, door.getZ(), Blocks.OAK_PLANKS.defaultBlockState());
+        BlockState lower = Blocks.OAK_DOOR.defaultBlockState().setValue(DoorBlock.FACING, Direction.NORTH);
+        level.setBlock(door, lower, Block.UPDATE_ALL);
+        level.setBlock(door.above(), lower.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER), Block.UPDATE_ALL);
+        level.setBlock(base.offset(2, 0, 0), Blocks.TORCH.defaultBlockState(), Block.UPDATE_ALL);
+        level.setBlock(base.offset(-2, 0, 0), Blocks.TORCH.defaultBlockState(), Block.UPDATE_ALL);
+        level.setBlock(base.offset(2, 0, 2), Blocks.CHEST.defaultBlockState(), Block.UPDATE_ALL);
+        level.setBlock(base.offset(-2, 0, 2), Blocks.OAK_SIGN.defaultBlockState(), Block.UPDATE_ALL);
+        for (int i = 0; i < 3; i++) {
+            Entity cow = EntityType.COW.create(level);
+            if (cow == null) continue;
+            cow.moveTo(base.getX() + 3.5, base.getY(), base.getZ() - 3.5 + i * 2, 0F, 0F);
+            level.addFreshEntity(cow);
+        }
+        LOG.info("[smoke] furnished {} for events", base);
+    }
 
     private static void step(int delay, Runnable action) {
         STEPS.add(new Step(delay, action));
