@@ -413,6 +413,11 @@ public final class SmokeTest {
         level.setBlock(base.offset(2, 0, 0), Blocks.TORCH.defaultBlockState(), Block.UPDATE_ALL);
         level.setBlock(base.offset(-2, 0, 0), Blocks.TORCH.defaultBlockState(), Block.UPDATE_ALL);
         level.setBlock(base.offset(2, 0, 2), Blocks.CHEST.defaultBlockState(), Block.UPDATE_ALL);
+        if (level.getBlockEntity(base.offset(2, 0, 2)) instanceof net.minecraft.world.Container chest) {
+            chest.setItem(0, new ItemStack(net.minecraft.world.item.Items.BREAD, 5));
+            chest.setItem(4, new ItemStack(net.minecraft.world.item.Items.TORCH, 12));
+            chest.setItem(13, new ItemStack(net.minecraft.world.item.Items.PAPER, 3));
+        }
         level.setBlock(base.offset(-2, 0, 2), Blocks.OAK_SIGN.defaultBlockState(), Block.UPDATE_ALL);
         for (int i = 0; i < 3; i++) {
             Entity cow = EntityType.COW.create(level);
@@ -420,6 +425,8 @@ public final class SmokeTest {
             cow.moveTo(base.getX() + 3.5, base.getY(), base.getZ() - 3.5 + i * 2, 0F, 0F);
             level.addFreshEntity(cow);
         }
+        // Face away from the doorway, out over open ground: effects are easier to see and the door is out of view.
+        moveTo(p, level, base.getX() + 0.5, base.getY(), base.getZ() + 0.5, 180F, 0F);
         LOG.info("[smoke] furnished {} for events", base);
     }
 

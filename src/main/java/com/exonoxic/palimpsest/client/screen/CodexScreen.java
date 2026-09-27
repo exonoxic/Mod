@@ -122,7 +122,8 @@ public class CodexScreen extends Screen {
         List<CodexEntry> list = entries();
         int known = 0;
         for (CodexEntry e : list) if (ClientBleedState.knows(e.id())) known++;
-        g.drawString(font, known + " / " + list.size(), left + 104, top + 12, 0x6B5A48, false);
+        String count = known + " / " + list.size();
+        g.drawString(font, count, left + 124 - font.width(count), top + 12, 0x6B5A48, false);
         int listTop = listTop();
         for (int row = 0; row < listRows(); row++) {
             int idx = row + listScroll;
