@@ -77,8 +77,21 @@ The first build downloads Minecraft and Forge (several hundred MB) from
 `maven.minecraftforge.net`, `libraries.minecraft.net` and `piston-meta.mojang.com`.
 You need a JDK 17. The Gradle wrapper is included.
 
-Every push to GitHub is built by [`.github/workflows/build.yml`](.github/workflows/build.yml),
-which also runs the game tests on a real dedicated server.
+Every push to GitHub is built and tested by [`.github/workflows/build.yml`](.github/workflows/build.yml):
+
+1. `tools/check.py` cross-checks every registered block, item, entity, sound and translation
+   key against the generated resources.
+2. `./gradlew build` compiles and reobfuscates the mod.
+3. `./gradlew runGameTestServer` boots a dedicated server and runs the GameTests in
+   `src/main/java/.../test/`. They cover the Bleed stages and save/load, recipe/advancement/
+   loot/template loading, real Undertext terrain generation, locating an Undertext structure,
+   gate frames, scraped blocks coming back, and rubric chalk stopping inkborn.
+4. `./gradlew runClient` under a virtual display runs a scripted client smoke test
+   (`client/dev/SmokeTest`, only active with `-Dpalimpsest.smokeTest=true`). It creates a
+   world, lays out every block, item and creature, fires all 34 horror events, checks that the
+   Bleed survives a change of dimension, visits every Undertext biome and a copy of every
+   structure, and opens every screen. It takes a screenshot at each stop and fails the build
+   if anything throws.
 
 ## What's in it
 
