@@ -43,9 +43,10 @@ public final class BleedEvents {
     @SubscribeEvent
     public static void attach(AttachCapabilitiesEvent<Entity> event) {
         if (event.getObject() instanceof Player) {
-            BleedCapability.Provider provider = new BleedCapability.Provider();
-            event.addCapability(BleedCapability.KEY, provider);
-            event.addListener(provider::invalidate);
+            // No invalidation listener: a player's capabilities are invalidated every time they
+            // change dimension, and an invalidated LazyOptional never comes back, which would
+            // silently detach the Bleed from the player until they log out.
+            event.addCapability(BleedCapability.KEY, new BleedCapability.Provider());
         }
     }
 

@@ -50,10 +50,6 @@ public final class BleedCapability {
         public void deserializeNBT(CompoundTag nbt) {
             data.load(nbt);
         }
-
-        public void invalidate() {
-            optional.invalidate();
-        }
     }
 
     private BleedCapability() {}

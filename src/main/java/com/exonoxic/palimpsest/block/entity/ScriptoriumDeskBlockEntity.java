@@ -52,8 +52,8 @@ public class ScriptoriumDeskBlockEntity extends BlockEntity implements MenuProvi
             return slot != OUTPUT;
         }
     };
-    private final LazyOptional<IItemHandler> inputs = LazyOptional.of(() -> new RangedWrapper(items, 0, 3));
-    private final LazyOptional<IItemHandler> output = LazyOptional.of(() -> new RangedWrapper(items, OUTPUT, OUTPUT + 1));
+    private LazyOptional<IItemHandler> inputs = LazyOptional.of(() -> new RangedWrapper(items, 0, 3));
+    private LazyOptional<IItemHandler> output = LazyOptional.of(() -> new RangedWrapper(items, OUTPUT, OUTPUT + 1));
     private int progress;
     private int maxProgress = 200;
 
@@ -142,6 +142,13 @@ public class ScriptoriumDeskBlockEntity extends BlockEntity implements MenuProvi
         super.invalidateCaps();
         inputs.invalidate();
         output.invalidate();
+    }
+
+    @Override
+    public void reviveCaps() {
+        super.reviveCaps();
+        inputs = LazyOptional.of(() -> new RangedWrapper(items, 0, 3));
+        output = LazyOptional.of(() -> new RangedWrapper(items, OUTPUT, OUTPUT + 1));
     }
 
     @Override

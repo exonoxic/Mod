@@ -1,6 +1,8 @@
 package com.exonoxic.palimpsest.client.dev;
 
 import com.exonoxic.palimpsest.Palimpsest;
+import com.exonoxic.palimpsest.bleed.BleedCapability;
+import com.exonoxic.palimpsest.client.ClientBleedState;
 import com.exonoxic.palimpsest.client.screen.CodexScreen;
 import com.exonoxic.palimpsest.client.screen.EndingScreen;
 import com.exonoxic.palimpsest.client.screen.LoreScreen;
@@ -280,6 +282,22 @@ public final class SmokeTest {
 
         // Every Undertext biome, then every Undertext structure (seen as a player would, without night vision).
         step(5, () -> server((srv, p) -> p.removeEffect(MobEffects.NIGHT_VISION)));
+        // Per-player state must survive a change of dimension.
+        step(40, () -> server((srv, p) -> {
+            ServerLevel undertext = srv.getLevel(ModDimensions.UNDERTEXT);
+            if (undertext != null) moveTo(p, undertext, 0.5, 120, 0.5, 0F, 0F);
+        }));
+        step(20, () -> server((srv, p) -> {
+            command(srv, p, "palimpsest bleed set @s 432");
+            float bleed = BleedCapability.get(p).getBleed();
+            if (Math.abs(bleed - 432F) > 0.01F) LOG.error("[smoke] SMOKE_FAIL Bleed after a dimension change is {} (expected 432)", bleed);
+            else LOG.info("[smoke] Bleed survives a dimension change");
+        }));
+        step(10, () -> {
+            float seen = ClientBleedState.bleed();
+            if (Math.abs(seen - 432F) > 0.01F) LOG.error("[smoke] SMOKE_FAIL client sees Bleed {} (expected 432)", seen);
+            server((srv, p) -> command(srv, p, "palimpsest bleed set @s 0"));
+        });
         for (String biome : List.of("scraped_expanse", "blotwood", "the_gutter", "inkwell_sea", "rubric_wastes", "marginalia")) {
             step(SETTLE, () -> server((srv, p) -> {
                 ServerLevel undertext = srv.getLevel(ModDimensions.UNDERTEXT);
