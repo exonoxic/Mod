@@ -190,6 +190,7 @@ public class RasureEntity extends Monster implements PalimpsestBoss {
     @Override
     protected void customServerAiStep() {
         super.customServerAiStep();
+        PalimpsestBoss.scaleForGroup(this);
         ServerLevel level = (ServerLevel) level();
         bossEvent.setProgress(getHealth() / getMaxHealth());
         if (home == null) {

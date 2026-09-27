@@ -37,6 +37,8 @@ minecraft {
 
         client {
             property 'forge.enabledGameTestNamespaces', mod_id
+            // CI sets PALIMPSEST_SMOKE=true to run the scripted visual smoke test (client/dev/SmokeTest).
+            property 'palimpsest.smokeTest', System.getenv('PALIMPSEST_SMOKE') ?: 'false'
         }
 
         server {

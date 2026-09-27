@@ -43,6 +43,29 @@ jobs:
         run: |
           grep -E "ERROR|WARN.*palimpsest|Exception|failed|passed|GameTest|tests" gametest.log | grep -v "^\s*at " | head -300 || true
 
+      - name: Client smoke test (virtual display, software OpenGL)
+        env:
+          PALIMPSEST_SMOKE: "true"
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb libgl1-mesa-dri > /dev/null
+          set -o pipefail
+          timeout 1800 xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClient --console=plain 2>&1 | tee client.log
+          grep -q "PALIMPSEST SMOKE TEST COMPLETE" client.log
+
+      - name: Summarise client run
+        if: always()
+        run: |
+          grep -E "\[smoke\]|ERROR|SMOKE_FAIL|Missing|missing texture|Unable to|Failed to load|Exception" client.log | grep -v "^\s*at " | head -300 || true
+          if [ -d run/crash-reports ]; then head -c 20000 run/crash-reports/*; fi
+
+      - name: Screenshots (printed for headless review)
+        if: always()
+        run: |
+          pip install -q pillow
+          python3 tools/ci_screens.py run/screenshots
+
       - name: Upload jar
         if: always()
         uses: actions/upload-artifact@v4

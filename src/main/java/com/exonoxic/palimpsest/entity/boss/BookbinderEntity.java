@@ -116,6 +116,7 @@ public class BookbinderEntity extends Monster implements PalimpsestBoss {
     @Override
     protected void customServerAiStep() {
         super.customServerAiStep();
+        PalimpsestBoss.scaleForGroup(this);
         bossEvent.setProgress(getHealth() / getMaxHealth());
         ServerLevel level = (ServerLevel) level();
 
