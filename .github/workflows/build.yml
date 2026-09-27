@@ -53,6 +53,7 @@ jobs:
           set -o pipefail
           timeout 1800 xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClient --console=plain 2>&1 | tee client.log
           grep -q "PALIMPSEST SMOKE TEST COMPLETE" client.log
+          if grep -q "SMOKE_FAIL" client.log; then echo "Smoke test reported failures"; exit 1; fi
 
       - name: Summarise client run
         if: always()
