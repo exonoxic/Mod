@@ -17,7 +17,7 @@ import net.minecraft.util.Mth;
  */
 public class PalehandRenderer extends MobRenderer<PalehandEntity, PalehandModel<PalehandEntity>> {
     private static final ResourceLocation TEXTURE = Palimpsest.id("textures/entity/palehand.png");
-    private static final float SCALE = 14.0F;
+    private static final float SCALE = 26.0F; // ~45 blocks from wrist to fingertip
 
     public PalehandRenderer(EntityRendererProvider.Context ctx) {
         super(ctx, new PalehandModel<>(ctx.bakeLayer(PalehandModel.LAYER)), 0F);
@@ -34,7 +34,7 @@ public class PalehandRenderer extends MobRenderer<PalehandEntity, PalehandModel<
         float rise = Mth.clamp(age / PalehandEntity.RISE, 0F, 1F);
         float sink = entity.getSinkAt() < 0 ? 0F : Mth.clamp((age - entity.getSinkAt()) / PalehandEntity.SINK, 0F, 1F);
         float h = (1F - (1F - rise) * (1F - rise)) - sink * sink;
-        poseStack.translate(0.0F, (1F - h) * 30F, 0.0F); // y is flipped here: positive is down
+        poseStack.translate(0.0F, (1F - h) * 50F, 0.0F); // y is flipped here: positive is down
         poseStack.scale(SCALE, SCALE, SCALE);
     }
 

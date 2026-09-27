@@ -39,8 +39,17 @@ public class CodexScreen extends Screen {
     private int listScroll;
     private int textScroll;
 
+    private String initialEntry;
+
     public CodexScreen() {
         super(Component.translatable("item.palimpsest.commonplace_book"));
+    }
+
+    /** Opens at a section, with an entry already selected if the player knows it. */
+    public CodexScreen(CodexEntry.Category category, String entryId) {
+        this();
+        this.category = category;
+        this.initialEntry = entryId;
     }
 
     @Override
@@ -48,6 +57,27 @@ public class CodexScreen extends Screen {
         left = (width - W) / 2;
         top = (height - H) / 2;
         selectFirst();
+        if (initialEntry != null) {
+            CodexEntry e = CodexEntries.get(initialEntry);
+            if (e != null && e.category() == category && ClientBleedState.knows(e.id())) selected = e;
+            initialEntry = null;
+        }
+    }
+
+    /** The Page shows the current stage above its list, so its list starts lower and is shorter. */
+    private List<FormattedCharSequence> stageLines() {
+        if (category != CodexEntry.Category.THE_PAGE) return List.of();
+        List<FormattedCharSequence> lines = font.split(ClientBleedState.stage().describe().copy().withStyle(ChatFormatting.ITALIC), 104);
+        return lines.size() > 4 ? lines.subList(0, 4) : lines;
+    }
+
+    private int listTop() {
+        List<FormattedCharSequence> lines = stageLines();
+        return lines.isEmpty() ? top + 28 : top + 26 + lines.size() * 10 + 8;
+    }
+
+    private int listRows() {
+        return category == CodexEntry.Category.THE_PAGE ? Math.max(1, (top + H - 12 - listTop()) / ROW_H) : LIST_ROWS;
     }
 
     private List<CodexEntry> entries() {
@@ -84,28 +114,25 @@ public class CodexScreen extends Screen {
         }
 
         g.drawString(font, Component.translatable(category.titleKey()).withStyle(ChatFormatting.DARK_RED), left + 18, top + 12, 0x8C1C13, false);
-        if (category == CodexEntry.Category.THE_PAGE) {
-            List<FormattedCharSequence> lines = font.split(ClientBleedState.stage().describe().copy().withStyle(ChatFormatting.ITALIC), 104);
-            int y = top + 26;
-            for (FormattedCharSequence l : lines) {
-                g.drawString(font, l, left + 18, y, 0x3B2F2A, false);
-                y += 10;
-            }
-        } else {
-            List<CodexEntry> list = entries();
-            int known = 0;
-            for (CodexEntry e : list) if (ClientBleedState.knows(e.id())) known++;
-            g.drawString(font, known + " / " + list.size(), left + 104, top + 12, 0x6B5A48, false);
-            for (int row = 0; row < LIST_ROWS; row++) {
-                int idx = row + listScroll;
-                if (idx >= list.size()) break;
-                CodexEntry e = list.get(idx);
-                int y = top + 28 + row * ROW_H;
-                boolean knows = ClientBleedState.knows(e.id());
-                Component label = knows ? Component.translatable(e.titleKey()) : Component.literal("~ ~ ~ ~ ~");
-                int color = knows ? (e == selected ? 0x8C1C13 : 0x2A2733) : 0xA89F8C;
-                g.drawString(font, font.plainSubstrByWidth(label.getString(), 108), left + 18, y, color, false);
-            }
+        int y0 = top + 26;
+        for (FormattedCharSequence l : stageLines()) {
+            g.drawString(font, l, left + 18, y0, 0x3B2F2A, false);
+            y0 += 10;
+        }
+        List<CodexEntry> list = entries();
+        int known = 0;
+        for (CodexEntry e : list) if (ClientBleedState.knows(e.id())) known++;
+        g.drawString(font, known + " / " + list.size(), left + 104, top + 12, 0x6B5A48, false);
+        int listTop = listTop();
+        for (int row = 0; row < listRows(); row++) {
+            int idx = row + listScroll;
+            if (idx >= list.size()) break;
+            CodexEntry e = list.get(idx);
+            int y = listTop + row * ROW_H;
+            boolean knows = ClientBleedState.knows(e.id());
+            Component label = knows ? Component.translatable(e.titleKey()) : Component.literal("~ ~ ~ ~ ~");
+            int color = knows ? (e == selected ? 0x8C1C13 : 0x2A2733) : 0xA89F8C;
+            g.drawString(font, font.plainSubstrByWidth(label.getString(), 108), left + 18, y, color, false);
         }
 
         if (selected != null) {
@@ -120,7 +147,7 @@ public class CodexScreen extends Screen {
             if (text.size() > maxLines) {
                 g.drawString(font, (textScroll + maxLines < text.size()) ? "▼" : "▲", left + 236, top + 160, 0x8C1C13, false);
             }
-        } else if (category != CodexEntry.Category.THE_PAGE) {
+        } else {
             g.drawString(font, Component.translatable("codex.palimpsest.empty").withStyle(ChatFormatting.ITALIC), left + 138, top + 32, 0x6B5A48, false);
         }
         super.render(g, mouseX, mouseY, partial);
@@ -159,11 +186,11 @@ public class CodexScreen extends Screen {
                 return true;
             }
         }
-        if (category != CodexEntry.Category.THE_PAGE && mouseX >= left + 16 && mouseX < left + 128) {
-            int row = (int) ((mouseY - (top + 28)) / ROW_H);
+        if (mouseX >= left + 16 && mouseX < left + 128 && mouseY >= listTop()) {
+            int row = (int) ((mouseY - listTop()) / ROW_H);
             List<CodexEntry> list = entries();
             int idx = row + listScroll;
-            if (row >= 0 && row < LIST_ROWS && idx < list.size() && ClientBleedState.knows(list.get(idx).id())) {
+            if (row >= 0 && row < listRows() && idx < list.size() && ClientBleedState.knows(list.get(idx).id())) {
                 selected = list.get(idx);
                 textScroll = 0;
                 click();
@@ -176,7 +203,7 @@ public class CodexScreen extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         if (mouseX < left + 128) {
-            int max = Math.max(0, entries().size() - LIST_ROWS);
+            int max = Math.max(0, entries().size() - listRows());
             listScroll = Math.max(0, Math.min(max, listScroll - (int) Math.signum(delta)));
         } else {
             textScroll = Math.max(0, textScroll - (int) Math.signum(delta));

@@ -4,6 +4,9 @@ import com.exonoxic.palimpsest.Palimpsest;
 import com.exonoxic.palimpsest.client.screen.CodexScreen;
 import com.exonoxic.palimpsest.client.screen.EndingScreen;
 import com.exonoxic.palimpsest.client.screen.LoreScreen;
+import com.exonoxic.palimpsest.codex.CodexEntry;
+import com.exonoxic.palimpsest.entity.FairCopyEntity;
+import com.exonoxic.palimpsest.entity.LonghandEntity;
 import com.exonoxic.palimpsest.entity.PalehandEntity;
 import com.exonoxic.palimpsest.registry.ModBlocks;
 import com.exonoxic.palimpsest.registry.ModEntities;
@@ -215,6 +218,26 @@ public final class SmokeTest {
             }));
             shot("creature_" + name);
         }
+        // Apparitions only exist for one player and keep their distance: a Longhand watcher vanishes
+        // inside 24 blocks and a Fair Copy walks away inside 12, so these are taken zoomed in.
+        step(40, () -> server((srv, p) -> {
+            ServerLevel level = p.serverLevel();
+            killMobs(level);
+            clear(level, -12, Y - 1, -12, 12, Y + 12, 24, Blocks.SMOOTH_STONE.defaultBlockState());
+            moveTo(p, level, 0.5, Y + 0.4, -25.5, 0F, 0F);
+            LonghandEntity.spawnWatcher(level, new BlockPos(0, Y, 0), p);
+        }));
+        step(1, () -> Minecraft.getInstance().options.fov().set(30));
+        shot("creature_longhand_watcher");
+        step(40, () -> server((srv, p) -> {
+            ServerLevel level = p.serverLevel();
+            killMobs(level);
+            moveTo(p, level, 0.5, Y + 0.2, -15.5, 0F, 0F);
+            FairCopyEntity.spawnFor(level, new BlockPos(0, Y, 0), p);
+        }));
+        shot("creature_fair_copy_sighting");
+        step(1, () -> Minecraft.getInstance().options.fov().set(70));
+
         // The Palehand only exists as a sighting for one player, and sinks if they come within 80 blocks.
         step(150, () -> server((srv, p) -> {
             ServerLevel level = p.serverLevel();
@@ -291,6 +314,10 @@ public final class SmokeTest {
         });
         step(20, () -> Minecraft.getInstance().setScreen(new CodexScreen()));
         shot("screen_codex");
+        step(10, () -> Minecraft.getInstance().setScreen(new CodexScreen(CodexEntry.Category.CREATURES, "knocker")));
+        shot("screen_codex_creature");
+        step(10, () -> Minecraft.getInstance().setScreen(new CodexScreen(CodexEntry.Category.PLACES, "wray_cabin")));
+        shot("screen_codex_place");
         step(20, () -> Minecraft.getInstance().setScreen(new LoreScreen("folio", 1)));
         shot("screen_folio");
         step(20, () -> Minecraft.getInstance().setScreen(new LoreScreen("faded", 3)));
@@ -400,13 +427,12 @@ public final class SmokeTest {
         if (buried) {
             // Underground: stand inside the first room, looking along it.
             moveTo(p, level, c.getX() + 0.5, box.minY() + 1.2, box.minZ() + 1.5, 0F, 10F);
-        } else if (dimension == ModDimensions.UNDERTEXT) {
-            // The Undertext's fog ends at ~48 blocks: stand at the edge of the building, not far off.
-            int ground = level.getHeight(Heightmap.Types.MOTION_BLOCKING, c.getX(), box.minZ() - 4);
-            moveTo(p, level, c.getX() + 0.5, ground + 5.0, box.minZ() - 4.5, 0F, 18F);
         } else {
-            double back = Math.max(box.getXSpan(), box.getZSpan()) * 0.9 + 6;
-            moveTo(p, level, c.getX() + 0.5, box.maxY() + back * 0.45, box.minZ() - back * 0.55, 0F, 32F);
+            // Frame the building from above and to the south, aimed at the ground at its centre.
+            // In the Undertext the fog ends at ~48 blocks, so stay closer.
+            int ground = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, c.getX(), c.getZ());
+            double back = Math.max(box.getXSpan(), box.getZSpan()) * 0.5 + (dimension == ModDimensions.UNDERTEXT ? 8 : 12);
+            moveTo(p, level, c.getX() + 0.5, ground + back * 0.55, c.getZ() - back, 0F, 29F);
         }
     }
 

@@ -104,7 +104,7 @@ public class PalehandEntity extends Mob implements Apparition {
             return;
         }
         if (!seen && p instanceof ServerPlayer sp && tickCount % 10 == 0 && tickCount > RISE / 2) {
-            Vec3 top = position().add(0, 22, 0);
+            Vec3 top = position().add(0, 30, 0);
             HitResult clip = level().clip(new ClipContext(sp.getEyePosition(), top, ClipContext.Block.VISUAL, ClipContext.Fluid.NONE, sp));
             boolean facing = top.subtract(sp.getEyePosition()).normalize().dot(sp.getLookAngle()) > 0.8;
             if (clip.getType() == HitResult.Type.MISS && facing) {
