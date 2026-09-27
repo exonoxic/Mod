@@ -4,6 +4,7 @@ import com.exonoxic.palimpsest.Palimpsest;
 import com.exonoxic.palimpsest.client.screen.CodexScreen;
 import com.exonoxic.palimpsest.client.screen.EndingScreen;
 import com.exonoxic.palimpsest.client.screen.LoreScreen;
+import com.exonoxic.palimpsest.registry.ModBlocks;
 import com.exonoxic.palimpsest.registry.ModEntities;
 import com.exonoxic.palimpsest.world.dimension.ModDimensions;
 import com.mojang.logging.LogUtils;
@@ -15,6 +16,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Difficulty;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -36,6 +38,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.network.NetworkHooks;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -243,6 +246,19 @@ public final class SmokeTest {
         shot("screen_faded");
         step(20, () -> Minecraft.getInstance().setScreen(new EndingScreen(BlockPos.ZERO)));
         shot("screen_ending");
+        step(20, () -> {
+            Minecraft.getInstance().setScreen(null);
+            server((srv, p) -> {
+                BlockPos desk = p.blockPosition().below(2);
+                p.serverLevel().setBlock(desk, ModBlocks.SCRIPTORIUM_DESK.get().defaultBlockState(), Block.UPDATE_ALL);
+                if (p.serverLevel().getBlockEntity(desk) instanceof MenuProvider provider) {
+                    NetworkHooks.openScreen(p, provider, desk);
+                } else {
+                    LOG.error("[smoke] SMOKE_FAIL scriptorium desk has no menu");
+                }
+            });
+        });
+        shot("screen_desk");
 
         step(40, () -> {
             Minecraft.getInstance().setScreen(null);
