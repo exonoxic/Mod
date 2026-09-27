@@ -1,15 +1,8 @@
 {
-  "type": "minecraft:jigsaw",
+  "type": "palimpsest:dry_land",
   "biomes": "#palimpsest:has_structure/last_folio",
   "step": "surface_structures",
   "spawn_overrides": {},
   "terrain_adaptation": "beard_box",
-  "start_pool": "palimpsest:last_folio/start",
-  "size": 1,
-  "start_height": {
-    "absolute": -9
-  },
-  "max_distance_from_center": 80,
-  "use_expansion_hack": false,
-  "project_start_to_heightmap": "WORLD_SURFACE_WG"
+  "structure": "palimpsest:last_folio_inner"
 }

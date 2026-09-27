@@ -4,6 +4,7 @@ import com.exonoxic.palimpsest.Palimpsest;
 import com.exonoxic.palimpsest.client.screen.CodexScreen;
 import com.exonoxic.palimpsest.client.screen.EndingScreen;
 import com.exonoxic.palimpsest.client.screen.LoreScreen;
+import com.exonoxic.palimpsest.entity.PalehandEntity;
 import com.exonoxic.palimpsest.registry.ModBlocks;
 import com.exonoxic.palimpsest.registry.ModEntities;
 import com.exonoxic.palimpsest.world.ModStructures;
@@ -133,7 +134,7 @@ public final class SmokeTest {
             LOG.warn("[smoke] could not clear old world", e);
         }
         LOG.info("[smoke] creating world");
-        LevelSettings settings = new LevelSettings("Palimpsest smoke test", GameType.CREATIVE, false, Difficulty.PEACEFUL,
+        LevelSettings settings = new LevelSettings("Palimpsest smoke test", GameType.CREATIVE, false, Difficulty.NORMAL,
                 true, new GameRules(), WorldDataConfiguration.DEFAULT);
         mc.createWorldOpenFlows().createFreshLevel(WORLD, settings, new WorldOptions(1453L, true, false),
                 WorldPresets::createNormalWorldDimensions);
@@ -191,18 +192,16 @@ public final class SmokeTest {
                 ModEntities.MARGIN_CRAWLER.get(), ModEntities.QUILLCROW.get(), ModEntities.PALE_STAG.get(), ModEntities.INKHOUND.get(),
                 ModEntities.RUBRICATOR.get(), ModEntities.KNOCKER.get(), ModEntities.COPYIST.get(), ModEntities.LONGHAND.get(),
                 ModEntities.REDACTED.get(), ModEntities.FAIR_COPY.get(), ModEntities.ERRATUM.get(), ModEntities.BOOKBINDER.get(),
-                ModEntities.RASURE.get(), ModEntities.PALEHAND.get());
+                ModEntities.RASURE.get());
         for (EntityType<?> type : creatures) {
             String name = ForgeRegistries.ENTITY_TYPES.getKey(type).getPath();
-            boolean palehand = type == ModEntities.PALEHAND.get();
-            step(palehand ? 100 : 40, () -> server((srv, p) -> {
+            step(40, () -> server((srv, p) -> {
                 ServerLevel level = p.serverLevel();
                 killMobs(level);
                 clear(level, -12, Y - 1, -12, 12, Y + 12, 24, Blocks.SMOOTH_STONE.defaultBlockState());
                 Entity e = type.create(level);
                 if (e == null) return;
-                double z = palehand ? 60.5 : 0.5;
-                e.moveTo(0.5, Y, z, 180F, 0F);
+                e.moveTo(0.5, Y, 0.5, 180F, 0F);
                 e.setYHeadRot(180F);
                 if (e instanceof Mob mob) {
                     mob.setNoAi(true);
@@ -211,12 +210,19 @@ public final class SmokeTest {
                 }
                 level.addFreshEntity(e);
                 double h = Math.max(0.6, e.getBbHeight());
-                double dist = palehand ? 70.0 : Math.max(2.4, Math.max(h, e.getBbWidth()) * 1.35 + e.getBbWidth() / 2);
-                double eye = palehand ? 6.0 : h * 0.6;
-                moveTo(p, level, 0.5, Y + eye - 1.62, z - dist, 0F, palehand ? -12F : 4F);
+                double dist = Math.max(2.4, Math.max(h, e.getBbWidth()) * 1.35 + e.getBbWidth() / 2);
+                moveTo(p, level, 0.5, Y + h * 0.6 - 1.62, 0.5 - dist, 0F, 4F);
             }));
             shot("creature_" + name);
         }
+        // The Palehand only exists as a sighting for one player, and sinks if they come within 80 blocks.
+        step(150, () -> server((srv, p) -> {
+            ServerLevel level = p.serverLevel();
+            killMobs(level);
+            moveTo(p, level, 0.5, Y + 6.0, 0.5, 0F, -14F);
+            PalehandEntity.spawnSighting(level, new BlockPos(0, Y, 120), p);
+        }));
+        shot("creature_palehand");
 
         // Night and a high Bleed, somewhere on land, with the HUD and overlays showing.
         step(40, () -> server((srv, p) -> {
@@ -249,7 +255,8 @@ public final class SmokeTest {
             shot("structure_" + key.location().getPath());
         }
 
-        // Every Undertext biome, then every Undertext structure.
+        // Every Undertext biome, then every Undertext structure (seen as a player would, without night vision).
+        step(5, () -> server((srv, p) -> p.removeEffect(MobEffects.NIGHT_VISION)));
         for (String biome : List.of("scraped_expanse", "blotwood", "the_gutter", "inkwell_sea", "rubric_wastes", "marginalia")) {
             step(SETTLE, () -> server((srv, p) -> {
                 ServerLevel undertext = srv.getLevel(ModDimensions.UNDERTEXT);
@@ -393,6 +400,10 @@ public final class SmokeTest {
         if (buried) {
             // Underground: stand inside the first room, looking along it.
             moveTo(p, level, c.getX() + 0.5, box.minY() + 1.2, box.minZ() + 1.5, 0F, 10F);
+        } else if (dimension == ModDimensions.UNDERTEXT) {
+            // The Undertext's fog ends at ~48 blocks: stand at the edge of the building, not far off.
+            int ground = level.getHeight(Heightmap.Types.MOTION_BLOCKING, c.getX(), box.minZ() - 4);
+            moveTo(p, level, c.getX() + 0.5, ground + 5.0, box.minZ() - 4.5, 0F, 18F);
         } else {
             double back = Math.max(box.getXSpan(), box.getZSpan()) * 0.9 + 6;
             moveTo(p, level, c.getX() + 0.5, box.maxY() + back * 0.45, box.minZ() - back * 0.55, 0F, 32F);

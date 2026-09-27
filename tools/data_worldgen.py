@@ -292,6 +292,9 @@ STRUCTURES = {
     "bindery": ("surface_structures", "beard_box", {"absolute": -1}, "WORLD_SURFACE_WG", 44, 18, 71117013),
     "last_folio": ("surface_structures", "beard_box", {"absolute": -9}, "WORLD_SURFACE_WG", 56, 26, 71117014),
 }
+# Surface structures that must not start on water (see DryLandStructure).
+DRY_LAND = {"wray_cabin", "scraped_obelisk", "hollow_chapel", "copying_house", "crow_roost", "doubled_house",
+            "faded_village", "marginalia_spire", "scrap_shrine", "bindery", "last_folio"}
 VARIANTS = {"wray_cabin": 3, "scraped_obelisk": 3, "faded_village": 2, "scrap_shrine": 3}
 PROCESSORS = {"wray_cabin": "decay_light", "hollow_chapel": "decay_heavy", "copying_house": "decay_heavy", "crow_roost": None,
               "doubled_house": None, "broken_gate": "decay_heavy", "scraped_obelisk": "decay_light", "survey_station": "decay_light",
@@ -327,7 +330,14 @@ def structures():
                "max_distance_from_center": 80, "use_expansion_hack": False}
         if project:
             obj["project_start_to_heightmap"] = project
-        wg(f"structure/{name}", obj)
+        if name in DRY_LAND:
+            # The jigsaw itself is registered as <name>_inner (in no structure set); the real
+            # structure wraps it and refuses to start on water.
+            wg(f"structure/{name}_inner", obj)
+            wg(f"structure/{name}", {"type": f"{NS}:dry_land", "biomes": f"#{NS}:has_structure/{name}", "step": step,
+                                     "spawn_overrides": {}, "terrain_adaptation": adapt, "structure": f"{NS}:{name}_inner"})
+        else:
+            wg(f"structure/{name}", obj)
         n = VARIANTS.get(name, 1)
         proc = PROCESSORS.get(name)
         elements = []

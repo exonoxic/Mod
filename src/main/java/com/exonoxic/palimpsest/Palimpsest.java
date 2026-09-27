@@ -44,6 +44,7 @@ public final class Palimpsest {
         ModCreativeTabs.TABS.register(modBus);
         ModBiomeModifiers.SERIALIZERS.register(modBus);
         ModPoiTypes.POI_TYPES.register(modBus);
+        ModStructureTypes.STRUCTURE_TYPES.register(modBus);
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, CommonConfig.SPEC, "palimpsest-common.toml");
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC, "palimpsest-client.toml");
