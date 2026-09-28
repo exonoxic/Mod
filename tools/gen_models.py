@@ -249,17 +249,25 @@ def paint_canvases(model, variant=None):
     canvas = Canvas(model.tw, model.th)
     glow = Canvas(model.tw, model.th)
     for p in model.all_parts():
-        for b in p.boxes:
-            paint = overrides.get(p.name) or b.paint or p.paint
+        for i, b in enumerate(p.boxes):
+            ov = overrides.get(p.name)
+            if isinstance(ov, list):
+                ov = ov[i]
+            paint = ov or b.paint or p.paint
             paint_box(canvas, glow, b, paint, r)
     return canvas, glow
 
 
 def paint_model(model):
+    base_glow = None
     for variant in [None] + list(model.variants):
         canvas, glow = paint_canvases(model, variant)
         name = model.name + ("_" + variant if variant else "")
         canvas.save(os.path.join(TEX_DIR, name + ".png"))
+        if variant is None:
+            base_glow = glow.px.copy()
+        elif base_glow is not None and (glow.px == base_glow).all():
+            continue  # variants share the base emissive layer unless theirs differs
         if glow.px[:, :, 3].any():
             glow.save(os.path.join(TEX_DIR, name + "_glow.png"))
 
@@ -911,7 +919,7 @@ def rasure():
 
 import creature_designs  # noqa: E402
 
-MODELS = [creature_designs.knocker(), creature_designs.longhand(), smudge(), redacted(), rubricator(), copyist(), inkhound(), pale_stag(), quillcrow(),
+MODELS = [creature_designs.knocker(), creature_designs.longhand(), smudge(), redacted(), rubricator(), creature_designs.copyist(), inkhound(), pale_stag(), quillcrow(),
           foxing_moth(), blotling(), margin_crawler(), erratum_legs(), palehand(), bookbinder(), rasure()]
 
 

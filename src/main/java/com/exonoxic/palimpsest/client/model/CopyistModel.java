@@ -19,43 +19,118 @@ import net.minecraft.util.Mth;
 public class CopyistModel<T extends CopyistEntity> extends HierarchicalModel<T> {
     public static final ModelLayerLocation LAYER = new ModelLayerLocation(Palimpsest.id("copyist"), "main");
     private final ModelPart root;
-    protected final ModelPart leftLeg;
-    protected final ModelPart rightLeg;
-    protected final ModelPart torso;
+    protected final ModelPart pelvis;
+    protected final ModelPart leftThigh;
+    protected final ModelPart leftShin;
+    protected final ModelPart leftHoof;
+    protected final ModelPart rightThigh;
+    protected final ModelPart rightShin;
+    protected final ModelPart rightHoof;
+    protected final ModelPart hideRump;
+    protected final ModelPart hideLegL;
+    protected final ModelPart hideLegR;
+    protected final ModelPart hideTail;
+    protected final ModelPart belly;
+    protected final ModelPart chest;
     protected final ModelPart neck;
     protected final ModelPart head;
-    protected final ModelPart leftHorn;
-    protected final ModelPart rightHorn;
-    protected final ModelPart leftArm;
-    protected final ModelPart rightArm;
+    protected final ModelPart mask;
+    protected final ModelPart snout;
+    protected final ModelPart maskEarL;
+    protected final ModelPart maskEarR;
+    protected final ModelPart jaw;
+    protected final ModelPart hideNeck;
+    protected final ModelPart leftUpperArm;
+    protected final ModelPart leftForearm;
+    protected final ModelPart leftHand;
+    protected final ModelPart leftFinger0;
+    protected final ModelPart leftFinger1;
+    protected final ModelPart leftFinger2;
+    protected final ModelPart rightUpperArm;
+    protected final ModelPart rightForearm;
+    protected final ModelPart rightHand;
+    protected final ModelPart rightFinger0;
+    protected final ModelPart rightFinger1;
+    protected final ModelPart rightFinger2;
+    protected final ModelPart hide;
 
     public CopyistModel(ModelPart root) {
         super(RenderType::entityCutoutNoCull);
         this.root = root;
-        this.leftLeg = root.getChild("left_leg");
-        this.rightLeg = root.getChild("right_leg");
-        this.torso = root.getChild("torso");
-        this.neck = this.torso.getChild("neck");
+        this.pelvis = root.getChild("pelvis");
+        this.leftThigh = this.pelvis.getChild("left_thigh");
+        this.leftShin = this.leftThigh.getChild("left_shin");
+        this.leftHoof = this.leftShin.getChild("left_hoof");
+        this.rightThigh = this.pelvis.getChild("right_thigh");
+        this.rightShin = this.rightThigh.getChild("right_shin");
+        this.rightHoof = this.rightShin.getChild("right_hoof");
+        this.hideRump = this.pelvis.getChild("hide_rump");
+        this.hideLegL = this.hideRump.getChild("hide_leg_l");
+        this.hideLegR = this.hideRump.getChild("hide_leg_r");
+        this.hideTail = this.hideRump.getChild("hide_tail");
+        this.belly = this.pelvis.getChild("belly");
+        this.chest = this.belly.getChild("chest");
+        this.neck = this.chest.getChild("neck");
         this.head = this.neck.getChild("head");
-        this.leftHorn = this.head.getChild("left_horn");
-        this.rightHorn = this.head.getChild("right_horn");
-        this.leftArm = this.torso.getChild("left_arm");
-        this.rightArm = this.torso.getChild("right_arm");
+        this.mask = this.head.getChild("mask");
+        this.snout = this.mask.getChild("snout");
+        this.maskEarL = this.mask.getChild("mask_ear_l");
+        this.maskEarR = this.mask.getChild("mask_ear_r");
+        this.jaw = this.head.getChild("jaw");
+        this.hideNeck = this.head.getChild("hide_neck");
+        this.leftUpperArm = this.chest.getChild("left_upper_arm");
+        this.leftForearm = this.leftUpperArm.getChild("left_forearm");
+        this.leftHand = this.leftForearm.getChild("left_hand");
+        this.leftFinger0 = this.leftHand.getChild("left_finger_0");
+        this.leftFinger1 = this.leftHand.getChild("left_finger_1");
+        this.leftFinger2 = this.leftHand.getChild("left_finger_2");
+        this.rightUpperArm = this.chest.getChild("right_upper_arm");
+        this.rightForearm = this.rightUpperArm.getChild("right_forearm");
+        this.rightHand = this.rightForearm.getChild("right_hand");
+        this.rightFinger0 = this.rightHand.getChild("right_finger_0");
+        this.rightFinger1 = this.rightHand.getChild("right_finger_1");
+        this.rightFinger2 = this.rightHand.getChild("right_finger_2");
+        this.hide = this.chest.getChild("hide");
     }
 
     public static LayerDefinition createBodyLayer() {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
-        PartDefinition leftLegDef = root.addOrReplaceChild("left_leg", CubeListBuilder.create().texOffs(16, 0).addBox(-1.5F, 0.0F, -1.5F, 3.0F, 18.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(2.0F, 6.0F, 1.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition rightLegDef = root.addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(28, 0).mirror().addBox(-1.5F, 0.0F, -1.5F, 3.0F, 18.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-2.0F, 6.0F, 1.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition torsoDef = root.addOrReplaceChild("torso", CubeListBuilder.create().texOffs(0, 23).addBox(-4.0F, -14.0F, -3.0F, 8.0F, 14.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 6.0F, 0.0F, 0.5F, 0.0F, 0.0F));
-        PartDefinition neckDef = torsoDef.addOrReplaceChild("neck", CubeListBuilder.create().texOffs(0, 43).addBox(-1.5F, -6.0F, -1.5F, 3.0F, 6.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -14.0F, -1.0F, -0.6F, 0.0F, 0.0F));
-        PartDefinition headDef = neckDef.addOrReplaceChild("head", CubeListBuilder.create().texOffs(28, 23).addBox(-3.0F, -4.0F, -7.0F, 6.0F, 5.0F, 9.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -6.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition leftHornDef = headDef.addOrReplaceChild("left_horn", CubeListBuilder.create().texOffs(12, 43).addBox(0.0F, -3.0F, -0.5F, 1.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(3.0F, -3.0F, -2.0F, 0.0F, 0.0F, -0.5F));
-        PartDefinition rightHornDef = headDef.addOrReplaceChild("right_horn", CubeListBuilder.create().texOffs(16, 43).addBox(-1.0F, -3.0F, -0.5F, 1.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-3.0F, -3.0F, -2.0F, 0.0F, 0.0F, 0.5F));
-        PartDefinition leftArmDef = torsoDef.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(0, 0).addBox(-1.0F, 0.0F, -1.0F, 2.0F, 21.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(4.0F, -13.0F, -1.0F, -0.5F, 0.0F, 0.0F));
-        PartDefinition rightArmDef = torsoDef.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(8, 0).mirror().addBox(-1.0F, 0.0F, -1.0F, 2.0F, 21.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-4.0F, -13.0F, -1.0F, -0.5F, 0.0F, 0.0F));
-        return LayerDefinition.create(mesh, 64, 64);
+        PartDefinition pelvisDef = root.addOrReplaceChild("pelvis", CubeListBuilder.create().texOffs(0, 26).addBox(-3.0F, -1.0F, -2.0F, 6.0F, 3.0F, 4.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 8.0F, 1.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition leftThighDef = pelvisDef.addOrReplaceChild("left_thigh", CubeListBuilder.create().texOffs(21, 14).addBox(-1.5F, 0.0F, -1.5F, 3.0F, 8.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(2.0F, 1.5F, 0.0F, -0.3F, 0.0F, 0.0F));
+        PartDefinition leftShinDef = leftThighDef.addOrReplaceChild("left_shin", CubeListBuilder.create().texOffs(20, 26).addBox(-1.0F, 0.0F, -1.0F, 2.0F, 5.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 8.0F, 0.0F, 0.6F, 0.0F, 0.0F));
+        PartDefinition leftHoofDef = leftShinDef.addOrReplaceChild("left_hoof", CubeListBuilder.create().texOffs(68, 26).addBox(-1.5F, 0.0F, -2.0F, 3.0F, 2.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 5.0F, 0.0F, -0.3F, 0.0F, 0.0F));
+        PartDefinition rightThighDef = pelvisDef.addOrReplaceChild("right_thigh", CubeListBuilder.create().texOffs(33, 14).mirror().addBox(-1.5F, 0.0F, -1.5F, 3.0F, 8.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-2.0F, 1.5F, 0.0F, -0.3F, 0.0F, 0.0F));
+        PartDefinition rightShinDef = rightThighDef.addOrReplaceChild("right_shin", CubeListBuilder.create().texOffs(28, 26).mirror().addBox(-1.0F, 0.0F, -1.0F, 2.0F, 5.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 8.0F, 0.0F, 0.6F, 0.0F, 0.0F));
+        PartDefinition rightHoofDef = rightShinDef.addOrReplaceChild("right_hoof", CubeListBuilder.create().texOffs(80, 26).mirror().addBox(-1.5F, 0.0F, -2.0F, 3.0F, 2.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 5.0F, 0.0F, -0.3F, 0.0F, 0.0F));
+        PartDefinition hideRumpDef = pelvisDef.addOrReplaceChild("hide_rump", CubeListBuilder.create().texOffs(79, 14).addBox(-4.5F, 0.0F, 0.15F, 9.0F, 8.0F, 0.0F, new CubeDeformation(0.0F)).texOffs(97, 14).addBox(-4.5F, 0.0F, 0.0F, 9.0F, 8.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -1.5F, 2.3F, 0.08F, 0.0F, 0.0F));
+        PartDefinition hideLegLDef = hideRumpDef.addOrReplaceChild("hide_leg_l", CubeListBuilder.create().texOffs(36, 26).addBox(-1.0F, 0.0F, 0.15F, 2.0F, 7.0F, 0.0F, new CubeDeformation(0.0F)).texOffs(40, 26).addBox(-1.0F, 0.0F, 0.0F, 2.0F, 7.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(3.3F, 7.5F, 0.1F, 0.05F, 0.0F, -0.06F));
+        PartDefinition hideLegRDef = hideRumpDef.addOrReplaceChild("hide_leg_r", CubeListBuilder.create().texOffs(44, 26).addBox(-1.0F, 0.0F, 0.15F, 2.0F, 7.0F, 0.0F, new CubeDeformation(0.0F)).texOffs(48, 26).addBox(-1.0F, 0.0F, 0.0F, 2.0F, 7.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-3.3F, 7.5F, 0.1F, 0.05F, 0.0F, 0.06F));
+        PartDefinition hideTailDef = hideRumpDef.addOrReplaceChild("hide_tail", CubeListBuilder.create().texOffs(77, 14).addBox(-0.5F, 0.0F, 0.0F, 1.0F, 9.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 1.0F, 0.2F, 0.35F, 0.0F, 0.0F));
+        PartDefinition bellyDef = pelvisDef.addOrReplaceChild("belly", CubeListBuilder.create().texOffs(0, 14).addBox(-3.0F, -7.0F, -2.5F, 6.0F, 7.0F, 4.5F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -1.0F, 0.0F, 0.45F, 0.0F, 0.0F));
+        PartDefinition chestDef = bellyDef.addOrReplaceChild("chest", CubeListBuilder.create().texOffs(100, 0).addBox(-3.5F, -7.0F, -3.0F, 7.0F, 7.0F, 5.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -7.0F, 0.0F, 0.35F, 0.0F, 0.0F));
+        PartDefinition neckDef = chestDef.addOrReplaceChild("neck", CubeListBuilder.create().texOffs(65, 14).addBox(-1.5F, -6.0F, -1.5F, 3.0F, 6.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -6.5F, -1.5F, -0.55F, 0.0F, 0.0F));
+        PartDefinition headDef = neckDef.addOrReplaceChild("head", CubeListBuilder.create().texOffs(45, 14).addBox(-2.5F, -5.0F, -3.0F, 5.0F, 5.0F, 5.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -6.0F, 0.0F, 0.25F, 0.0F, 0.0F));
+        PartDefinition maskDef = headDef.addOrReplaceChild("mask", CubeListBuilder.create().texOffs(72, 0).addBox(-3.5F, -2.0F, -4.0F, 7.0F, 5.0F, 7.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -4.5F, -0.3F, 0.0F, 0.0F, 0.0F));
+        PartDefinition snoutDef = maskDef.addOrReplaceChild("snout", CubeListBuilder.create().texOffs(92, 26).addBox(-2.0F, -1.5F, -2.0F, 4.0F, 3.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 1.2F, -4.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition maskEarLDef = maskDef.addOrReplaceChild("mask_ear_l", CubeListBuilder.create().texOffs(44, 33).addBox(0.0F, -1.0F, -0.5F, 3.0F, 2.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(3.5F, -1.2F, -1.0F, 0.0F, 0.0F, -0.35F));
+        PartDefinition maskEarRDef = maskDef.addOrReplaceChild("mask_ear_r", CubeListBuilder.create().texOffs(52, 33).mirror().addBox(-3.0F, -1.0F, -0.5F, 3.0F, 2.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-3.5F, -1.2F, -1.0F, 0.0F, 0.0F, 0.35F));
+        PartDefinition jawDef = headDef.addOrReplaceChild("jaw", CubeListBuilder.create().texOffs(52, 26).addBox(-2.0F, 0.0F, -4.5F, 4.0F, 2.0F, 4.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 1.5F, 0.15F, 0.0F, 0.0F));
+        PartDefinition hideNeckDef = headDef.addOrReplaceChild("hide_neck", CubeListBuilder.create().texOffs(0, 33).addBox(-2.5F, 0.0F, -0.15F, 5.0F, 5.0F, 0.0F, new CubeDeformation(0.0F)).texOffs(10, 33).addBox(-2.5F, 0.0F, 0.0F, 5.0F, 5.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 1.6F, -2.6F, 0.12F, 0.0F, 0.0F));
+        PartDefinition leftUpperArmDef = chestDef.addOrReplaceChild("left_upper_arm", CubeListBuilder.create().texOffs(0, 0).addBox(-1.0F, -1.0F, -1.0F, 2.0F, 12.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(4.2F, -6.0F, -1.0F, -0.95F, 0.0F, -0.1F));
+        PartDefinition leftForearmDef = leftUpperArmDef.addOrReplaceChild("left_forearm", CubeListBuilder.create().texOffs(56, 0).addBox(-1.0F, 0.0F, -1.0F, 2.0F, 11.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 11.0F, 0.0F, 0.15F, 0.0F, 0.0F));
+        PartDefinition leftHandDef = leftForearmDef.addOrReplaceChild("left_hand", CubeListBuilder.create().texOffs(104, 26).addBox(-1.5F, 0.0F, -1.5F, 3.0F, 2.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 11.0F, 0.0F, -0.2F, 0.0F, 0.0F));
+        PartDefinition leftFinger0Def = leftHandDef.addOrReplaceChild("left_finger_0", CubeListBuilder.create().texOffs(20, 33).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-1.0F, 2.0F, -1.0F, 0.3F, 0.0F, 0.12F));
+        PartDefinition leftFinger1Def = leftHandDef.addOrReplaceChild("left_finger_1", CubeListBuilder.create().texOffs(24, 33).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 2.0F, -1.0F, 0.3F, 0.0F, 0.0F));
+        PartDefinition leftFinger2Def = leftHandDef.addOrReplaceChild("left_finger_2", CubeListBuilder.create().texOffs(28, 33).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(1.0F, 2.0F, -1.0F, 0.3F, 0.0F, -0.12F));
+        PartDefinition rightUpperArmDef = chestDef.addOrReplaceChild("right_upper_arm", CubeListBuilder.create().texOffs(8, 0).mirror().addBox(-1.0F, -1.0F, -1.0F, 2.0F, 12.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-4.2F, -6.0F, -1.0F, -0.95F, 0.0F, 0.1F));
+        PartDefinition rightForearmDef = rightUpperArmDef.addOrReplaceChild("right_forearm", CubeListBuilder.create().texOffs(64, 0).mirror().addBox(-1.0F, 0.0F, -1.0F, 2.0F, 11.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 11.0F, 0.0F, 0.15F, 0.0F, 0.0F));
+        PartDefinition rightHandDef = rightForearmDef.addOrReplaceChild("right_hand", CubeListBuilder.create().texOffs(116, 26).mirror().addBox(-1.5F, 0.0F, -1.5F, 3.0F, 2.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 11.0F, 0.0F, -0.2F, 0.0F, 0.0F));
+        PartDefinition rightFinger0Def = rightHandDef.addOrReplaceChild("right_finger_0", CubeListBuilder.create().texOffs(32, 33).mirror().addBox(-0.5F, 0.0F, -0.5F, 1.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-1.0F, 2.0F, -1.0F, 0.3F, 0.0F, -0.12F));
+        PartDefinition rightFinger1Def = rightHandDef.addOrReplaceChild("right_finger_1", CubeListBuilder.create().texOffs(36, 33).mirror().addBox(-0.5F, 0.0F, -0.5F, 1.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 2.0F, -1.0F, 0.3F, 0.0F, 0.0F));
+        PartDefinition rightFinger2Def = rightHandDef.addOrReplaceChild("right_finger_2", CubeListBuilder.create().texOffs(40, 33).mirror().addBox(-0.5F, 0.0F, -0.5F, 1.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(1.0F, 2.0F, -1.0F, 0.3F, 0.0F, 0.12F));
+        PartDefinition hideDef = chestDef.addOrReplaceChild("hide", CubeListBuilder.create().texOffs(16, 0).addBox(-5.0F, 0.0F, 0.15F, 10.0F, 13.0F, 0.0F, new CubeDeformation(0.0F)).texOffs(36, 0).addBox(-5.0F, 0.0F, 0.0F, 10.0F, 13.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -7.2F, 2.6F, 0.05F, 0.0F, 0.0F));
+        return LayerDefinition.create(mesh, 128, 64);
     }
 
     @Override
@@ -66,18 +141,40 @@ public class CopyistModel<T extends CopyistEntity> extends HierarchicalModel<T> 
     @Override
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         root().getAllParts().forEach(ModelPart::resetPose);
-        head.yRot += netHeadYaw * Mth.DEG_TO_RAD * 0.7F;
-        neck.yRot += netHeadYaw * Mth.DEG_TO_RAD * 0.3F;
-        head.zRot += Mth.sin(ageInTicks * 0.9F) * 0.08F;
-        leftLeg.xRot += Mth.cos(limbSwing * 0.5F) * 1.3F * limbSwingAmount;
-        rightLeg.xRot += Mth.cos(limbSwing * 0.5F + Mth.PI) * 1.3F * limbSwingAmount;
-        leftArm.xRot += Mth.cos(limbSwing * 0.5F + Mth.PI) * 1.1F * limbSwingAmount;
-        rightArm.xRot += Mth.cos(limbSwing * 0.5F) * 1.1F * limbSwingAmount;
-        if (attackTime > 0) {
+        float w = limbSwing * 0.55F;
+        float a = Math.min(1.0F, limbSwingAmount);
+        head.yRot += netHeadYaw * Mth.DEG_TO_RAD * 0.6F;
+        neck.yRot += netHeadYaw * Mth.DEG_TO_RAD * 0.35F;
+        head.xRot += headPitch * Mth.DEG_TO_RAD * 0.5F;
+        // It copies animals badly: slow curious tilts broken by sudden snaps of the head.
+        float snap = Mth.sin(ageInTicks * 0.23F) > 0.93F ? 0.45F : 0.0F;
+        head.zRot += Mth.sin(ageInTicks * 0.04F) * 0.22F + snap;
+        head.yRot += Mth.sin(ageInTicks * 0.11F) > 0.95F ? -0.5F : 0.0F;
+        // Its jaw works in bursts, chewing nothing.
+        if (Mth.sin(ageInTicks * 0.05F) > 0.55F) jaw.xRot += Math.max(0.0F, Mth.sin(ageInTicks * 0.9F)) * 0.3F;
+        // A four-limbed walk: arms as forelegs, knuckles down.
+        leftThigh.xRot += Mth.cos(w) * 0.8F * a;
+        rightThigh.xRot += Mth.cos(w + Mth.PI) * 0.8F * a;
+        leftShin.xRot += Math.max(0.0F, Mth.sin(w)) * 0.6F * a;
+        rightShin.xRot += Math.max(0.0F, -Mth.sin(w)) * 0.6F * a;
+        leftUpperArm.xRot += Mth.cos(w + Mth.PI) * 0.7F * a;
+        rightUpperArm.xRot += Mth.cos(w) * 0.7F * a;
+        leftForearm.xRot -= Math.max(0.0F, Mth.cos(w)) * 0.4F * a;
+        rightForearm.xRot -= Math.max(0.0F, -Mth.cos(w)) * 0.4F * a;
+        chest.xRot += Mth.sin(ageInTicks * 0.08F) * 0.03F;
+        pelvis.y -= Mth.abs(Mth.cos(w)) * 0.6F * a;
+        hide.xRot += -Mth.abs(Mth.sin(w)) * 0.12F * a + Mth.sin(ageInTicks * 0.06F) * 0.03F;
+        hideRump.xRot += -Mth.abs(Mth.sin(w + 0.4F)) * 0.25F * a;
+        hideNeck.xRot += -Mth.abs(Mth.sin(w + 1.0F)) * 0.2F * a + Mth.sin(ageInTicks * 0.07F) * 0.04F;
+        hideLegL.xRot += Mth.sin(w + 0.7F) * 0.35F * a + Mth.sin(ageInTicks * 0.1F) * 0.05F;
+        hideLegR.xRot += Mth.sin(w + 2.2F) * 0.35F * a - Mth.sin(ageInTicks * 0.1F) * 0.05F;
+        hideTail.zRot += Mth.sin(ageInTicks * 0.13F) * 0.2F;
+        if (attackTime > 0.0F) {
             float s = Mth.sin(Mth.sqrt(attackTime) * Mth.PI);
-            leftArm.xRot -= 1.2F * s;
-            rightArm.xRot -= 1.2F * s;
-            head.xRot -= 0.5F * s;
+            leftUpperArm.xRot -= 1.3F * s;
+            rightUpperArm.xRot -= 1.1F * s;
+            jaw.xRot += 0.7F * s;
+            head.xRot -= 0.4F * s;
         }
     }
 }

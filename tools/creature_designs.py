@@ -522,3 +522,284 @@ def longhand():
         for (ModelPart f : new ModelPart[]{rightFinger0, rightFinger1, rightFinger2, rightFinger3}) f.xRot += Mth.cos(ageInTicks * 0.3F) * 0.2F;
 """
     return Model("longhand", "LonghandModel", E + "LonghandEntity", (64, 64), parts, anim)
+
+
+# ================================================================ the Copyist
+C_SKIN = (188, 166, 158)
+C_SKIN_D = (148, 124, 120)
+C_SKIN_DD = (112, 90, 92)
+C_SKIN_L = (210, 194, 186)
+C_VEIN = (140, 108, 128)
+C_TOOTH = (228, 218, 196)
+C_GUM = (150, 78, 82)
+C_HOOF = (56, 48, 44)
+C_EYE = (214, 192, 118)
+C_RAW = (166, 92, 90)
+C_FAT = (214, 196, 170)
+
+
+def _c_skin(extra=None, veins=True):
+    features = {"all": [("draw", skin(C_SKIN, C_SKIN_D, C_SKIN_L, veins=C_VEIN if veins else None, mottle=0.3))]}
+    for k, lst in (extra or {}).items():
+        features.setdefault(k, []).extend(lst)
+    return dict(base=C_SKIN, noise=4, rim=(C_SKIN_DD, 0.3), features=features)
+
+
+def patches(base, spot, count, rmin, rmax, seed):
+    """Large irregular coat patches (cow), deterministic per face."""
+    def fn(canvas, glow, u, v, w, h, r):
+        for y in range(h):
+            for x in range(w):
+                canvas.set(u + x, v + y, jitter(base, 5, r))
+        rr = __import__("random").Random(seed * 7919 + u * 31 + v)
+        for _ in range(count):
+            cx, cy = rr.uniform(0, w), rr.uniform(0, h)
+            rad = rr.uniform(rmin, rmax)
+            for y in range(h):
+                for x in range(w):
+                    d = math.hypot((x + 0.5 - cx) * 0.9, y + 0.5 - cy) + (_hash(x, y, seed) % 3) * 0.35
+                    if d < rad:
+                        canvas.set(u + x, v + y, jitter(spot, 4, r))
+    return fn
+
+
+def raw_inside(seed):
+    """The inside of a flayed skin: raw red with pale streaks of fat."""
+    def fn(canvas, glow, u, v, w, h, r):
+        for y in range(h):
+            for x in range(w):
+                c = C_RAW if _hash(x, y, seed) % 5 else C_FAT
+                canvas.set(u + x, v + y, jitter(mix(c, C_RAW, 0.3), 6, r))
+    return fn
+
+
+def hide_paint(outer, seed, hem=3):
+    """A skin worn as a cloak, as two layers a fraction of a pixel apart (coplanar faces with
+    different textures would z-fight): [coat, raw inside]. Both share the same torn edges."""
+    shape = ragged(hem, holes=2, sides=True, seed=seed)
+    return [dict(base=(200, 190, 180), noise=0, shape=shape, features={"all": [("draw", outer)]}),
+            dict(base=C_RAW, noise=0, shape=shape, features={"all": [("draw", raw_inside(seed))]})]
+
+
+def skin_layers(x, y, w, h, outward):
+    """Two boxes for a hide piece: the coat layer sits 0.15 px further out than the raw layer."""
+    dz = 0.15 if outward > 0 else -0.15
+    return [B(x, y, dz, w, h, 0), B(x, y, 0, w, h, 0)]
+
+
+def _gone():
+    """A piece this animal doesn't have: fully cut out."""
+    return dict(base=(0, 0, 0), noise=0, shape=lambda *a: 0)
+
+
+# Per-animal skins. Each entry: coat, mask face, snout, ears/horns, hanging legs, tail.
+def _cow():
+    coat = patches((226, 220, 210), (46, 38, 34), 4, 1.5, 3.2, 1)
+    return {
+        "hide": hide_paint(coat, 21),
+        "hide_rump": hide_paint(patches((226, 220, 210), (46, 38, 34), 3, 1.5, 2.8, 7), 24, 2),
+        "hide_neck": hide_paint(patches((226, 220, 210), (46, 38, 34), 1, 1.2, 2.0, 8), 25, 2),
+        "hide_leg_l": hide_paint(patches((226, 220, 210), (46, 38, 34), 1, 1.0, 2.0, 2), 22, 1),
+        "hide_leg_r": hide_paint(patches((226, 220, 210), (46, 38, 34), 1, 1.0, 2.0, 3), 23, 1),
+        "hide_tail": dict(base=(46, 38, 34), noise=5, features={"all": [("ascii", ["", "", "", "", "t", "t"], {"t": (30, 26, 24)})]}),
+        "mask": dict(base=(226, 220, 210), noise=5, features={
+            "all": [("draw", patches((226, 220, 210), (46, 38, 34), 2, 1.5, 2.5, 4))],
+            "front": [("ascii", [".......", ".HE.EH.", ".......", ".......", "......."],
+                       {"H": (20, 16, 18), "E": (C_EYE, "glow")})]}),
+        "snout": dict(base=(186, 150, 140), noise=5, features={"front": [("ascii", ["....", ".nn.", "...."], {"n": (70, 50, 50)})]}),
+        "mask_ear_l": dict(base=(214, 206, 184), noise=4, features={"all": [("ascii", ["...d", "...d"], {"d": (150, 140, 118)})]}),
+        "mask_ear_r": dict(base=(214, 206, 184), noise=4, features={"all": [("ascii", ["d...", "d..."], {"d": (150, 140, 118)})]}),
+    }
+
+
+def _pig():
+    coat = patches((230, 162, 160), (202, 128, 128), 5, 1.0, 2.0, 5)
+    return {
+        "hide": hide_paint(coat, 31),
+        "hide_rump": hide_paint(coat, 34, 2),
+        "hide_neck": hide_paint(coat, 35, 2),
+        "hide_leg_l": hide_paint(coat, 32, 1),
+        "hide_leg_r": hide_paint(coat, 33, 1),
+        "hide_tail": dict(base=(222, 150, 150), noise=4),
+        "mask": dict(base=(232, 164, 162), noise=5, features={
+            "all": [("draw", patches((232, 164, 162), (212, 140, 140), 3, 1.0, 1.8, 6))],
+            "front": [("ascii", [".......", ".HE.EH.", ".......", ".......", "......."],
+                       {"H": (40, 20, 24), "E": (C_EYE, "glow")})]}),
+        "snout": dict(base=(242, 176, 174), noise=4, features={"front": [("ascii", ["....", ".n.n", "...."], {"n": (120, 60, 66)})]}),
+        "mask_ear_l": dict(base=(220, 146, 146), noise=4),
+        "mask_ear_r": dict(base=(220, 146, 146), noise=4),
+    }
+
+
+def _sheep():
+    def wool(seed):
+        def fn(canvas, glow, u, v, w, h, r):
+            for y in range(h):
+                for x in range(w):
+                    k = _hash(x // 2, y // 2, seed) % 4
+                    c = [(228, 222, 204), (214, 206, 186), (236, 232, 218), (200, 192, 172)][k]
+                    canvas.set(u + x, v + y, jitter(c, 4, r))
+        return fn
+    return {
+        "hide": hide_paint(wool(41), 41, 2),
+        "hide_rump": hide_paint(wool(45), 45, 2),
+        "hide_neck": hide_paint(wool(46), 46, 2),
+        "hide_leg_l": hide_paint(wool(42), 42, 1),
+        "hide_leg_r": hide_paint(wool(43), 43, 1),
+        "hide_tail": dict(base=(220, 214, 196), noise=5),
+        "mask": dict(base=(224, 218, 200), noise=5, features={
+            "all": [("draw", wool(44))],
+            "front": [("ascii", [".......", ".HE.EH.", ".fffff.", ".fffff.", "......."],
+                       {"H": (30, 26, 26), "E": (C_EYE, "glow"), "f": (96, 88, 82)})]}),
+        "snout": dict(base=(92, 84, 78), noise=4, features={"front": [("ascii", ["....", ".nn.", "...."], {"n": (50, 44, 42)})]}),
+        "mask_ear_l": dict(base=(96, 88, 82), noise=4),
+        "mask_ear_r": dict(base=(96, 88, 82), noise=4),
+    }
+
+
+def _chicken():
+    def feathers(seed):
+        def fn(canvas, glow, u, v, w, h, r):
+            for y in range(h):
+                for x in range(w):
+                    c = (240, 238, 232) if (y + (x // 2)) % 3 else (206, 204, 200)
+                    canvas.set(u + x, v + y, jitter(c, 3, r))
+        return fn
+    return {
+        "hide": hide_paint(feathers(51), 51, 2),
+        "hide_rump": hide_paint(feathers(53), 53, 2),
+        "hide_neck": [dict(base=(190, 40, 36), noise=4, shape=ragged(2, seed=54)), dict(base=(150, 30, 30), noise=4, shape=ragged(2, seed=54))],
+        "hide_leg_l": dict(base=(222, 170, 64), noise=4),
+        "hide_leg_r": dict(base=(222, 170, 64), noise=4),
+        "hide_tail": dict(base=(236, 234, 228), noise=4),
+        "mask": dict(base=(240, 238, 232), noise=4, features={
+            "all": [("draw", feathers(52))],
+            "front": [("ascii", [".......", ".HE.EH.", ".......", ".......", "......."],
+                       {"H": (26, 24, 24), "E": (C_EYE, "glow")})],
+            "top": [("ascii", ["..rrr..", "..rrr..", "...r...", ".......", ".......", ".......", "......."], {"r": (190, 40, 36)})]}),
+        "snout": dict(base=(226, 164, 60), noise=4, features={"bottom": [("ascii", ["rrrr", "rrrr"], {"r": (190, 40, 36)})]}),
+        "mask_ear_l": _gone(),
+        "mask_ear_r": _gone(),
+    }
+
+
+def copyist():
+    """
+    Something that learned what an animal is by watching them and got it almost right. Its own
+    body is pale, too long and hairless; it walks on crude copies of hooves; and it wears the
+    skin of whatever it was pretending to be, the animal's head pulled down over its own like a
+    mask. Under the snout is a human mouth full of flat teeth.
+    """
+    face = _c_skin({"front": [("ascii", [".....", ".....", ".....", "ddddd", "lllll"],
+                               {"d": C_SKIN_D, "l": C_SKIN_L})]}, veins=False)
+    jaw = _c_skin({"front": [("ascii", ["TTTT", "gggg"], {"T": C_TOOTH, "g": C_GUM})],
+                   "top": [("ascii", ["gggg", "gggg", "gggg", "TTTT"], {"g": (90, 40, 44), "T": C_TOOTH})]}, veins=False)
+    chest = _c_skin({"front": [("ascii", [
+        "s.sss.s",
+        "rr.s.rr",
+        "..s.s..",
+        "rr.s.rr",
+        "..s.s..",
+        "rr.s.rr",
+        "s.sss.s",
+    ], {"s": C_SKIN, ".": (132, 108, 106), "r": C_SKIN_L})]})
+    hoof = dict(base=C_HOOF, noise=5, rim=((30, 26, 24), 0.5), features={"front": [("ascii", [".", "d"], {"d": (30, 26, 24)}, (1, 0))]})
+    finger = _c_skin({"all": [("ascii", ["", "", "n"], {"n": (96, 80, 76)})]}, veins=False)
+    cow = _cow()
+
+    def arm(side, sx):
+        m = sx < 0
+        fingers = [P(f"{side}_finger_{i}", (fx, 2, -1), rot=(0.3, 0, (i - 1) * 0.12 * -sx),
+                     boxes=[B(-0.5, 0, -0.5, 1, 3, 1, mirror=m)], paint=finger) for i, fx in enumerate((-1, 0, 1))]
+        return P(f"{side}_upper_arm", (4.2 * sx, -6, -1), rot=(-0.95, 0, -0.1 * sx),
+                 boxes=[B(-1, -1, -1, 2, 12, 2, mirror=m)], paint=_c_skin(), children=[
+                     P(f"{side}_forearm", (0, 11, 0), rot=(0.15, 0, 0), boxes=[B(-1, 0, -1, 2, 11, 2, mirror=m)], paint=_c_skin(), children=[
+                         P(f"{side}_hand", (0, 11, 0), rot=(-0.2, 0, 0), boxes=[B(-1.5, 0, -1.5, 3, 2, 3, mirror=m)],
+                           paint=_c_skin(veins=False), children=fingers)])])
+
+    def leg(side, sx):
+        m = sx < 0
+        return P(f"{side}_thigh", (2 * sx, 1.5, 0), rot=(-0.3, 0, 0), boxes=[B(-1.5, 0, -1.5, 3, 8, 3, mirror=m)], paint=_c_skin(), children=[
+            P(f"{side}_shin", (0, 8, 0), rot=(0.6, 0, 0), boxes=[B(-1, 0, -1, 2, 5, 2, mirror=m)], paint=_c_skin(), children=[
+                P(f"{side}_hoof", (0, 5, 0), rot=(-0.3, 0, 0), boxes=[B(-1.5, 0, -2, 3, 2, 3, mirror=m)], paint=hoof)])])
+
+    mask = P("mask", (0, -4.5, -0.3), boxes=[B(-3.5, -2, -4, 7, 5, 7)], paint=cow["mask"], children=[
+        P("snout", (0, 1.2, -4), boxes=[B(-2, -1.5, -2, 4, 3, 2)], paint=cow["snout"]),
+        P("mask_ear_l", (3.5, -1.2, -1), rot=(0, 0, -0.35), boxes=[B(0, -1, -0.5, 3, 2, 1)], paint=cow["mask_ear_l"]),
+        P("mask_ear_r", (-3.5, -1.2, -1), rot=(0, 0, 0.35), boxes=[B(-3, -1, -0.5, 3, 2, 1, mirror=True)], paint=cow["mask_ear_r"]),
+    ])
+    head = P("head", (0, -6, 0), rot=(0.25, 0, 0), boxes=[B(-2.5, -5, -3, 5, 5, 5)], paint=face, children=[
+        mask,
+        P("jaw", (0, 0, 1.5), rot=(0.15, 0, 0), boxes=[B(-2, 0, -4.5, 4, 2, 4)], paint=jaw),
+        # The skin of the animal's throat, hanging off the mask down its front.
+        P("hide_neck", (0, 1.6, -2.6), rot=(0.12, 0, 0), boxes=skin_layers(-2.5, 0, 5, 5, -1), paint=None),
+    ])
+    # The skin over its back, from the shoulders down past the ribs.
+    hide = P("hide", (0, -7.2, 2.6), rot=(0.05, 0, 0), boxes=skin_layers(-5, 0, 10, 13, 1), paint=None)
+    # The hindquarters of the skin hang over its rump, the animal's empty legs and tail swinging from them.
+    rump = P("hide_rump", (0, -1.5, 2.3), rot=(0.08, 0, 0), boxes=skin_layers(-4.5, 0, 9, 8, 1), paint=None, children=[
+        P("hide_leg_l", (3.3, 7.5, 0.1), rot=(0.05, 0, -0.06), boxes=skin_layers(-1, 0, 2, 7, 1), paint=None),
+        P("hide_leg_r", (-3.3, 7.5, 0.1), rot=(0.05, 0, 0.06), boxes=skin_layers(-1, 0, 2, 7, 1), paint=None),
+        P("hide_tail", (0, 1, 0.2), rot=(0.35, 0, 0), boxes=[B(-0.5, 0, 0, 1, 9, 0)], paint=cow["hide_tail"]),
+    ])
+    parts = [
+        P("pelvis", (0, 8, 1), boxes=[B(-3, -1, -2, 6, 3, 4)], paint=_c_skin(), children=[
+            leg("left", 1), leg("right", -1), rump,
+            P("belly", (0, -1, 0), rot=(0.45, 0, 0), boxes=[B(-3, -7, -2.5, 6, 7, 4.5)], paint=_c_skin(), children=[
+                P("chest", (0, -7, 0), rot=(0.35, 0, 0), boxes=[B(-3.5, -7, -3, 7, 7, 5)], paint=chest, children=[
+                    P("neck", (0, -6.5, -1.5), rot=(-0.55, 0, 0), boxes=[B(-1.5, -6, -1.5, 3, 6, 3)], paint=_c_skin(), children=[head]),
+                    arm("left", 1), arm("right", -1),
+                    hide,
+                ]),
+            ]),
+        ]),
+    ]
+    for part in (hide, rump, head):
+        for p in part.walk():
+            if p.name in cow and isinstance(cow[p.name], list):
+                for b, paint in zip(p.boxes, cow[p.name]):
+                    b.paint = paint
+    variants = {}
+    for name, fn in (("pig", _pig), ("sheep", _sheep), ("chicken", _chicken)):
+        variants[name] = fn()
+        for k, v in variants[name].items():
+            # single-box parts that became two-layer pieces take the same paint on both layers
+            if k.startswith("hide_leg") and not isinstance(v, list):
+                variants[name][k] = [v, v]
+    anim = """        float w = limbSwing * 0.55F;
+        float a = Math.min(1.0F, limbSwingAmount);
+        head.yRot += netHeadYaw * Mth.DEG_TO_RAD * 0.6F;
+        neck.yRot += netHeadYaw * Mth.DEG_TO_RAD * 0.35F;
+        head.xRot += headPitch * Mth.DEG_TO_RAD * 0.5F;
+        // It copies animals badly: slow curious tilts broken by sudden snaps of the head.
+        float snap = Mth.sin(ageInTicks * 0.23F) > 0.93F ? 0.45F : 0.0F;
+        head.zRot += Mth.sin(ageInTicks * 0.04F) * 0.22F + snap;
+        head.yRot += Mth.sin(ageInTicks * 0.11F) > 0.95F ? -0.5F : 0.0F;
+        // Its jaw works in bursts, chewing nothing.
+        if (Mth.sin(ageInTicks * 0.05F) > 0.55F) jaw.xRot += Math.max(0.0F, Mth.sin(ageInTicks * 0.9F)) * 0.3F;
+        // A four-limbed walk: arms as forelegs, knuckles down.
+        leftThigh.xRot += Mth.cos(w) * 0.8F * a;
+        rightThigh.xRot += Mth.cos(w + Mth.PI) * 0.8F * a;
+        leftShin.xRot += Math.max(0.0F, Mth.sin(w)) * 0.6F * a;
+        rightShin.xRot += Math.max(0.0F, -Mth.sin(w)) * 0.6F * a;
+        leftUpperArm.xRot += Mth.cos(w + Mth.PI) * 0.7F * a;
+        rightUpperArm.xRot += Mth.cos(w) * 0.7F * a;
+        leftForearm.xRot -= Math.max(0.0F, Mth.cos(w)) * 0.4F * a;
+        rightForearm.xRot -= Math.max(0.0F, -Mth.cos(w)) * 0.4F * a;
+        chest.xRot += Mth.sin(ageInTicks * 0.08F) * 0.03F;
+        pelvis.y -= Mth.abs(Mth.cos(w)) * 0.6F * a;
+        hide.xRot += -Mth.abs(Mth.sin(w)) * 0.12F * a + Mth.sin(ageInTicks * 0.06F) * 0.03F;
+        hideRump.xRot += -Mth.abs(Mth.sin(w + 0.4F)) * 0.25F * a;
+        hideNeck.xRot += -Mth.abs(Mth.sin(w + 1.0F)) * 0.2F * a + Mth.sin(ageInTicks * 0.07F) * 0.04F;
+        hideLegL.xRot += Mth.sin(w + 0.7F) * 0.35F * a + Mth.sin(ageInTicks * 0.1F) * 0.05F;
+        hideLegR.xRot += Mth.sin(w + 2.2F) * 0.35F * a - Mth.sin(ageInTicks * 0.1F) * 0.05F;
+        hideTail.zRot += Mth.sin(ageInTicks * 0.13F) * 0.2F;
+        if (attackTime > 0.0F) {
+            float s = Mth.sin(Mth.sqrt(attackTime) * Mth.PI);
+            leftUpperArm.xRot -= 1.3F * s;
+            rightUpperArm.xRot -= 1.1F * s;
+            jaw.xRot += 0.7F * s;
+            head.xRot -= 0.4F * s;
+        }
+"""
+    return Model("copyist", "CopyistModel", E + "CopyistEntity", (128, 64), parts, anim, variants=variants)

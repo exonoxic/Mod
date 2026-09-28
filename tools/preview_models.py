@@ -254,9 +254,12 @@ BG = (58, 58, 64)
 
 
 def preview(name, pose_name=None, angles=(0, 35, 90, 160)):
+    name, _, variant = name.partition(":")
     m = model_by_name(name)
     gm.pack(m)
-    canvas, glow = gm.paint_canvases(m)
+    canvas, glow = gm.paint_canvases(m, variant or None)
+    if variant:
+        name = name + "_" + variant
     tex, gtex = canvas.px, glow.px
     pose = POSES.get(name, {}).get(pose_name, {}) if pose_name else {}
     tiles = []

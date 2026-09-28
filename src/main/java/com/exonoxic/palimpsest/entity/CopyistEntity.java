@@ -52,9 +52,14 @@ public class CopyistEntity extends Monster {
     public static final int REVEALED = 4;
 
     private static final EntityDataAccessor<Integer> DISGUISE = SynchedEntityData.defineId(CopyistEntity.class, EntityDataSerializers.INT);
+    /** Which animal's skin it wears once revealed: the last thing it pretended to be. */
+    private static final EntityDataAccessor<Integer> HIDE = SynchedEntityData.defineId(CopyistEntity.class, EntityDataSerializers.INT);
     private int revealIn = -1;
     private int huntTicks;
     private int idleHunt;
+
+    private static final float REVEAL_TICKS = 16.0F;
+    private int revealedAt = Integer.MIN_VALUE;
 
     public CopyistEntity(EntityType<? extends Monster> type, Level level) {
         super(type, level);
@@ -100,10 +105,21 @@ public class CopyistEntity extends Monster {
         return getDisguise() == REVEALED;
     }
 
+    public int getHide() {
+        return entityData.get(HIDE);
+    }
+
+    /** Client only: 0..1 through the unfolding that follows a reveal; 1 when there is none. */
+    public float revealProgress(float partialTick) {
+        if (revealedAt == Integer.MIN_VALUE) return 1.0F;
+        return Math.min(1.0F, (tickCount - revealedAt + partialTick) / REVEAL_TICKS);
+    }
+
     @Override
     public @Nullable SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType reason,
                                                   @Nullable SpawnGroupData data, @Nullable CompoundTag tag) {
         if (reason == MobSpawnType.NATURAL || reason == MobSpawnType.CHUNK_GENERATION) entityData.set(DISGUISE, random.nextInt(4));
+        else if (isRevealed()) entityData.set(HIDE, random.nextInt(4));
         return super.finalizeSpawn(level, difficulty, reason, data, tag);
     }
 
@@ -111,11 +127,17 @@ public class CopyistEntity extends Monster {
     protected void defineSynchedData() {
         super.defineSynchedData();
         entityData.define(DISGUISE, REVEALED);
+        entityData.define(HIDE, COW);
     }
 
     @Override
     public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
-        if (DISGUISE.equals(key)) refreshDimensions();
+        if (DISGUISE.equals(key)) {
+            refreshDimensions();
+            if (!level().isClientSide && !isRevealed()) entityData.set(HIDE, getDisguise());
+            // Only animate reveals that happen while we watch, not ones loaded with the chunk.
+            if (level().isClientSide && isRevealed() && tickCount > 1) revealedAt = tickCount;
+        }
         super.onSyncedDataUpdated(key);
     }
 
@@ -263,11 +285,13 @@ public class CopyistEntity extends Monster {
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         tag.putInt("Disguise", getDisguise());
+        tag.putInt("Hide", getHide());
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         entityData.set(DISGUISE, tag.contains("Disguise") ? tag.getInt("Disguise") : REVEALED);
+        if (tag.contains("Hide")) entityData.set(HIDE, Math.floorMod(tag.getInt("Hide"), 4));
     }
 }
