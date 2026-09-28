@@ -202,6 +202,22 @@ POSES = {
         "walk": {"left_thigh": (0.8, 0, 0), "right_thigh": (-0.8, 0, 0), "right_shin": (1.0, 0, 0),
                  "left_upper_arm": (-0.4, 0, 0), "right_upper_arm": (0.4, 0, 0), "shroud_back": (-0.2, 0, 0)},
     },
+    "longhand": {
+        "freeze0": {"left_upper_arm": (-1.35, 0, 0), "right_upper_arm": (-1.2, 0, 0), "left_forearm": (-0.25, 0, 0),
+                    "right_forearm": (-0.35, 0, 0), "left_finger_0": (0, 0, 0.5), "left_finger_3": (0, 0, -0.5),
+                    "right_finger_0": (0, 0, -0.5), "right_finger_3": (0, 0, 0.5), "head": (0, 0, 0.45), "neck": (-0.2, 0, 0)},
+        "freeze1": {"left_thigh": (-0.75, 0, 0), "left_shin": (0.9, 0, 0), "right_thigh": (0.35, 0, 0), "right_shin": (0.25, 0, 0),
+                    "ribcage": (0.28, 0, 0), "left_upper_arm": (0.55, 0, 0), "right_upper_arm": (-0.85, 0, 0),
+                    "right_forearm": (-0.4, 0, 0), "head": (0, 0.45, 0)},
+        "freeze2": {"neck": (0, 0, 0.55), "head": (-0.15, 0, 1.3), "right_forearm": (-0.25, 0, 0)},
+        "freeze3": {"pelvis": (0, 0, 0, 0, 9, 0), "left_thigh": (-1.25, 0, 0), "right_thigh": (-1.1, 0, 0), "left_shin": (2.1, 0, 0),
+                    "right_shin": (1.95, 0, 0), "left_point": (-0.9, 0, 0), "right_point": (-0.85, 0, 0), "abdomen": (0.45, 0, 0),
+                    "ribcage": (0.5, 0, 0), "neck": (-0.6, 0, 0), "head": (-0.55, 0, 0), "left_upper_arm": (-0.75, 0, 0),
+                    "right_upper_arm": (-0.7, 0, 0), "left_forearm": (0.3, 0, 0), "right_forearm": (0.25, 0, 0)},
+        "freeze4": {"left_upper_arm": (-2.85, 0, -0.25), "right_upper_arm": (-2.75, 0, 0.25), "left_forearm": (-0.7, 0, 0),
+                    "right_forearm": (-0.75, 0, 0), "left_finger_1": (0.9, 0, 0), "left_finger_2": (0.8, 0, 0),
+                    "right_finger_1": (0.85, 0, 0), "right_finger_2": (0.9, 0, 0), "head": (0.55, 0, 0)},
+    },
 }
 
 
@@ -220,7 +236,7 @@ def closeup(name, pose_name=None, angles=(0, 30, 160), frac=0.42):
     pose = POSES.get(name, {}).get(pose_name, {}) if pose_name else {}
     tiles = []
     for a in angles:
-        im, _ = render(m, canvas.px, glow.px, pose, a, size=900)
+        im, _ = render(m, canvas.px, glow.px, pose, a, size=900, bg=BG)
         box = (225, 20, 675, int(20 + 900 * frac))
         tiles.append(im.crop(box))
     sheet = Image.new("RGB", (sum(t.width for t in tiles), tiles[0].height))
@@ -234,6 +250,9 @@ def closeup(name, pose_name=None, angles=(0, 30, 160), frac=0.42):
     return path
 
 
+BG = (58, 58, 64)
+
+
 def preview(name, pose_name=None, angles=(0, 35, 90, 160)):
     m = model_by_name(name)
     gm.pack(m)
@@ -242,7 +261,7 @@ def preview(name, pose_name=None, angles=(0, 35, 90, 160)):
     pose = POSES.get(name, {}).get(pose_name, {}) if pose_name else {}
     tiles = []
     for a in angles:
-        im, scale = render(m, tex, gtex, pose, a)
+        im, scale = render(m, tex, gtex, pose, a, bg=BG)
         ruler(im, scale, None)
         ImageDraw.Draw(im).text((8, 6), f"{name} {pose_name or 'rest'} {a}deg", fill=(255, 255, 255))
         tiles.append(im)
@@ -263,6 +282,11 @@ def main(argv):
     names, pose, close = [], None, False
     i = 0
     while i < len(argv):
+        if argv[i] == "--light":
+            global BG
+            BG = (176, 178, 186)
+            i += 1
+            continue
         if argv[i] == "--close":
             close = True
             i += 1

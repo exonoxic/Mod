@@ -911,7 +911,7 @@ def rasure():
 
 import creature_designs  # noqa: E402
 
-MODELS = [creature_designs.knocker(), longhand(), smudge(), redacted(), rubricator(), copyist(), inkhound(), pale_stag(), quillcrow(),
+MODELS = [creature_designs.knocker(), creature_designs.longhand(), smudge(), redacted(), rubricator(), copyist(), inkhound(), pale_stag(), quillcrow(),
           foxing_moth(), blotling(), margin_crawler(), erratum_legs(), palehand(), bookbinder(), rasure()]
 
 

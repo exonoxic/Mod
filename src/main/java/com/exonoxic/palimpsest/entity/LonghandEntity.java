@@ -7,6 +7,7 @@ import com.exonoxic.palimpsest.entity.apparition.Apparitions;
 import com.exonoxic.palimpsest.entity.projectile.InkBombEntity;
 import com.exonoxic.palimpsest.horror.Spots;
 import com.exonoxic.palimpsest.registry.ModEntities;
+import com.exonoxic.palimpsest.registry.ModParticles;
 import com.exonoxic.palimpsest.registry.ModSounds;
 import com.exonoxic.palimpsest.util.Advancements;
 import com.exonoxic.palimpsest.world.WardHelper;
@@ -158,7 +159,18 @@ public class LonghandEntity extends Monster implements Apparition {
     @Override
     public void tick() {
         super.tick();
-        if (level().isClientSide) return;
+        if (level().isClientSide) {
+            // Unwatched, it leaves ink behind it: drips from the fingertips and the nib.
+            if (!isFrozen() && random.nextInt(4) == 0) {
+                double yawRad = Math.toRadians(yBodyRot);
+                double side = (random.nextBoolean() ? 1 : -1) * 0.2D;
+                level().addParticle(ModParticles.INK_DRIP.get(),
+                        getX() + Math.cos(yawRad) * side + (random.nextDouble() - 0.5D) * 0.1D,
+                        getY() + 0.35D + random.nextDouble() * 0.3D,
+                        getZ() + Math.sin(yawRad) * side + (random.nextDouble() - 0.5D) * 0.1D, 0.0D, 0.0D, 0.0D);
+            }
+            return;
+        }
         boolean observed = isObserved();
         if (observed != isFrozen()) {
             entityData.set(FROZEN, observed);

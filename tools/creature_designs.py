@@ -82,17 +82,27 @@ def ragged(bottom=3, holes=0, sides=False, seed=0):
     return shape
 
 
-def gloss(base, sheen, streak_col=None):
-    """Wet ink: near-black with a thin highlight streak down one edge."""
+def gloss(base, sheen, streak_col=None, script=0.0):
+    """Wet ink: near-black with a soft highlight running down one edge, optionally with faint
+    handwriting showing in the surface."""
     def fn(canvas, glow, u, v, w, h, r):
         for y in range(h):
             for x in range(w):
-                c = jitter(base, 3, r)
-                canvas.set(u + x, v + y, c)
-        col = streak_col if streak_col is not None else max(0, w - 2)
-        for y in range(h):
-            if _hash(y, u) % 5 != 0:
-                canvas.blend(u + col, v + y, sheen, 0.55)
+                canvas.set(u + x, v + y, jitter(base, 3, r))
+        if w >= 2:
+            col = streak_col if streak_col is not None else w - 2
+            for y in range(h):
+                canvas.blend(u + col, v + y, sheen, 0.4 if _hash(y, u) % 4 else 0.22)
+        else:
+            for y in range(1, h, 4):
+                canvas.blend(u, v + y, sheen, 0.22)
+        if script and w >= 3 and h >= 3:
+            for y in range(1, h - 1, 2):
+                x = 0
+                while x < w:
+                    if _hash(u + x, v + y, 3) % 100 < script * 100:
+                        canvas.blend(u + x, v + y, sheen, 0.3)
+                    x += 1
     return fn
 
 
@@ -339,3 +349,176 @@ def knocker():
         }}
 """
     return Model("knocker", "KnockerModel", E + "KnockerEntity", (128, 64), parts, anim)
+
+
+# ================================================================ the Longhand
+L_INK = (14, 13, 18)
+L_INK_2 = (24, 22, 30)
+L_SHEEN = (84, 90, 132)
+L_STEEL = (64, 66, 76)
+L_STEEL_L = (128, 132, 146)
+L_STEEL_D = (38, 38, 46)
+L_EYE = (236, 234, 226)
+L_SLIT = (120, 118, 116)
+
+
+def _l_ink(ragged_edges=True, sheen_col=None, seed=0, script=0.0):
+    d = dict(base=L_INK, noise=3, shade=True, features={"all": [("draw", gloss(L_INK, L_SHEEN, sheen_col, script))]})
+    if ragged_edges:
+        # Dry-brush edges: the stroke's sides break up into bristle marks.
+        def shape(name, x, y, w, h):
+            if name in ("front", "back") and w >= 3 and (x == 0 or x == w - 1) and _hash(y, x, seed) % 5 == 0:
+                return 0
+            return 255
+        d["shape"] = shape
+    return d
+
+
+def _l_steel(extra=None):
+    feats = {"all": [("draw", lambda cv, gl, u, v, w, h, r: [
+        cv.set(u + x, v + y, jitter(mix(L_STEEL, L_STEEL_L, 0.35) if (x + y) % 5 == 0 else L_STEEL, 4, r))
+        for y in range(h) for x in range(w)])]}
+    for k, lst in (extra or {}).items():
+        feats.setdefault(k, []).extend(lst)
+    return dict(base=L_STEEL, noise=4, rim=(L_STEEL_D, 0.5), features=feats)
+
+
+def tail(seed, stage):
+    """A tapering run of ink: ragged, dripping edges that thin out further down."""
+    def shape(name, x, y, w, h):
+        if name not in ("front", "back"):
+            return 255
+        k = _hash(y, seed)
+        if (x == 0 or x == w - 1) and k % (4 - stage) == 0:
+            return 0
+        if stage == 2 and y >= h - 1 - (_hash(x, seed) % 4):
+            return 0
+        return 255
+    return dict(base=L_INK, noise=2, shape=shape,
+                features={"all": [("draw", gloss(L_INK, L_SHEEN, 1, script=0.35 if stage == 0 else 0.0))]})
+
+
+def longhand():
+    """
+    One long pen-stroke of wet ink, taller than a door. Its head is a steel nib, point up;
+    the breather hole is its only eye. It moves only when nobody is looking, and it is always
+    in a slightly different pose when you look back.
+    """
+    body = _l_ink(seed=1)
+    limb = _l_ink(ragged_edges=False)
+    nib_base = _l_steel({"front": [("ascii", ["kkkk", "k..k", "iiii"], {"k": L_STEEL_L, ".": L_STEEL, "i": L_INK})],
+                         "back": [("ascii", ["kkkk", "....", "iiii"], {"k": L_STEEL_L, ".": L_STEEL, "i": L_INK})]})
+    nib_mid = _l_steel({"front": [("ascii", ["iEi", "kSk", "kSk"], {"E": (L_EYE, "glow"), "S": (L_SLIT, "glow"),
+                                                                   "k": L_STEEL_L, "i": L_STEEL_D})],
+                        "back": [("ascii", ["k.k", "...", ".k."], {"k": L_STEEL_L, ".": L_STEEL})]})
+    nib_upper = dict(base=L_INK, noise=2, features={
+        "all": [("draw", gloss(L_INK, L_SHEEN))],
+        "front": [("ascii", ["S.", "S.", "S."], {"S": ((70, 68, 70), "glow")}, (0, 0))]})
+    nib_tip = dict(base=L_INK, noise=2, features={"all": [("draw", gloss(L_INK, L_SHEEN, 0))]})
+    drip = dict(base=L_INK, noise=2, features={"all": [("ascii", [".", ".", "s"], {"s": L_SHEEN})]})
+    finger = _l_ink(ragged_edges=False)
+
+    def arm(side, sx):
+        s = side
+        m = sx < 0
+        fingers = []
+        for i, (fx, spread) in enumerate(((-1.0, -0.22), (-0.35, -0.07), (0.35, 0.07), (1.0, 0.22))):
+            ln = 8 if i in (1, 2) else 7
+            fingers.append(P(f"{s}_finger_{i}", (fx * 0.8, 2, 0), rot=(0.18, 0, spread * -sx),
+                             boxes=[B(-0.5, 0, -0.5, 1, ln, 1, mirror=m)], paint=finger,
+                             children=[P(f"{s}_drip_{i}", (0, ln, 0), boxes=[B(-0.5, 0, -0.5, 1, 2, 0)], paint=drip)] if i == 2 else []))
+        return P(f"{s}_upper_arm", (2.8 * sx, -7.6, 0), rot=(0.02, 0, -0.06 * sx),
+                 boxes=[B(-0.5, -0.5, -0.5, 1, 13, 1, mirror=m)], paint=limb, children=[
+                     P(f"{s}_forearm", (0, 12.5, 0), rot=(-0.08, 0, 0.03 * sx),
+                       boxes=[B(-0.5, 0, -0.5, 1, 13, 1, mirror=m)], paint=limb, children=[
+                           P(f"{s}_hand", (0, 13, 0), boxes=[B(-1, 0, -0.5, 2, 2, 1, mirror=m)], paint=limb,
+                             children=fingers)])])
+
+    legs = []
+    for side, sx in (("left", 1), ("right", -1)):
+        m = sx < 0
+        legs.append(P(f"{side}_thigh", (1.1 * sx, 0.5, 0), rot=(-0.04, 0, 0.03 * sx),
+                      boxes=[B(-1, 0, -1, 2, 13, 2, mirror=m)], paint=_l_ink(seed=2 + (sx > 0)), children=[
+                          P(f"{side}_shin", (0, 13, 0), rot=(0.1, 0, 0), boxes=[B(-0.5, 0, -0.5, 1, 10, 1, mirror=m)], paint=limb,
+                            children=[P(f"{side}_point", (0, 10, 0), rot=(-0.06, 0, 0),
+                                        boxes=[B(-0.5, 0, -1, 1, 2, 2, mirror=m)], paint=_l_steel())])]))
+    head = P("head", (0, -5, 0), rot=(-0.08, 0, 0.18), boxes=[B(-2, -3, -1.5, 4, 3, 3)], paint=nib_base, children=[
+        P("nib_mid", (0, -3, 0), boxes=[B(-1.5, -3, -1, 3, 3, 2)], paint=nib_mid),
+        P("nib_upper", (0, -6, 0), boxes=[B(-1, -3, -0.5, 2, 3, 1)], paint=nib_upper),
+        P("nib_tip", (0, -9, 0), rot=(0.05, 0, 0), boxes=[B(-0.5, -2, -0.5, 1, 2, 1)], paint=nib_tip),
+        P("chin_drip", (0.8, 0, -1.2), boxes=[B(-0.5, 0, 0, 1, 3, 0)], paint=drip),
+    ])
+    parts = [
+        P("pelvis", (0, -1.5, 0), boxes=[B(-1.5, -1, -1, 3, 2, 2)], paint=body, children=legs + [
+            P("abdomen", (0, -1, 0), rot=(0.02, 0, -0.07), boxes=[B(-1, -7, -1, 2, 7, 2)], paint=body, children=[
+                P("ribcage", (0, -7, 0), rot=(0.08, 0, 0.1), boxes=[B(-2.5, -8, -1.5, 5, 8, 3)], paint=_l_ink(seed=4, script=0.45), children=[
+                    # The tail of the stroke: ink running off its shoulders almost to the floor.
+                    P("tail_0", (0, -7.8, 1.6), rot=(0.14, 0, 0), boxes=[B(-4, 0, 0, 8, 12, 0)], paint=tail(5, 0), children=[
+                        P("tail_1", (0, 12, 0), rot=(0.02, 0, 0), boxes=[B(-2.5, 0, 0, 5, 12, 0)], paint=tail(6, 1), children=[
+                            P("tail_2", (0, 12, 0), rot=(-0.04, 0, 0), boxes=[B(-1, 0, 0, 2, 11, 0)], paint=tail(7, 2))])]),
+                    P("neck", (0, -8, 0), rot=(0.12, 0, -0.04), boxes=[B(-0.5, -5, -0.5, 1, 5, 1)], paint=limb, children=[head]),
+                    arm("left", 1), arm("right", -1),
+                    P("rib_drip", (-1.5, 0, -1.6), boxes=[B(-0.5, 0, 0, 1, 3, 0)], paint=drip),
+                ]),
+            ]),
+        ]),
+    ]
+    anim = """        if (entity.isFrozen()) {
+            // Caught. Every time you look back it is holding a different, wrong pose.
+            switch (entity.getPoseIndex()) {
+                case 0 -> {
+                    leftUpperArm.xRot -= 1.35F; rightUpperArm.xRot -= 1.2F;
+                    leftForearm.xRot -= 0.25F; rightForearm.xRot -= 0.35F;
+                    leftFinger0.zRot += 0.5F; leftFinger3.zRot -= 0.5F; rightFinger0.zRot -= 0.5F; rightFinger3.zRot += 0.5F;
+                    head.zRot += 0.45F; neck.xRot -= 0.2F;
+                }
+                case 1 -> {
+                    leftThigh.xRot -= 0.75F; leftShin.xRot += 0.9F; rightThigh.xRot += 0.35F; rightShin.xRot += 0.25F;
+                    ribcage.xRot += 0.28F; leftUpperArm.xRot += 0.55F; rightUpperArm.xRot -= 0.85F; rightForearm.xRot -= 0.4F;
+                    head.yRot += 0.45F;
+                }
+                case 2 -> {
+                    // The neck snapped sideways; the eye still on you.
+                    neck.zRot += 0.55F; head.zRot += 1.3F; head.xRot -= 0.15F;
+                    leftUpperArm.zRot -= 0.05F; rightUpperArm.zRot += 0.05F;
+                    rightForearm.xRot -= 0.25F;
+                }
+                case 3 -> {
+                    pelvis.y += 9.0F;
+                    leftThigh.xRot -= 1.25F; rightThigh.xRot -= 1.1F; leftShin.xRot += 2.1F; rightShin.xRot += 1.95F;
+                    leftPoint.xRot -= 0.9F; rightPoint.xRot -= 0.85F;
+                    abdomen.xRot += 0.45F; ribcage.xRot += 0.5F; neck.xRot -= 0.6F; head.xRot -= 0.55F;
+                    leftUpperArm.xRot -= 0.75F; rightUpperArm.xRot -= 0.7F; leftForearm.xRot += 0.3F; rightForearm.xRot += 0.25F;
+                }
+                default -> {
+                    leftUpperArm.xRot -= 2.85F; rightUpperArm.xRot -= 2.75F;
+                    leftUpperArm.zRot -= 0.25F; rightUpperArm.zRot += 0.25F;
+                    leftForearm.xRot -= 0.7F; rightForearm.xRot -= 0.75F;
+                    leftFinger1.xRot += 0.9F; leftFinger2.xRot += 0.8F; rightFinger1.xRot += 0.85F; rightFinger2.xRot += 0.9F;
+                    head.xRot += 0.55F;
+                }
+            }
+            return;
+        }
+        head.yRot += netHeadYaw * Mth.DEG_TO_RAD;
+        head.xRot += headPitch * Mth.DEG_TO_RAD;
+        // Unwatched, it moves in fast, broken strokes.
+        float jerk = Mth.sin(ageInTicks * 2.3F) * 0.06F;
+        float w = limbSwing * 0.5F;
+        leftThigh.xRot += Mth.cos(w) * 1.0F * limbSwingAmount;
+        rightThigh.xRot += Mth.cos(w + Mth.PI) * 1.0F * limbSwingAmount;
+        leftShin.xRot += Math.max(0.0F, Mth.sin(w)) * 1.2F * limbSwingAmount;
+        rightShin.xRot += Math.max(0.0F, -Mth.sin(w)) * 1.2F * limbSwingAmount;
+        leftUpperArm.xRot += Mth.cos(w + Mth.PI) * 0.7F * limbSwingAmount + jerk;
+        rightUpperArm.xRot += Mth.cos(w) * 0.7F * limbSwingAmount - jerk;
+        leftForearm.xRot -= Math.max(0.0F, Mth.cos(w)) * 0.5F * limbSwingAmount;
+        rightForearm.xRot -= Math.max(0.0F, -Mth.cos(w)) * 0.5F * limbSwingAmount;
+        ribcage.zRot += jerk * 0.5F;
+        head.zRot += Mth.sin(ageInTicks * 0.9F) * 0.05F;
+        tail0.xRot += -Mth.abs(Mth.sin(w)) * 0.35F * limbSwingAmount;
+        tail1.xRot += Mth.abs(Mth.sin(w + 0.5F)) * 0.25F * limbSwingAmount;
+        tail2.xRot += Mth.sin(ageInTicks * 0.2F) * 0.08F;
+        for (ModelPart f : new ModelPart[]{leftFinger0, leftFinger1, leftFinger2, leftFinger3}) f.xRot += Mth.sin(ageInTicks * 0.3F) * 0.2F;
+        for (ModelPart f : new ModelPart[]{rightFinger0, rightFinger1, rightFinger2, rightFinger3}) f.xRot += Mth.cos(ageInTicks * 0.3F) * 0.2F;
+"""
+    return Model("longhand", "LonghandModel", E + "LonghandEntity", (64, 64), parts, anim)
