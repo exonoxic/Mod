@@ -33,6 +33,8 @@ public class QuillcrowModel<T extends QuillcrowEntity> extends HierarchicalModel
     protected final ModelPart rightQuill0;
     protected final ModelPart rightQuill1;
     protected final ModelPart rightQuill2;
+    protected final ModelPart stuckQuill0;
+    protected final ModelPart stuckQuill1;
     protected final ModelPart tail;
     protected final ModelPart tailQuill0;
     protected final ModelPart tailQuill1;
@@ -59,6 +61,8 @@ public class QuillcrowModel<T extends QuillcrowEntity> extends HierarchicalModel
         this.rightQuill0 = this.rightWing.getChild("right_quill_0");
         this.rightQuill1 = this.rightWing.getChild("right_quill_1");
         this.rightQuill2 = this.rightWing.getChild("right_quill_2");
+        this.stuckQuill0 = this.body.getChild("stuck_quill_0");
+        this.stuckQuill1 = this.body.getChild("stuck_quill_1");
         this.tail = this.body.getChild("tail");
         this.tailQuill0 = this.tail.getChild("tail_quill_0");
         this.tailQuill1 = this.tail.getChild("tail_quill_1");
@@ -74,7 +78,7 @@ public class QuillcrowModel<T extends QuillcrowEntity> extends HierarchicalModel
         PartDefinition root = mesh.getRoot();
         PartDefinition bodyDef = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 0).addBox(-2.0F, -2.0F, -3.0F, 4.0F, 4.0F, 7.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 19.5F, 0.0F, 0.3F, 0.0F, 0.0F));
         PartDefinition headDef = bodyDef.addOrReplaceChild("head", CubeListBuilder.create().texOffs(16, 23).addBox(-1.5F, -3.0F, -2.5F, 3.0F, 3.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -2.0F, -3.0F, -0.3F, 0.0F, 0.0F));
-        PartDefinition ruffDef = headDef.addOrReplaceChild("ruff", CubeListBuilder.create().texOffs(28, 23).addBox(-2.0F, -1.5F, -1.5F, 4.0F, 2.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.5F, 0.0F, 0.0F, 0.0F));
+        PartDefinition ruffDef = headDef.addOrReplaceChild("ruff", CubeListBuilder.create().texOffs(32, 23).addBox(-2.0F, -1.5F, -1.5F, 4.0F, 2.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.5F, 0.0F, 0.0F, 0.0F));
         PartDefinition beakDef = headDef.addOrReplaceChild("beak", CubeListBuilder.create().texOffs(0, 29).addBox(-1.0F, -0.5F, -2.0F, 2.0F, 1.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -1.5F, -2.5F, 0.0F, 0.0F, 0.0F));
         PartDefinition beakTipDef = beakDef.addOrReplaceChild("beak_tip", CubeListBuilder.create().texOffs(8, 29).addBox(-0.5F, -0.5F, -2.0F, 1.0F, 1.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, -2.0F, 0.0F, 0.0F, 0.0F));
         PartDefinition beakDripDef = beakTipDef.addOrReplaceChild("beak_drip", CubeListBuilder.create().texOffs(14, 29).addBox(0.0F, 0.0F, -0.5F, 0.0F, 2.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.5F, -1.6F, 0.0F, 0.0F, 0.0F));
@@ -86,13 +90,15 @@ public class QuillcrowModel<T extends QuillcrowEntity> extends HierarchicalModel
         PartDefinition rightQuill0Def = rightWingDef.addOrReplaceChild("right_quill_0", CubeListBuilder.create().texOffs(48, 11).addBox(-1.0F, 0.0F, 0.0F, 2.0F, 0.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-0.5F, 1.0F, 6.5F, -0.3F, 0.0F, 0.0F));
         PartDefinition rightQuill1Def = rightWingDef.addOrReplaceChild("right_quill_1", CubeListBuilder.create().texOffs(0, 17).addBox(-1.0F, 0.0F, 0.0F, 2.0F, 0.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-0.5F, 2.0F, 6.5F, -0.42F, -0.08F, 0.0F));
         PartDefinition rightQuill2Def = rightWingDef.addOrReplaceChild("right_quill_2", CubeListBuilder.create().texOffs(16, 17).addBox(-1.0F, 0.0F, 0.0F, 2.0F, 0.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-0.5F, 3.0F, 6.5F, -0.54F, -0.16F, 0.0F));
-        PartDefinition tailDef = bodyDef.addOrReplaceChild("tail", CubeListBuilder.create().texOffs(50, 23).addBox(-1.5F, 0.0F, 0.0F, 3.0F, 1.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -1.0F, 4.0F, -0.55F, 0.0F, 0.0F));
+        PartDefinition stuckQuill0Def = bodyDef.addOrReplaceChild("stuck_quill_0", CubeListBuilder.create().texOffs(54, 0).addBox(-0.5F, -6.0F, -0.5F, 1.0F, 6.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.8F, -2.0F, 0.5F, -0.6F, 0.3F, 0.35F));
+        PartDefinition stuckQuill1Def = bodyDef.addOrReplaceChild("stuck_quill_1", CubeListBuilder.create().texOffs(28, 23).addBox(-0.5F, -5.0F, -0.5F, 1.0F, 5.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-1.0F, -2.0F, 2.0F, -0.9F, -0.2F, -0.4F));
+        PartDefinition tailDef = bodyDef.addOrReplaceChild("tail", CubeListBuilder.create().texOffs(54, 23).addBox(-1.5F, 0.0F, 0.0F, 3.0F, 1.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -1.0F, 4.0F, -0.55F, 0.0F, 0.0F));
         PartDefinition tailQuill0Def = tailDef.addOrReplaceChild("tail_quill_0", CubeListBuilder.create().texOffs(32, 17).addBox(-1.0F, 0.0F, 0.0F, 2.0F, 0.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-1.0F, 0.5F, 1.5F, 0.0F, -0.25F, 0.0F));
         PartDefinition tailQuill1Def = tailDef.addOrReplaceChild("tail_quill_1", CubeListBuilder.create().texOffs(48, 17).addBox(-1.0F, 0.0F, 0.0F, 2.0F, 0.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.5F, 1.5F, 0.0F, 0.0F, 0.0F));
         PartDefinition tailQuill2Def = tailDef.addOrReplaceChild("tail_quill_2", CubeListBuilder.create().texOffs(0, 23).addBox(-1.0F, 0.0F, 0.0F, 2.0F, 0.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(1.0F, 0.5F, 1.5F, 0.0F, 0.25F, 0.0F));
-        PartDefinition leftLegDef = root.addOrReplaceChild("left_leg", CubeListBuilder.create().texOffs(42, 23).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(1.0F, 21.0F, 0.5F, 0.0F, 0.0F, 0.0F));
+        PartDefinition leftLegDef = root.addOrReplaceChild("left_leg", CubeListBuilder.create().texOffs(46, 23).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(1.0F, 21.0F, 0.5F, 0.0F, 0.0F, 0.0F));
         PartDefinition leftTalonsDef = leftLegDef.addOrReplaceChild("left_talons", CubeListBuilder.create().texOffs(16, 29).addBox(-1.0F, 0.0F, -1.5F, 2.0F, 0.5F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 2.5F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition rightLegDef = root.addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(46, 23).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-1.0F, 21.0F, 0.5F, 0.0F, 0.0F, 0.0F));
+        PartDefinition rightLegDef = root.addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(50, 23).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-1.0F, 21.0F, 0.5F, 0.0F, 0.0F, 0.0F));
         PartDefinition rightTalonsDef = rightLegDef.addOrReplaceChild("right_talons", CubeListBuilder.create().texOffs(24, 29).addBox(-1.0F, 0.0F, -1.5F, 2.0F, 0.5F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 2.5F, 0.0F, 0.0F, 0.0F, 0.0F));
         return LayerDefinition.create(mesh, 64, 32);
     }

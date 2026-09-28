@@ -62,7 +62,7 @@ public final class ClientSetup {
         event.registerEntityRenderer(ModEntities.MARGIN_CRAWLER.get(), ctx -> new SimpleMobRenderer<>(ctx,
                 new MarginCrawlerModel<>(ctx.bakeLayer(MarginCrawlerModel.LAYER)), "margin_crawler", 0.35F, 1.0F).withGlow());
         event.registerEntityRenderer(ModEntities.QUILLCROW.get(), ctx -> new SimpleMobRenderer<>(ctx,
-                new QuillcrowModel<>(ctx.bakeLayer(QuillcrowModel.LAYER)), "quillcrow", 0.25F, 1.0F).withGlow());
+                new QuillcrowModel<>(ctx.bakeLayer(QuillcrowModel.LAYER)), "quillcrow", 0.25F, 1.3F).withGlow());
         event.registerEntityRenderer(ModEntities.PALE_STAG.get(), ctx -> new SimpleMobRenderer<>(ctx,
                 new PaleStagModel<>(ctx.bakeLayer(PaleStagModel.LAYER)), "pale_stag", 0.6F, 1.0F));
         event.registerEntityRenderer(ModEntities.INKHOUND.get(), ctx -> new SimpleMobRenderer<>(ctx,

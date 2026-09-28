@@ -28,6 +28,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * A figure censored by black bars. Its blade does not cut so much as delete: the wound will
@@ -78,6 +79,13 @@ public class RedactedEntity extends Monster {
     }
 
     @Override
+    public void setTarget(@Nullable LivingEntity target) {
+        // It has noticed you: the bars twitch and something under them squeals like a marker.
+        if (target instanceof Player && getTarget() == null && !level().isClientSide) playSound(ModSounds.REDACTED_STATIC.get(), 1.2F, 1.0F);
+        super.setTarget(target);
+    }
+
+    @Override
     public boolean hurt(DamageSource source, float amount) {
         boolean hurt = super.hurt(source, amount);
         if (hurt && isAlive() && !level().isClientSide && random.nextFloat() < 0.25F) {
@@ -88,6 +96,8 @@ public class RedactedEntity extends Monster {
                 double ox = getX(), oy = getY(), oz = getZ();
                 if (randomTeleport(x, y, z, true)) {
                     ((ServerLevel) level()).sendParticles(ModParticles.ERASURE_MOTE.get(), ox, oy + 1, oz, 20, 0.3, 0.8, 0.3, 0.02);
+                    level().playSound(null, ox, oy, oz, ModSounds.REDACTED_STATIC.get(), getSoundSource(), 1.0F, 1.0F);
+                    playSound(ModSounds.REDACTED_STATIC.get(), 1.0F, 0.8F);
                     break;
                 }
             }

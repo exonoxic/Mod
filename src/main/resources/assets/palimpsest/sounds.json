@@ -760,6 +760,62 @@
     ],
     "subtitle": "subtitles.palimpsest.entity.knocker.tap"
   },
+  "entity.inkhound.hiss": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_inkhound_hiss_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_inkhound_hiss_1"
+      },
+      {
+        "name": "palimpsest:entity/entity_inkhound_hiss_2"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.inkhound.hiss"
+  },
+  "entity.redacted.static": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_redacted_static_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_redacted_static_1"
+      },
+      {
+        "name": "palimpsest:entity/entity_redacted_static_2"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.redacted.static"
+  },
+  "entity.margin_crawler.patter": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_margin_crawler_patter_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_margin_crawler_patter_1"
+      },
+      {
+        "name": "palimpsest:entity/entity_margin_crawler_patter_2"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.margin_crawler.patter"
+  },
+  "entity.pale_stag.rustle": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_pale_stag_rustle_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_pale_stag_rustle_1"
+      },
+      {
+        "name": "palimpsest:entity/entity_pale_stag_rustle_2"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.pale_stag.rustle"
+  },
   "entity.knocker.scratch": {
     "sounds": [
       {

@@ -100,4 +100,9 @@ public class MarginCrawlerEntity extends Monster {
     protected SoundEvent getDeathSound() {
         return ModSounds.CRAWLER_DEATH.get();
     }
+
+    @Override
+    protected void playStepSound(BlockPos pos, BlockState state) {
+        playSound(ModSounds.CRAWLER_PATTER.get(), 0.35F, 0.9F + random.nextFloat() * 0.25F);
+    }
 }

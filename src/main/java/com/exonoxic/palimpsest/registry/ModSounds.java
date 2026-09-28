@@ -96,6 +96,10 @@ public final class ModSounds {
     public static final RegistryObject<SoundEvent> SQUEEZE_DRAG = reg("entity.squeeze.drag");
     public static final RegistryObject<SoundEvent> KNOCKER_TAP = reg("entity.knocker.tap");
     public static final RegistryObject<SoundEvent> KNOCKER_SCRATCH = reg("entity.knocker.scratch");
+    public static final RegistryObject<SoundEvent> INKHOUND_HISS = reg("entity.inkhound.hiss");
+    public static final RegistryObject<SoundEvent> REDACTED_STATIC = reg("entity.redacted.static");
+    public static final RegistryObject<SoundEvent> CRAWLER_PATTER = reg("entity.margin_crawler.patter");
+    public static final RegistryObject<SoundEvent> STAG_RUSTLE = reg("entity.pale_stag.rustle");
     public static final RegistryObject<SoundEvent> REDACTED_AMBIENT = reg("entity.redacted.ambient");
     public static final RegistryObject<SoundEvent> REDACTED_ATTACK = reg("entity.redacted.attack");
     public static final RegistryObject<SoundEvent> REDACTED_HURT = reg("entity.redacted.hurt");

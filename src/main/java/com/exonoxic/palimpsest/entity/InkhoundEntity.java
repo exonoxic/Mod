@@ -80,8 +80,11 @@ public class InkhoundEntity extends Monster {
         else heardCount = 1;
         heardFrom = noise.source();
         lastHeard = now;
+        // The first thing it hears, the jaw drops open a little and it goes still to listen.
+        if (heardCount == 1 && getTarget() == null) playSound(ModSounds.INKHOUND_HISS.get(), 0.5F, 1.1F + random.nextFloat() * 0.2F);
         Player p = level().getPlayerByUUID(noise.source());
         if (p != null && !p.isCreative() && !p.isSpectator() && (heardCount >= 3 || p.distanceToSqr(this) < 36.0D)) {
+            if (getTarget() != p) playSound(ModSounds.INKHOUND_HISS.get(), 1.2F, 0.85F + random.nextFloat() * 0.15F);
             setTarget(p);
             playSound(ModSounds.INKHOUND_HOWL.get(), 1.6F, 0.9F + random.nextFloat() * 0.2F);
         }

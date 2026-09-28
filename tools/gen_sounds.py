@@ -564,6 +564,47 @@ def r_squeeze_drag(i):
     return norm(place(dur, parts)) * 0.85
 
 
+def r_inkhound_hiss(i):
+    """A dried-ink jaw dropping open: a wet, cracking hiss and the click of little teeth."""
+    rng = R("inkhoundhiss", i)
+    dur = 1.1
+    n = int(dur * SR)
+    hiss = scrape(rng, dur, 2200, 9000) * env_adsr(n, 0.05, 0.2, 0.7, 0.5)
+    parts = [(0.0, hiss), (0.0, scrape(rng, dur, 300, 1200) * env_exp(n, 0.25) * 0.5)]
+    for _ in range(int(rng.integers(3, 6))):
+        parts.append((rng.uniform(0.0, 0.5), pitch(knock(rng, 0.2), rng.uniform(2.4, 3.2)) * 0.35))
+    return norm(place(dur, parts)) * 0.8
+
+
+def r_redacted_static(i):
+    """A marker squealing across paper, then broken static, as if a recording had been cut."""
+    rng = R("redactedstatic", i)
+    dur = 1.0
+    squeal = scrape(rng, 0.35, 3000, 6500) * env_adsr(int(0.35 * SR), 0.02, 0.1, 0.8, 0.1)
+    static = noise(0.6, rng) * 0.5
+    gate = np.repeat(rng.random(int(0.6 * SR) // 400 + 1) > 0.45, 400)[:len(static)]
+    return norm(place(dur, [(0.0, squeal), (0.3, static * gate)])) * 0.75
+
+
+def r_crawler_patter(i):
+    """Little hands going along the floor, one after another, too many of them."""
+    rng = R("crawlerpatter", i)
+    parts, t0 = [], 0.0
+    for _ in range(int(rng.integers(5, 9))):
+        parts.append((t0, pitch(knock(rng, 0.12), rng.uniform(3.0, 4.0)) * rng.uniform(0.3, 0.6)))
+        t0 += rng.uniform(0.03, 0.07)
+    return norm(place(t0 + 0.15, parts)) * 0.5
+
+
+def r_stag_rustle(i):
+    """A step of something made of paper: a dry rustle and a soft crease."""
+    rng = R("stagrustle", i)
+    dur = 0.45
+    n = int(dur * SR)
+    x = scrape(rng, dur, 900, 6000) * env_exp(n, 0.12)
+    return norm(x + scrape(rng, dur, 200, 700) * env_exp(n, 0.05) * 0.4) * 0.55
+
+
 def r_knocker_tap(i):
     """Knuckles testing a wall, lightly, somewhere else each time."""
     rng = R("knockertap", i)
@@ -876,6 +917,10 @@ CATALOGUE = {
     "entity.squeeze.crack": ("entity", [r_squeeze_crack] * 3, {}),
     "entity.squeeze.drag": ("entity", [r_squeeze_drag] * 3, {}),
     "entity.knocker.tap": ("entity", [r_knocker_tap] * 3, {}),
+    "entity.inkhound.hiss": ("entity", [r_inkhound_hiss] * 3, {}),
+    "entity.redacted.static": ("entity", [r_redacted_static] * 3, {}),
+    "entity.margin_crawler.patter": ("entity", [r_crawler_patter] * 3, {}),
+    "entity.pale_stag.rustle": ("entity", [r_stag_rustle] * 3, {}),
     "entity.knocker.scratch": ("entity", [r_knocker_scratch] * 2, {}),
     "entity.redacted.ambient": ("entity", [r_redacted("ambient")] * 2, {}),
     "entity.redacted.attack": ("entity", [r_redacted("attack")] * 2, {}),

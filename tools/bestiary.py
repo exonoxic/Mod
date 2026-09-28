@@ -852,8 +852,8 @@ def quillcrow():
     body = dict(base=Q_BLACK, noise=3, features={"all": [("draw", feathers(Q_BLACK, Q_SHEEN, (10, 10, 14), 1))]})
     head = dict(base=Q_BLACK, noise=3, features={
         "all": [("draw", feathers(Q_BLACK, Q_SHEEN, (10, 10, 14), 2))],
-        "right": [("ascii", ["", ".E.", ""], {"E": (Q_EYE, "glow")})],
-        "left": [("ascii", ["", ".E.", ""], {"E": (Q_EYE, "glow")})],
+        "right": [("ascii", ["E.e", ".E.", "e.."], {"E": (Q_EYE, "glow"), "e": ((190, 196, 188), "glow")})],
+        "left": [("ascii", ["e.E", ".E.", "..e"], {"E": (Q_EYE, "glow"), "e": ((190, 196, 188), "glow")})],
         "front": [("ascii", ["", "e.e", ""], {"e": (Q_EYE, "glow")})]})
     nib = dict(base=Q_STEEL, noise=3, shade=True, features={
         "top": [("ascii", ["L.L", "LoL", "L.L"], {"L": Q_STEEL_L, "o": Q_STEEL_D, ".": Q_STEEL_D})],
@@ -867,6 +867,8 @@ def quillcrow():
         "bottom": [("draw", fill((30, 29, 36), 3)), ("ascii", ["s", "s", "s", "s", "s", "s"], {"s": Q_SHAFT})]})
     leg = dict(base=(46, 42, 40), noise=3)
     drip = dict(base=(10, 10, 14), noise=2, shade=False, shape=drip_shape(9))
+    nib_shaft = dict(base=Q_SHAFT, noise=3, features={"all": [("ascii", ["k", "k", "", "", "", ""], {"k": (12, 12, 16)})],
+                                                      "bottom": [("draw", fill((12, 12, 16), 2))]})
 
     def wing_part(side, sx):
         m = sx < 0
@@ -882,6 +884,9 @@ def quillcrow():
                     P("beak_tip", (0, 0, -2), boxes=[B(-0.5, -0.5, -2, 1, 1, 2)], paint=nib_tip, children=[
                         P("beak_drip", (0, 0.5, -1.6), boxes=[B(0, 0, -0.5, 0, 2, 1)], paint=drip)])])]),
             wing_part("left", 1), wing_part("right", -1),
+            # Old pens driven into its back, as if someone had tried.
+            P("stuck_quill_0", (0.8, -2, 0.5), rot=(-0.6, 0.3, 0.35), boxes=[B(-0.5, -6, -0.5, 1, 6, 1)], paint=nib_shaft),
+            P("stuck_quill_1", (-1, -2, 2), rot=(-0.9, -0.2, -0.4), boxes=[B(-0.5, -5, -0.5, 1, 5, 1)], paint=nib_shaft),
             P("tail", (0, -1, 4), rot=(-0.55, 0, 0), boxes=[B(-1.5, 0, 0, 3, 1, 2)], paint=body, children=[
                 P(f"tail_quill_{i}", (i - 1, 0.5, 1.5), rot=(0, (i - 1) * 0.25, 0), boxes=[B(-1, 0, 0, 2, 0, 6)], paint=quill)
                 for i in range(3)]),
@@ -1039,13 +1044,17 @@ def blotling():
         P("puddle", (0, 24, 0), boxes=[B(-7, -0.05, -7, 14, 0, 14)], paint=dict(base=B_INK, noise=2, shape=splat,
           features={"all": [("draw", wet(B_INK, B_SHEEN, B_HI, 3))]})),
         P("core", (0, 24, 0), boxes=[B(-5, -2, -5, 10, 2, 10, paint=ink), B(-4, -6.5, -4, 8, 5, 8, paint=front),
-                                     B(-3.5, -9, -2.5, 5, 3, 5, paint=ink), B(0.5, -10, -0.5, 3, 2, 3, paint=ink),
+                                     B(-3.5, -8.5, -3, 6, 2, 6, paint=ink),
                                      B(3.5, -4, -2, 2, 3, 4, paint=ink), B(-5.5, -3.5, 0, 2, 2, 3, paint=ink)], children=[
             eye("eye_0", (-2, -4.2, -4.3), 2),
             eye("eye_1", (1.6, -5, -4.2), 1),
-            eye("eye_2", (-0.5, -7.5, -3.3), 3),
+            eye("eye_2", (-0.5, -6.8, -4.3), 3),
             eye("eye_3", (3.8, -2.6, -2.2), 1),
-            P("maw", (0, -2.3, -4), boxes=[B(-3.5, 0, -0.2, 7, 1.5, 1)], paint=dict(base=(60, 10, 14), noise=2, features={
+            # Frozen splashes of ink rise off it, as if something had just been dropped into it.
+            P("splash_0", (-2, -8.5, -1), rot=(-0.3, 0, -0.5), boxes=[B(-0.5, -4, -0.5, 1, 4, 1)], paint=ink),
+            P("splash_1", (1.5, -8.5, 0), rot=(0.25, 0, 0.45), boxes=[B(-0.5, -5, -0.5, 1, 5, 1)], paint=ink),
+            P("splash_2", (0, -8.5, 2), rot=(0.6, 0, -0.1), boxes=[B(-0.5, -3, -0.5, 1, 3, 1)], paint=ink),
+            P("maw", (0, -2.3, -4), boxes=[B(-4, 0, -0.2, 8, 2, 1)], paint=dict(base=(60, 10, 14), noise=2, features={
                 "top": [("draw", teeth_row(B_TOOTH, (60, 10, 14)))], "front": [("draw", wet(B_INK, B_SHEEN, B_HI, 4))]})),
         ]),
     ]
@@ -1060,7 +1069,9 @@ def blotling():
         eye2Lid.y += Mth.sin(ageInTicks * 0.09F + 4.0F) > 0.9F ? 3.0F : 0.0F;
         eye3Lid.y += Mth.sin(ageInTicks * 0.15F + 1.0F) > 0.93F ? 1.0F : 0.0F;
         // The mouth works, slowly, all the time.
-        maw.y += Math.max(0.0F, Mth.sin(ageInTicks * 0.08F)) * 1.2F;
+        maw.y += Math.max(0.0F, Mth.sin(ageInTicks * 0.08F)) * 2.0F;
+        splash0.zRot += Mth.sin(ageInTicks * 0.15F) * 0.08F;
+        splash1.zRot -= Mth.sin(ageInTicks * 0.13F + 1.0F) * 0.08F;
 """
     return Model("blotling", "BlotlingModel", E + "BlotlingEntity", (128, 64), parts, anim, translucent=True)
 

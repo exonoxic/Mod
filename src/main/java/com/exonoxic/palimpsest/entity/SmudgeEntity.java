@@ -165,7 +165,8 @@ public class SmudgeEntity extends PathfinderMob implements Apparition {
 
     @Override
     public int getAmbientSoundInterval() {
-        return 240;
+        // Once it is following you, the mouth that was left behind hardly stops.
+        return isFixated() ? 70 : 240;
     }
 
     @Override
