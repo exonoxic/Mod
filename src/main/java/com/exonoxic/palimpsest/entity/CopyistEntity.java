@@ -3,6 +3,7 @@ package com.exonoxic.palimpsest.entity;
 import com.exonoxic.palimpsest.bleed.BleedManager;
 import com.exonoxic.palimpsest.entity.ai.Squeeze;
 import com.exonoxic.palimpsest.entity.ai.SqueezeNavigation;
+import com.exonoxic.palimpsest.entity.ai.Squeezer;
 import com.exonoxic.palimpsest.registry.ModEntities;
 import com.exonoxic.palimpsest.registry.ModParticles;
 import com.exonoxic.palimpsest.registry.ModSounds;
@@ -48,7 +49,7 @@ import org.jetbrains.annotations.Nullable;
  * shadow, it never grazes, it always faces you, and its voice is a little too low. Get close,
  * feed it, hurt it or look at it through a Reading Lens and it stops pretending.
  */
-public class CopyistEntity extends Monster {
+public class CopyistEntity extends Monster implements Squeezer {
     public static final int COW = 0;
     public static final int PIG = 1;
     public static final int SHEEP = 2;
@@ -76,6 +77,16 @@ public class CopyistEntity extends Monster {
     @Override
     protected PathNavigation createNavigation(Level level) {
         return new SqueezeNavigation(this, level);
+    }
+
+    @Override
+    public Squeeze squeeze() {
+        return squeeze;
+    }
+
+    @Override
+    public float getBbHeight() {
+        return squeeze == null ? super.getBbHeight() : squeeze.reportedHeight(super.getBbHeight());
     }
 
     @Override

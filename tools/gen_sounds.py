@@ -536,6 +536,53 @@ def r_longhand(kind):
     return fn
 
 
+def r_squeeze_crack(i):
+    """Joints giving way one after another as something folds itself small."""
+    rng = R("squeezecrack", i)
+    parts, t0 = [], 0.0
+    for _ in range(int(rng.integers(4, 8))):
+        d = 0.06
+        n = int(d * SR)
+        c = noise(d, rng) * env_exp(n, 0.004)
+        c = bandpass(c, 900, 5200) + resonator(c, rng.uniform(220, 600), 6) * 0.9
+        parts.append((t0, norm(c) * rng.uniform(0.45, 1.0)))
+        t0 += rng.uniform(0.05, 0.17)
+    parts.append((0.08, lowpass(creak(rng, 0.7, 20, 60), 1400) * 0.35))
+    return norm(place(t0 + 0.8, parts))
+
+
+def r_squeeze_drag(i):
+    """A body pulled across the floor on its elbows, a nail catching now and then."""
+    rng = R("squeezedrag", i)
+    dur = 1.35
+    n = int(dur * SR)
+    body = scrape(rng, dur, 140, 1500) * np.sin(np.linspace(0, np.pi, n)) ** 1.5
+    thud = lowpass(noise(0.3, rng), 240) * env_exp(int(0.3 * SR), 0.06)
+    parts = [(0.0, body), (0.02, thud * 0.8)]
+    for _ in range(int(rng.integers(1, 3))):
+        parts.append((rng.uniform(0.15, 0.95), scrape(rng, 0.16, 2500, 7000) * 0.3))
+    return norm(place(dur, parts)) * 0.85
+
+
+def r_knocker_tap(i):
+    """Knuckles testing a wall, lightly, somewhere else each time."""
+    rng = R("knockertap", i)
+    parts, t0 = [], 0.0
+    for _ in range(int(rng.integers(2, 4))):
+        parts.append((t0, pitch(knock(rng, 0.55), rng.uniform(1.2, 1.45))))
+        t0 += rng.uniform(0.16, 0.3)
+    return norm(distance(place(t0 + 0.4, parts), rng, 0.5))
+
+
+def r_knocker_scratch(i):
+    """Fingernails drawn slowly along the outside of the wall."""
+    rng = R("knockerscratch", i)
+    dur = 2.2
+    n = int(dur * SR)
+    x = scrape(rng, dur, 1800, 7500) * env_adsr(n, 0.3, 0.3, 0.8, 0.6)
+    return norm(distance(x + scrape(rng, dur, 500, 1600) * 0.4, rng, 0.6)) * 0.8
+
+
 def r_redacted(kind):
     def fn(i):
         rng = R("red" + kind, i)
@@ -826,6 +873,10 @@ CATALOGUE = {
     "entity.longhand.move": ("entity", [r_longhand("move")] * 2, {}),
     "entity.longhand.hurt": ("entity", [r_longhand("hurt")], {}),
     "entity.longhand.death": ("entity", [r_longhand("death")], {}),
+    "entity.squeeze.crack": ("entity", [r_squeeze_crack] * 3, {}),
+    "entity.squeeze.drag": ("entity", [r_squeeze_drag] * 3, {}),
+    "entity.knocker.tap": ("entity", [r_knocker_tap] * 3, {}),
+    "entity.knocker.scratch": ("entity", [r_knocker_scratch] * 2, {}),
     "entity.redacted.ambient": ("entity", [r_redacted("ambient")] * 2, {}),
     "entity.redacted.attack": ("entity", [r_redacted("attack")] * 2, {}),
     "entity.redacted.hurt": ("entity", [r_redacted("hurt")], {}),
@@ -847,7 +898,8 @@ CATALOGUE = {
 }
 
 
-def main():
+def main(only=()):
+    """Writes every clip, or with --only just those events' clips; sounds.json always lists everything."""
     manifest = {}
     total = 0
     for event, (folder, fns, extra) in CATALOGUE.items():
@@ -856,9 +908,9 @@ def main():
         for i, fn in enumerate(fns):
             base = event.replace(".", "_")
             name = f"{folder}/{base}_{i}" if len(fns) > 1 else f"{folder}/{base}"
-            clip = fn(i)
-            save(os.path.join(SND, name + ".ogg"), clip, stereo=stereo)
-            total += 1
+            if not only or event in only:
+                save(os.path.join(SND, name + ".ogg"), fn(i), stereo=stereo)
+                total += 1
             entry = {"name": f"palimpsest:{name}"}
             if extra.get("stream"):
                 entry["stream"] = True
@@ -873,4 +925,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    args = sys.argv[1:]
+    main(args[1:] if args[:1] == ["--only"] else ())

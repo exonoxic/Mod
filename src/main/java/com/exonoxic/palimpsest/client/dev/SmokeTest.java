@@ -582,6 +582,34 @@ public final class SmokeTest {
             step(20, () -> {});
             shot("squeeze_" + name + "_doorway");
         }
+
+        // A Knocker that got no answer, bent down at the window to look in: by day, then as it would
+        // really be met, at night without night vision.
+        step(20, () -> {
+            clearMannequins();
+            server((srv, p) -> {
+                ServerLevel level = p.serverLevel();
+                clear(level, -12, Y - 1, -12, 12, Y + 12, 24, Blocks.SMOOTH_STONE.defaultBlockState());
+                fill(level, -4, Y, 3, 5, Y + 3, 3, Blocks.SPRUCE_PLANKS.defaultBlockState());
+                fill(level, 0, Y + 1, 3, 1, Y + 2, 3, Blocks.GLASS.defaultBlockState());
+                view(p, 1.0, Y + 1.62, 0.4, 1.0, Y + 1.6, 3.0);
+            });
+            mannequin(ModEntities.KNOCKER.get(), 1.0, Y, 4.8, 180F, k -> {
+                data(k, "STATE", KnockerEntity.SEARCHING);
+                k.setPose(Squeeze.STOOP);
+            });
+        });
+        step(20, () -> {});
+        shot("knocker_window");
+        step(60, () -> server((srv, p) -> {
+            command(srv, p, "time set 18000");
+            p.removeEffect(MobEffects.NIGHT_VISION);
+        }));
+        shot("knocker_window_night");
+        step(10, () -> server((srv, p) -> {
+            command(srv, p, "time set 6000");
+            p.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 1_000_000, 0, false, false));
+        }));
         step(10, SmokeTest::clearMannequins);
     }
 

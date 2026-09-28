@@ -1,5 +1,6 @@
 package com.exonoxic.palimpsest.entity.ai;
 
+import com.exonoxic.palimpsest.registry.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EntityDimensions;
@@ -21,6 +22,12 @@ import java.util.List;
  * shrinks at once but only straightens up again once there has been room for a moment. The pose
  * is synced like any other (stooping is {@link Pose#CROUCHING}, crawling {@link Pose#SWIMMING});
  * the client eases the model between postures.
+ * <p>
+ * It is heard before it is seen: joints crack as it folds itself down, and while it crawls the
+ * floor carries the sound of something dragging itself along on its elbows.
+ * <p>
+ * Routes are planned at its crawling height ({@link SqueezeNavigation}), so any gap a block high
+ * counts as a way through, including one it has to climb up into.
  */
 public final class Squeeze {
     public static final Pose STOOP = Pose.CROUCHING;
@@ -35,6 +42,9 @@ public final class Squeeze {
     private final EntityDimensions stoop;
     private final EntityDimensions crawl;
     private int roomy;
+    private int nextSound;
+    private boolean planning;
+    private Pose held = Pose.STANDING;
     private float crawlO;
     private float crawlNow;
     private float stoopO;
@@ -82,9 +92,11 @@ public final class Squeeze {
         // Dying, sleeping and the like are not ours to change.
         if (!free || rank(current) < 0) return;
         Pose fits = tallestFitting();
+        if (rank(held) > rank(fits)) fits = held;
         if (rank(fits) > rank(current)) {
             roomy = 0;
             mob.setPose(fits);
+            mob.playSound(ModSounds.SQUEEZE_CRACK.get(), fits == CRAWL ? 1.0F : 0.7F, 0.85F + mob.getRandom().nextFloat() * 0.3F);
         } else if (rank(fits) < rank(current)) {
             if (++roomy >= ROOMY_TICKS) {
                 roomy = 0;
@@ -93,6 +105,42 @@ public final class Squeeze {
         } else {
             roomy = 0;
         }
+        sounds();
+    }
+
+    private void sounds() {
+        Pose pose = mob.getPose();
+        Vec3 motion = mob.getDeltaMovement();
+        boolean moving = motion.x * motion.x + motion.z * motion.z > 4.0E-4D;
+        if (--nextSound > 0 || !moving || (pose != CRAWL && pose != STOOP)) return;
+        float pitch = 0.85F + mob.getRandom().nextFloat() * 0.25F;
+        if (pose == CRAWL) {
+            mob.playSound(ModSounds.SQUEEZE_DRAG.get(), 0.9F, pitch);
+            nextSound = 18 + mob.getRandom().nextInt(10);
+        } else {
+            // Bent double, its joints complain at every other step.
+            mob.playSound(ModSounds.SQUEEZE_CRACK.get(), 0.3F, pitch * 0.9F);
+            nextSound = 30 + mob.getRandom().nextInt(25);
+        }
+    }
+
+    /** Keeps it at least this low whether or not it needs to be (a Knocker bending to look in at a window). */
+    public void holdAtLeast(Pose pose) {
+        held = rank(pose) < 0 ? Pose.STANDING : pose;
+    }
+
+    /** Set by {@link SqueezeNavigation} while it works out a route. */
+    void planning(boolean on) {
+        planning = on;
+    }
+
+    /**
+     * The height the creature reports: its crawling height while a route is being planned (so the
+     * pathfinder lets it climb up into a one-high gap even from under a low ceiling), otherwise
+     * its real one. Entities return this from {@code getBbHeight()}.
+     */
+    public float reportedHeight(float height) {
+        return planning ? Math.min(height, crawl.height) : height;
     }
 
     /** 0..1 how far into the crawl the model is (client). */

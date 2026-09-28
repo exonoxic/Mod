@@ -128,6 +128,8 @@ SUBTITLES = {
     "entity.knocker.death": "Knocker dies", "entity.copyist.reveal": "Something tears open", "entity.copyist.ambient": "An animal calls, wrongly",
     "entity.copyist.hurt": "Copyist hurts", "entity.copyist.death": "Copyist dies", "entity.longhand.ambient": "Wood creaks",
     "entity.longhand.move": "Something moved", "entity.longhand.hurt": "Longhand splinters", "entity.longhand.death": "Longhand falls",
+    "entity.squeeze.crack": "Bones crack", "entity.squeeze.drag": "Something drags itself",
+    "entity.knocker.tap": "Knuckles test the wall", "entity.knocker.scratch": "Nails drag along the wall",
     "entity.redacted.ambient": "Static hisses", "entity.redacted.attack": "Redacted slashes", "entity.redacted.hurt": "Redacted hurts",
     "entity.redacted.death": "Redacted is deleted", "entity.erratum.ambient": "Stone grinds", "entity.erratum.reveal": "Erratum shrieks",
     "entity.palehand.ambient": "Something vast moves", "entity.fair_copy.vanish": "Someone leaves",

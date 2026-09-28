@@ -108,7 +108,10 @@ Every push to GitHub is built and tested by [`.github/workflows/build.yml`](.git
   follow you, or only come when called, or only exist while you aren't looking. Most are
   harmless once you understand them. A few are not. The tall ones are not stopped by low
   ceilings or small holes either: they bend double under anything two blocks high and crawl
-  flat through a gap one block high.
+  flat through a gap one block high, and you hear them first: joints cracking as they fold,
+  something dragging itself along. A Knocker nobody answers goes quiet and looks for another
+  way in, tapping on the walls wherever you stand and stooping at the windows; seal the gaps
+  and light the house with lanterns, which it cannot put out.
 - **The Undertext.** A dimension with six biomes, its own sky, fog, light, ambience and music.
   It isn't a darker Nether: it's the earlier draft of the world, and it's built on the same
   kinds of places you already know.

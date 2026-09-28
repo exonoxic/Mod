@@ -3,6 +3,7 @@ package com.exonoxic.palimpsest.entity;
 import com.exonoxic.palimpsest.bleed.BleedManager;
 import com.exonoxic.palimpsest.entity.ai.Squeeze;
 import com.exonoxic.palimpsest.entity.ai.SqueezeNavigation;
+import com.exonoxic.palimpsest.entity.ai.Squeezer;
 import com.exonoxic.palimpsest.entity.apparition.Apparition;
 import com.exonoxic.palimpsest.entity.apparition.ApparitionState;
 import com.exonoxic.palimpsest.entity.apparition.Apparitions;
@@ -58,7 +59,7 @@ import java.util.UUID;
  * <p>Watchers stand far away and are gone when approached (or stared at for too long).
  * Hunters come for one player and are the reason to carry a lantern.</p>
  */
-public class LonghandEntity extends Monster implements Apparition {
+public class LonghandEntity extends Monster implements Apparition, Squeezer {
     public static final int WATCHER = 0;
     public static final int HUNTER = 1;
     public static final int POSES = 5;
@@ -82,6 +83,16 @@ public class LonghandEntity extends Monster implements Apparition {
     @Override
     protected PathNavigation createNavigation(Level level) {
         return new SqueezeNavigation(this, level);
+    }
+
+    @Override
+    public Squeeze squeeze() {
+        return squeeze;
+    }
+
+    @Override
+    public float getBbHeight() {
+        return squeeze == null ? super.getBbHeight() : squeeze.reportedHeight(super.getBbHeight());
     }
 
     @Override

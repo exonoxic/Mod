@@ -1,12 +1,15 @@
 package com.exonoxic.palimpsest.entity;
 
 import com.exonoxic.palimpsest.bleed.BleedManager;
+import com.exonoxic.palimpsest.config.CommonConfig;
 import com.exonoxic.palimpsest.entity.ai.Squeeze;
 import com.exonoxic.palimpsest.entity.ai.SqueezeNavigation;
+import com.exonoxic.palimpsest.entity.ai.Squeezer;
 import com.exonoxic.palimpsest.entity.apparition.Apparition;
 import com.exonoxic.palimpsest.entity.apparition.ApparitionState;
 import com.exonoxic.palimpsest.entity.apparition.Apparitions;
 import com.exonoxic.palimpsest.horror.Spots;
+import com.exonoxic.palimpsest.horror.WorldAlterations;
 import com.exonoxic.palimpsest.registry.ModEntities;
 import com.exonoxic.palimpsest.registry.ModSounds;
 import com.exonoxic.palimpsest.util.Advancements;
@@ -22,6 +25,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
@@ -34,11 +38,17 @@ import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.block.AbstractGlassBlock;
 import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.IronBarsBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
@@ -49,13 +59,28 @@ import java.util.UUID;
  * It comes to doors at night and knocks. Three times, then a wait, then three again. It will
  * not open a door. It does not need to: sooner or later, somebody inside does.
  *
- * <p>States: KNOCKING at a door; LUNGE after the door opens (or someone steps outside);
- * LEAVING at dawn, when warded off, or when it gives up.</p>
+ * <p>If nobody answers, it stops knocking. That is worse. It goes round the house, tapping on the
+ * wall nearest wherever you are standing, dragging its nails along the outside, bending down at
+ * the windows to look in. And every so often it tries the house again: any gap a block high will
+ * do. If it finds one it comes through without a sound but the dragging, putting out the torches
+ * as it passes, and only lets you see it when it is close. If it finds nothing, it goes back to
+ * the door and knocks again, harder. Lanterns and the like, which it cannot put out, keep it
+ * off, as do wards and the dawn.</p>
+ *
+ * <p>States: KNOCKING at a door; SEARCHING for another way in; LUNGE after the door opens (or
+ * someone steps outside, or it gets in); LEAVING at dawn, when warded off, or when it gives up.</p>
  */
-public class KnockerEntity extends Monster implements Apparition {
+public class KnockerEntity extends Monster implements Apparition, Squeezer {
     public static final int KNOCKING = 1;
     public static final int LUNGE = 2;
     public static final int LEAVING = 3;
+    public static final int SEARCHING = 4;
+    /** Rounds of three knocks before it goes quiet and looks for another way in. */
+    private static final int KNOCK_ROUNDS = 3;
+    /** How long it searches before going back to knock again. */
+    private static final int SEARCH_BEFORE_RETURN = 1200;
+    private static final double PROWL_SPEED = 0.55D;
+    private static final double CREEP_SPEED = 0.8D;
 
     private static final EntityDataAccessor<Integer> STATE = SynchedEntityData.defineId(KnockerEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> KNOCK_ANIM = SynchedEntityData.defineId(KnockerEntity.class, EntityDataSerializers.INT);
@@ -71,6 +96,21 @@ public class KnockerEntity extends Monster implements Apparition {
     private int lungeTicks;
     private int leaveTicks;
     private boolean opened;
+    @Nullable
+    private BlockPos home;
+    private int rounds;
+    private boolean angry;
+    private int searchTicks;
+    private boolean creeping;
+    @Nullable
+    private BlockPos patrol;
+    private boolean patrolIsWindow;
+    private boolean returning;
+    private int pause;
+    private int taps;
+    private int watching;
+    private int lookedAt;
+    private int brightTicks;
     /** Bends double under a doorway, crawls through anything a block high. */
     public final Squeeze squeeze = Squeeze.of(this, 0.7F, 2.7F);
 
@@ -82,6 +122,16 @@ public class KnockerEntity extends Monster implements Apparition {
     @Override
     protected PathNavigation createNavigation(Level level) {
         return new SqueezeNavigation(this, level);
+    }
+
+    @Override
+    public Squeeze squeeze() {
+        return squeeze;
+    }
+
+    @Override
+    public float getBbHeight() {
+        return squeeze == null ? super.getBbHeight() : squeeze.reportedHeight(super.getBbHeight());
     }
 
     @Override
@@ -125,6 +175,7 @@ public class KnockerEntity extends Monster implements Apparition {
         BlockPos standAt = best;
         KnockerEntity k = Apparitions.spawn(ModEntities.KNOCKER.get(), level, standAt, player, e -> {
             e.door = door.immutable();
+            e.home = standAt.immutable();
             e.entityData.set(STATE, KNOCKING);
             e.visit = 2400 + level.random.nextInt(2400);
             e.apparition.begin(player, -1, 0);
@@ -193,6 +244,9 @@ public class KnockerEntity extends Monster implements Apparition {
     }
 
     private void lunge(Player target) {
+        creeping = false;
+        watching = 0;
+        squeeze.holdAtLeast(Pose.STANDING);
         entityData.set(STATE, LUNGE);
         entityData.set(VIEWER, Optional.empty());
         lungeTicks = 900;
@@ -202,6 +256,7 @@ public class KnockerEntity extends Monster implements Apparition {
 
     private void leave() {
         if (getState() == LEAVING) return;
+        squeeze.holdAtLeast(Pose.STANDING);
         entityData.set(STATE, LEAVING);
         setTarget(null);
         leaveTicks = 0;
@@ -218,6 +273,7 @@ public class KnockerEntity extends Monster implements Apparition {
             case KNOCKING -> tickKnocking();
             case LUNGE -> tickLunge();
             case LEAVING -> tickLeaving();
+            case SEARCHING -> tickSearching();
             default -> leave();
         }
     }
@@ -245,11 +301,18 @@ public class KnockerEntity extends Monster implements Apparition {
             }
         }
         if (knocksLeft > 0 && --knockDelay <= 0) {
-            level().playSound(null, door, ModSounds.EVENT_KNOCK.get(), SoundSource.HOSTILE, 1.0F, 0.95F + random.nextFloat() * 0.1F);
+            // Back again after searching, it pounds rather than knocks.
+            level().playSound(null, door, ModSounds.EVENT_KNOCK.get(), SoundSource.HOSTILE, angry ? 1.7F : 1.0F,
+                    angry ? 0.72F + random.nextFloat() * 0.08F : 0.95F + random.nextFloat() * 0.1F);
             entityData.set(KNOCK_ANIM, 10);
             knocksLeft--;
-            knockDelay = 12;
+            knockDelay = angry ? 8 : 12;
         } else if (knocksLeft == 0 && --knockCooldown <= 0) {
+            // Three, and three, and three. Then nothing, which is worse.
+            if (++rounds > KNOCK_ROUNDS) {
+                startSearching();
+                return;
+            }
             knocksLeft = 3;
             knockDelay = 0;
             knockCooldown = 160 + random.nextInt(220);
@@ -285,11 +348,269 @@ public class KnockerEntity extends Monster implements Apparition {
             leave();
             return;
         }
-        if (level().getBrightness(LightLayer.BLOCK, blockPosition().above()) >= 12) {
+        // Torches it puts out as it comes; only light it cannot put out drives it off.
+        snuffAround();
+        if (tooBright(12)) {
             leave();
             return;
         }
         if (target instanceof Player p && WardHelper.isPlayerWarded(p) && distanceToSqr(p) < 36) leave();
+    }
+
+    // ------------------------------------------------------------------ looking for another way in
+
+    private void startSearching() {
+        entityData.set(STATE, SEARCHING);
+        searchTicks = 0;
+        creeping = false;
+        returning = false;
+        patrol = null;
+        watching = 0;
+        // It stops. For a while there is nothing to hear at all.
+        pause = 60 + random.nextInt(60);
+        taps = 0;
+        getNavigation().stop();
+    }
+
+    private void tickSearching() {
+        searchTicks++;
+        squeeze.holdAtLeast(watching > 0 ? Squeeze.STOOP : Pose.STANDING);
+        Player p = quarry();
+        boolean dawn = level().isDay() && level().canSeeSky(blockPosition().above(2));
+        if (p == null || --visit <= 0 || dawn || WardHelper.isWarded(level(), blockPosition(), 16)) {
+            if (!opened && p instanceof ServerPlayer sp && sp.distanceToSqr(this) < 48 * 48) {
+                Advancements.grant(sp, "three_knocks");
+                BleedManager.unlock(sp, "knocker");
+            }
+            squeeze.holdAtLeast(Pose.STANDING);
+            leave();
+            return;
+        }
+        if (exposed(p)) {
+            squeeze.holdAtLeast(Pose.STANDING);
+            lunge(p);
+            return;
+        }
+        if (creeping) {
+            tickCreeping(p);
+            return;
+        }
+        // Every second it tries the house again: is there any way in at all?
+        if (searchTicks % 20 == 0) {
+            Path way = getNavigation().createPath(p, 0);
+            if (way != null && way.canReach()) {
+                creeping = true;
+                watching = 0;
+                patrol = null;
+                getNavigation().moveTo(way, CREEP_SPEED);
+                return;
+            }
+        }
+        if (watching > 0) {
+            tickWatching(p);
+            return;
+        }
+        if (pause > 0) {
+            pause--;
+            getNavigation().stop();
+            getLookControl().setLookAt(p, 10.0F, 10.0F);
+            if (taps > 0 && pause % 15 == 0) {
+                testWall(p);
+                taps--;
+            }
+            return;
+        }
+        if (patrol == null) {
+            if (searchTicks > SEARCH_BEFORE_RETURN && home != null && door != null) {
+                returning = true;
+                patrol = home;
+                getNavigation().moveTo(home.getX() + 0.5D, home.getY(), home.getZ() + 0.5D, PROWL_SPEED);
+            } else {
+                choosePatrol(p);
+            }
+            if (patrol == null) {
+                pause = 40;
+                return;
+            }
+        }
+        boolean arrived = distanceToSqr(patrol.getX() + 0.5D, patrol.getY(), patrol.getZ() + 0.5D) < 2.0D;
+        if (arrived || getNavigation().isDone()) {
+            if (returning) {
+                // Back at the door, it pounds on it: two rounds, harder and faster, then it goes looking again.
+                returning = false;
+                angry = true;
+                rounds = KNOCK_ROUNDS - 2;
+                knocksLeft = 0;
+                knockCooldown = 10;
+                entityData.set(STATE, KNOCKING);
+            } else if (patrolIsWindow && arrived) {
+                watching = 140 + random.nextInt(100);
+                lookedAt = 0;
+            } else {
+                pause = 50 + random.nextInt(60);
+                taps = 1 + random.nextInt(3);
+            }
+            patrol = null;
+            return;
+        }
+        if (tickCount % 40 == 0) getNavigation().moveTo(patrol.getX() + 0.5D, patrol.getY(), patrol.getZ() + 0.5D, PROWL_SPEED);
+    }
+
+    /** Found a way in: it comes through quietly and only shows itself when it is close. */
+    private void tickCreeping(Player p) {
+        if (distanceToSqr(p) < 8 * 8 && hasLineOfSight(p)) {
+            lunge(p);
+            return;
+        }
+        snuffAround();
+        if (tooBright(13)) {
+            leave();
+            return;
+        }
+        if (getNavigation().isDone() || tickCount % 30 == 0) {
+            Path way = getNavigation().createPath(p, 0);
+            if (way == null || !way.canReach()) {
+                // The way has been shut. It goes back to looking.
+                creeping = false;
+                getNavigation().stop();
+                pause = 40;
+                return;
+            }
+            getNavigation().moveTo(way, CREEP_SPEED);
+        }
+    }
+
+    /** At a window, bent down to look in. Look back at it for long enough and it draws away. */
+    private void tickWatching(Player p) {
+        watching--;
+        getNavigation().stop();
+        getLookControl().setLookAt(p, 30.0F, 30.0F);
+        if (seenThroughGlassBy(p)) {
+            if (++lookedAt > 30) {
+                watching = 0;
+                lookedAt = 0;
+                if (random.nextBoolean()) playSound(ModSounds.KNOCKER_AMBIENT.get(), 0.9F, 0.8F);
+                Vec3 away = new Vec3(getX() - p.getX(), 0.0D, getZ() - p.getZ());
+                away = away.lengthSqr() < 1.0E-4D ? new Vec3(1.0D, 0.0D, 0.0D) : away.normalize();
+                BlockPos back = Spots.localFloor((ServerLevel) level(), Mth.floor(getX() + away.x * 4), Mth.floor(getY()), Mth.floor(getZ() + away.z * 4), 3);
+                if (back != null) {
+                    patrol = back;
+                    patrolIsWindow = false;
+                    getNavigation().moveTo(back.getX() + 0.5D, back.getY(), back.getZ() + 0.5D, 0.35D);
+                }
+            }
+        } else if (watching % 50 == 0 && random.nextInt(3) == 0) {
+            // One tap on the glass.
+            testWall(p);
+        }
+    }
+
+    /** The player it came for, or failing that whoever is nearby and not in creative. */
+    @Nullable
+    private Player quarry() {
+        Player p = apparition.target(level());
+        if (p != null && p.isAlive() && !p.isSpectator() && p.level() == level()) return p;
+        Player near = level().getNearestPlayer(this, 32);
+        return near != null && !near.isCreative() && !near.isSpectator() ? near : null;
+    }
+
+    /** Out under the sky and in plain view: it simply comes for them. */
+    private boolean exposed(Player p) {
+        return !p.isCreative() && !p.isSpectator() && distanceToSqr(p) < 14 * 14 && hasLineOfSight(p)
+                && level().canSeeSky(p.blockPosition().above()) && !WardHelper.isPlayerWarded(p);
+    }
+
+    /** Somewhere outside to stand next: at a window some of the time, otherwise anywhere round the house. */
+    private void choosePatrol(Player p) {
+        ServerLevel level = (ServerLevel) level();
+        patrolIsWindow = false;
+        if (random.nextInt(5) < 2) {
+            BlockPos window = windowSpot(level, p);
+            if (window != null) {
+                patrol = window;
+                patrolIsWindow = true;
+                getNavigation().moveTo(window.getX() + 0.5D, window.getY(), window.getZ() + 0.5D, PROWL_SPEED);
+                return;
+            }
+        }
+        for (int i = 0; i < 8; i++) {
+            double angle = random.nextDouble() * Math.PI * 2.0D;
+            double r = 4.0D + random.nextDouble() * 4.0D;
+            BlockPos floor = Spots.localFloor(level, Mth.floor(p.getX() + Math.cos(angle) * r), Mth.floor(getY()),
+                    Mth.floor(p.getZ() + Math.sin(angle) * r), 4);
+            // Outside, and out of the brightest light.
+            if (floor == null || !level.canSeeSky(floor.above(2)) || level.getBrightness(LightLayer.BLOCK, floor.above()) >= 13) continue;
+            Path path = getNavigation().createPath(floor, 0);
+            if (path == null || !path.canReach()) continue;
+            patrol = floor;
+            getNavigation().moveTo(path, PROWL_SPEED);
+            return;
+        }
+    }
+
+    /** Outside a window near the player, on the far side of the glass from them. */
+    @Nullable
+    private BlockPos windowSpot(ServerLevel level, Player p) {
+        BlockPos center = p.blockPosition();
+        BlockPos best = null;
+        double bestDist = Double.MAX_VALUE;
+        for (BlockPos pos : BlockPos.betweenClosed(center.offset(-8, -1, -8), center.offset(8, 3, 8))) {
+            BlockState state = level.getBlockState(pos);
+            if (!(state.getBlock() instanceof AbstractGlassBlock) && !(state.getBlock() instanceof IronBarsBlock)) continue;
+            for (Direction d : Direction.Plane.HORIZONTAL) {
+                BlockPos outside = pos.relative(d);
+                if (outside.distSqr(center) <= pos.distSqr(center)) continue;
+                BlockPos feet = Spots.localFloor(level, outside.getX(), outside.getY() - 1, outside.getZ(), 2);
+                if (feet == null || !level.canSeeSky(feet.above(2))) continue;
+                double dist = feet.distSqr(blockPosition());
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    best = feet.immutable();
+                }
+            }
+        }
+        if (best == null) return null;
+        Path path = getNavigation().createPath(best, 0);
+        return path != null && path.canReach() ? best : null;
+    }
+
+    /** Is the player looking straight at it, with nothing but glass (or bars, or leaves) between? */
+    private boolean seenThroughGlassBy(Player p) {
+        Vec3 from = p.getEyePosition();
+        Vec3 to = getEyePosition();
+        Vec3 d = to.subtract(from);
+        double len = d.length();
+        if (len < 1.0E-3D || len > 24.0D || p.getViewVector(1.0F).dot(d.scale(1.0D / len)) < 0.95D) return false;
+        int steps = Mth.ceil(len / 0.2D);
+        for (int i = 1; i < steps; i++) {
+            if (level().getBlockState(BlockPos.containing(from.add(d.scale(i / (double) steps)))).canOcclude()) return false;
+        }
+        return true;
+    }
+
+    /** Knuckles on the wall between it and the player (or, now and then, its nails along it). */
+    private void testWall(Player p) {
+        BlockHitResult hit = level().clip(new ClipContext(getEyePosition().subtract(0.0D, 0.6D, 0.0D), p.getEyePosition(),
+                ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
+        BlockPos at = hit.getType() == HitResult.Type.BLOCK ? hit.getBlockPos() : blockPosition().above();
+        boolean scratch = random.nextInt(4) == 0;
+        level().playSound(null, at, scratch ? ModSounds.KNOCKER_SCRATCH.get() : ModSounds.KNOCKER_TAP.get(), SoundSource.HOSTILE,
+                1.0F, 0.9F + random.nextFloat() * 0.2F);
+        if (!scratch) entityData.set(KNOCK_ANIM, 6);
+    }
+
+    /** Puts out torches within reach (when the world may be altered). */
+    private void snuffAround() {
+        if (tickCount % 4 != 0 || !CommonConfig.ALLOW_WORLD_ALTERATION.get() || !(level() instanceof ServerLevel level)) return;
+        for (BlockPos pos : WorldAlterations.scan(level, blockPosition().above(), 2, 2, WorldAlterations::isTorch)) {
+            WorldAlterations.snuff(level, pos);
+        }
+    }
+
+    /** Standing in light it could not put out, for half a second. */
+    private boolean tooBright(int level) {
+        brightTicks = level().getBrightness(LightLayer.BLOCK, blockPosition().above()) >= level ? brightTicks + 1 : 0;
+        return brightTicks > 10;
     }
 
     private void tickLeaving() {
@@ -307,7 +628,7 @@ public class KnockerEntity extends Monster implements Apparition {
     @Override
     public boolean hurt(DamageSource source, float amount) {
         boolean hurt = super.hurt(source, amount);
-        if (hurt && !level().isClientSide && getState() == KNOCKING && source.getEntity() instanceof Player p) lunge(p);
+        if (hurt && !level().isClientSide && (getState() == KNOCKING || getState() == SEARCHING) && source.getEntity() instanceof Player p) lunge(p);
         return hurt;
     }
 
@@ -338,7 +659,10 @@ public class KnockerEntity extends Monster implements Apparition {
         tag.putInt("State", getState());
         tag.putInt("Visit", visit);
         tag.putBoolean("Opened", opened);
+        tag.putInt("Rounds", rounds);
+        tag.putBoolean("Angry", angry);
         if (door != null) tag.put("Door", NbtUtils.writeBlockPos(door));
+        if (home != null) tag.put("Home", NbtUtils.writeBlockPos(home));
     }
 
     @Override
@@ -349,5 +673,8 @@ public class KnockerEntity extends Monster implements Apparition {
         visit = tag.getInt("Visit");
         opened = tag.getBoolean("Opened");
         door = tag.contains("Door") ? NbtUtils.readBlockPos(tag.getCompound("Door")) : null;
+        home = tag.contains("Home") ? NbtUtils.readBlockPos(tag.getCompound("Home")) : null;
+        rounds = tag.getInt("Rounds");
+        angry = tag.getBoolean("Angry");
     }
 }

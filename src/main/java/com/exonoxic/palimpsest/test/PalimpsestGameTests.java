@@ -38,6 +38,7 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -284,6 +285,81 @@ public final class PalimpsestGameTests {
             check(mid.getPose() == Squeeze.STOOP && mid.getBbHeight() < 2.0F,
                     "a Knocker in a two-high space should stoop (pose " + mid.getPose() + ", height " + mid.getBbHeight() + ")");
             check(low.getHealth() >= low.getMaxHealth() && mid.getHealth() >= mid.getMaxHealth(), "a folded Knocker should not suffocate");
+            helper.succeed();
+        });
+    }
+
+    /**
+     * A room three blocks high with a one-block hole in its end wall, one block up off the floor. A
+     * Copyist has to climb up into it (the pathfinder only allows that because it plans at crawling
+     * height) and come out in the room beyond.
+     */
+    @GameTest(template = EMPTY, timeoutTicks = 400)
+    public static void squeezersClimbIntoRaisedHoles(GameTestHelper helper) {
+        for (int x = 0; x <= 8; x++) {
+            for (int y = 0; y <= 4; y++) {
+                for (int z = 3; z <= 5; z++) {
+                    boolean room = z == 4 && y >= 1 && y <= 3 && ((x >= 1 && x <= 3) || (x >= 5 && x <= 7));
+                    boolean hole = x == 4 && y == 2 && z == 4;
+                    helper.setBlock(new BlockPos(x, y, z), room || hole ? Blocks.AIR : Blocks.STONE);
+                }
+            }
+        }
+        CopyistEntity copyist = helper.spawn(ModEntities.COPYIST.get(), new BlockPos(1, 1, 4));
+        BlockPos goal = helper.absolutePos(new BlockPos(7, 1, 4));
+        float health = copyist.getHealth();
+        Set<Pose> seen = new HashSet<>();
+        helper.succeedWhen(() -> {
+            seen.add(copyist.getPose());
+            if (copyist.getNavigation().isDone()) copyist.getNavigation().moveTo(copyist.getNavigation().createPath(goal, 0), 1.0D);
+            check(copyist.getHealth() >= health, "the Copyist hurt itself climbing into the hole");
+            check(copyist.getX() > goal.getX(), "the Copyist has not climbed through yet (at x " + (copyist.getX() - helper.absolutePos(BlockPos.ZERO).getX())
+                    + ", poses seen " + seen + ")");
+            check(seen.contains(Squeeze.CRAWL), "the Copyist never crawled into the hole");
+        });
+    }
+
+    /**
+     * What a Knocker checks for when nobody answers: is there any way in? Penned outside a hut, it
+     * finds none while the hut is sealed, and finds one through a one-block gap at floor level and
+     * through one a step up the wall. Planning at crawling height must not leak into its real size.
+     */
+    @GameTest(template = EMPTY, timeoutTicks = 100)
+    public static void knockerFindsAWayIn(GameTestHelper helper) {
+        for (int x = 0; x <= 8; x++) {
+            for (int z = 0; z <= 8; z++) helper.setBlock(new BlockPos(x, 0, z), Blocks.STONE);
+        }
+        // The hut: stone walls x 3..7, z 2..6, three high, roofed; its inside is x 4..6, z 3..5.
+        for (int x = 3; x <= 7; x++) {
+            for (int z = 2; z <= 6; z++) {
+                for (int y = 1; y <= 4; y++) {
+                    boolean inside = x >= 4 && x <= 6 && z >= 3 && z <= 5 && y <= 3;
+                    helper.setBlock(new BlockPos(x, y, z), inside ? Blocks.AIR : Blocks.STONE);
+                }
+            }
+        }
+        // A pen against its west wall, open to the sky, so the Knocker cannot wander off.
+        for (int y = 1; y <= 3; y++) {
+            for (int z = 2; z <= 6; z++) helper.setBlock(new BlockPos(0, y, z), Blocks.STONE);
+            for (int x = 1; x <= 2; x++) {
+                helper.setBlock(new BlockPos(x, y, 2), Blocks.STONE);
+                helper.setBlock(new BlockPos(x, y, 6), Blocks.STONE);
+            }
+        }
+        KnockerEntity knocker = helper.spawn(ModEntities.KNOCKER.get(), new BlockPos(1, 1, 4));
+        BlockPos inside = helper.absolutePos(new BlockPos(5, 1, 4));
+        helper.runAfterDelay(10, () -> {
+            check(knocker.isAlive(), "the Knocker vanished before it could be tested");
+            Path sealed = knocker.getNavigation().createPath(inside, 0);
+            check(sealed == null || !sealed.canReach(), "the Knocker found a way into a sealed hut");
+            helper.setBlock(new BlockPos(3, 1, 4), Blocks.AIR);
+            Path low = knocker.getNavigation().createPath(inside, 0);
+            check(low != null && low.canReach(), "the Knocker found no way in through a one-block gap at floor level");
+            helper.setBlock(new BlockPos(3, 1, 4), Blocks.STONE);
+            helper.setBlock(new BlockPos(3, 2, 4), Blocks.AIR);
+            Path raised = knocker.getNavigation().createPath(inside, 0);
+            check(raised != null && raised.canReach(), "the Knocker found no way in through a one-block gap a step up the wall");
+            check(Math.abs(knocker.getBbHeight() - 2.7F) < 0.01F, "after planning, the Knocker still reports height " + knocker.getBbHeight());
             helper.succeed();
         });
     }

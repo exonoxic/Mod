@@ -477,6 +477,11 @@ def knocker():
             leftFinger2.zRot -= 0.35F;
             rightFinger0.zRot -= 0.35F;
             rightFinger2.zRot += 0.35F;
+        }} else if (state == {K}.SEARCHING) {{
+            // Going round the house: hunched, head cocked, listening at the walls.
+            neck.xRot += (0.28F) * upright;
+            head.zRot += 0.4F + Mth.sin(ageInTicks * 0.05F) * 0.08F;
+            jaw.xRot += 0.12F;
         }} else if (state == {K}.LEAVING) {{
             neck.xRot += (0.4F) * upright;
             head.xRot += (0.25F) * upright;
