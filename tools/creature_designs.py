@@ -873,7 +873,7 @@ R_GUM = (112, 30, 36)
 R_GUM_D = (70, 16, 22)
 R_TOOTH = (226, 216, 190)
 R_THROAT = (8, 6, 8)
-R_FLESH = (78, 24, 30)
+R_FLESH = (128, 70, 70)
 R_SCLERA = (226, 214, 178)
 R_VEIN = (170, 60, 56)
 R_IRIS = (40, 30, 52)
@@ -968,8 +968,8 @@ def erratum_eye():
             a, b = spans[y]
             return 255 if a <= x <= b else 0
         return shape
-    lid = (104, 40, 44)
-    wet = (46, 12, 16)
+    lid = (170, 110, 104)
+    wet = (56, 16, 20)
     rim = dict(base=R_FLESH, noise=6, shape=rows_shape([(3, 9), (1, 11), (0, 12), (1, 11), (3, 9)]), features={
         "all": [("ascii", ["...lllllll...",
                            ".ll.......ll.",
