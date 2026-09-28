@@ -271,7 +271,8 @@ public final class SmokeTest {
                 }
             });
         });
-        for (int i = 0; i < 10; i++) {
+        // Up to 20 ticks to finish the round, up to 120 of silence, then about 130 to walk round.
+        for (int i = 0; i < 16; i++) {
             int n = i;
             step(20, () -> server((srv, p) -> {
                 for (KnockerEntity k : p.serverLevel().getEntitiesOfClass(KnockerEntity.class, p.getBoundingBox().inflate(32))) {
