@@ -401,7 +401,7 @@ public final class SmokeTest {
      * out of the pose or makes them vanish.
      */
     private static void featuredCreatures() {
-        // The Knocker at a door: mid-knock from the side, then from behind, lunging, and its face.
+        // The Knocker at a door: mid-knock in profile, then from behind, lunging, and its face.
         step(40, () -> {
             clearMannequins();
             server((srv, p) -> {
@@ -412,7 +412,7 @@ public final class SmokeTest {
                 BlockState lower = Blocks.SPRUCE_DOOR.defaultBlockState().setValue(DoorBlock.FACING, Direction.NORTH);
                 level.setBlock(new BlockPos(0, Y, 3), lower, Block.UPDATE_ALL);
                 level.setBlock(new BlockPos(0, Y + 1, 3), lower.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER), Block.UPDATE_ALL);
-                view(p, -2.4, Y + 2.1, 0.4, 0.5, Y + 1.6, 2.4);
+                view(p, -3.2, Y + 1.9, 2.2, 0.5, Y + 1.7, 2.8);
             });
             // Where a real one stands: the block in front of the door, knocking with its right hand.
             mannequin(ModEntities.KNOCKER.get(), 0.5, Y, 2.5, 0F, k -> {
