@@ -250,6 +250,8 @@ public final class SmokeTest {
                 killMobs(level);
                 clear(level, -12, Y - 1, -12, 12, Y + 12, 24, Blocks.SMOOTH_STONE.defaultBlockState());
                 command(srv, p, "time set 18000");
+                // As the player would see it: by the light of one torch.
+                p.removeEffect(MobEffects.NIGHT_VISION);
                 fill(level, -3, Y, -3, 3, Y + 2, 3, Blocks.STONE_BRICKS.defaultBlockState());
                 fill(level, -3, Y + 3, -3, 3, Y + 3, 3, Blocks.SPRUCE_PLANKS.defaultBlockState());
                 fill(level, -2, Y, -2, 2, Y + 2, 2, Blocks.AIR.defaultBlockState());
@@ -291,6 +293,7 @@ public final class SmokeTest {
         step(10, () -> server((srv, p) -> {
             killMobs(p.serverLevel());
             command(srv, p, "time set 6000");
+            p.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 1_000_000, 0, false, false));
         }));
 
         // Apparitions only exist for one player and keep their distance: a Longhand watcher vanishes
