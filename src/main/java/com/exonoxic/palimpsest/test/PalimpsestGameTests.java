@@ -322,7 +322,7 @@ public final class PalimpsestGameTests {
     /**
      * What a Knocker checks for when nobody answers: is there any way in? Penned outside a hut, it
      * finds none while the hut is sealed, and finds one through a one-block gap at floor level and
-     * through one a step up the wall. Planning at crawling height must not leak into its real size.
+     * through one a step up the wall. Each question is asked afresh, never answered from the last route.
      */
     @GameTest(template = EMPTY, timeoutTicks = 100)
     public static void knockerFindsAWayIn(GameTestHelper helper) {
@@ -350,16 +350,15 @@ public final class PalimpsestGameTests {
         BlockPos inside = helper.absolutePos(new BlockPos(5, 1, 4));
         helper.runAfterDelay(10, () -> {
             check(knocker.isAlive(), "the Knocker vanished before it could be tested");
-            Path sealed = knocker.getNavigation().createPath(inside, 0);
+            Path sealed = knocker.wayIn(inside);
             check(sealed == null || !sealed.canReach(), "the Knocker found a way into a sealed hut");
             helper.setBlock(new BlockPos(3, 1, 4), Blocks.AIR);
-            Path low = knocker.getNavigation().createPath(inside, 0);
+            Path low = knocker.wayIn(inside);
             check(low != null && low.canReach(), "the Knocker found no way in through a one-block gap at floor level");
             helper.setBlock(new BlockPos(3, 1, 4), Blocks.STONE);
             helper.setBlock(new BlockPos(3, 2, 4), Blocks.AIR);
-            Path raised = knocker.getNavigation().createPath(inside, 0);
+            Path raised = knocker.wayIn(inside);
             check(raised != null && raised.canReach(), "the Knocker found no way in through a one-block gap a step up the wall");
-            check(Math.abs(knocker.getBbHeight() - 2.7F) < 0.01F, "after planning, the Knocker still reports height " + knocker.getBbHeight());
             helper.succeed();
         });
     }

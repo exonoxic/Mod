@@ -400,7 +400,7 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
         }
         // Every second it tries the house again: is there any way in at all?
         if (searchTicks % 20 == 0) {
-            Path way = getNavigation().createPath(p, 0);
+            Path way = wayIn(p.blockPosition());
             if (way != null && way.canReach()) {
                 creeping = true;
                 watching = 0;
@@ -479,7 +479,7 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
             return;
         }
         if (getNavigation().isDone() || tickCount % 30 == 0) {
-            Path way = getNavigation().createPath(p, 0);
+            Path way = wayIn(p.blockPosition());
             if (way == null || !way.canReach()) {
                 // The way has been shut. It goes back to looking.
                 creeping = false;
@@ -514,6 +514,15 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
             // One tap on the glass.
             testWall(p);
         }
+    }
+
+    /**
+     * A route from where it stands to {@code target}, worked out afresh ({@code canReach()} on the
+     * result says whether it really gets there): how it looks for a way into a house.
+     */
+    @Nullable
+    public Path wayIn(BlockPos target) {
+        return getNavigation() instanceof SqueezeNavigation nav ? nav.freshPath(target, 0) : getNavigation().createPath(target, 0);
     }
 
     /** The player it came for, or failing that whoever is nearby and not in creative. */
@@ -551,7 +560,7 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
                     Mth.floor(p.getZ() + Math.sin(angle) * r), 4);
             // Outside, and out of the brightest light.
             if (floor == null || !level.canSeeSky(floor.above(2)) || level.getBrightness(LightLayer.BLOCK, floor.above()) >= 13) continue;
-            Path path = getNavigation().createPath(floor, 0);
+            Path path = wayIn(floor);
             if (path == null || !path.canReach()) continue;
             patrol = floor;
             getNavigation().moveTo(path, PROWL_SPEED);
@@ -581,7 +590,7 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
             }
         }
         if (best == null) return null;
-        Path path = getNavigation().createPath(best, 0);
+        Path path = wayIn(best);
         return path != null && path.canReach() ? best : null;
     }
 

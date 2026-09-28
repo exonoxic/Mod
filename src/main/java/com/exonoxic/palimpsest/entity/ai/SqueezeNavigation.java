@@ -3,15 +3,19 @@ package com.exonoxic.palimpsest.entity.ai;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.PathNavigationRegion;
 import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.level.pathfinder.Node;
+import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.level.pathfinder.PathFinder;
 import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
 import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Set;
 
 /**
  * Ground navigation for creatures with a {@link Squeeze}: paths may run through any gap one
@@ -19,6 +23,9 @@ import org.jetbrains.annotations.Nullable;
  * climb up into such a gap even from under a low ceiling.
  */
 public class SqueezeNavigation extends GroundPathNavigation {
+    /** Set by createPathFinder, which the superclass constructor calls (so no initialiser here). */
+    private PathFinder finder;
+
     public SqueezeNavigation(Mob mob, Level level) {
         super(mob, level);
     }
@@ -27,7 +34,26 @@ public class SqueezeNavigation extends GroundPathNavigation {
     protected PathFinder createPathFinder(int maxVisitedNodes) {
         this.nodeEvaluator = new SqueezeNodeEvaluator();
         this.nodeEvaluator.setCanPassDoors(true);
-        return new PathFinder(this.nodeEvaluator, maxVisitedNodes);
+        this.finder = new PathFinder(this.nodeEvaluator, maxVisitedNodes);
+        return this.finder;
+    }
+
+    /**
+     * A route to {@code target} worked out from scratch, without touching the route being followed.
+     * ({@link #createPath} hands back the current path whenever it thinks it is aimed at the same
+     * place, which is no use for asking "is there any way in from here, now?".)
+     */
+    @Nullable
+    public Path freshPath(BlockPos target, int accuracy) {
+        if (!canUpdatePath()) return null;
+        // Aim at the ground under the target, as GroundPathNavigation does.
+        BlockPos goal = target;
+        for (int i = 0; i < 4 && level.getBlockState(goal.below()).isAir(); i++) goal = goal.below();
+        float range = (float) mob.getAttributeValue(Attributes.FOLLOW_RANGE);
+        int r = (int) range + 8;
+        BlockPos from = mob.blockPosition();
+        PathNavigationRegion region = new PathNavigationRegion(level, from.offset(-r, -r, -r), from.offset(r, r, r));
+        return finder.findPath(region, mob, Set.of(goal), range, accuracy, 1.0F);
     }
 
     private static class SqueezeNodeEvaluator extends WalkNodeEvaluator {
