@@ -72,6 +72,7 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -83,8 +84,10 @@ import org.slf4j.Logger;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /**
@@ -113,6 +116,10 @@ public final class SmokeTest {
     private static int wait;
     private static String lastScreen = "";
     private static final List<Entity> MANNEQUINS = new ArrayList<>();
+    /** Knocker hunt: server steps it has been seen in the gap, and coming for the player; shots taken. */
+    private static volatile int huntGap;
+    private static volatile int huntLunge;
+    private static final Set<String> huntShots = new HashSet<>();
     private static int nextMannequinId = 2_000_000;
 
     private SmokeTest() {}
@@ -279,21 +286,44 @@ public final class SmokeTest {
                 }
             });
         });
-        // Up to 20 ticks to finish the round, up to 120 of silence, then about 130 to walk round
-        // (and the server gets through two or three ticks for each of the client's here).
-        for (int i = 0; i < 16; i++) {
+        // Watched in short steps (the server gets through two or three ticks for each of the
+        // client's here): its state is logged now and then, the moment it is in the gap is
+        // photographed, and once it comes for the player they turn round to face it.
+        step(1, () -> {
+            huntGap = 0;
+            huntLunge = 0;
+            huntShots.clear();
+        });
+        for (int i = 0; i < 48; i++) {
             int n = i;
-            step(20, () -> server((srv, p) -> {
+            step(8, () -> server((srv, p) -> {
                 for (KnockerEntity k : p.serverLevel().getEntitiesOfClass(KnockerEntity.class, p.getBoundingBox().inflate(32))) {
+                    if (Math.abs(k.getX() - 0.5D) < 1.0D && k.getZ() > -4.3D && k.getZ() < -1.7D) huntGap++;
+                    if (k.getState() == KnockerEntity.LUNGE) {
+                        huntLunge++;
+                        Vec3 eye = p.getEyePosition();
+                        Vec3 at = k.getEyePosition();
+                        double dx = at.x - eye.x, dy = at.y - eye.y, dz = at.z - eye.z;
+                        float yaw = (float) Math.toDegrees(Mth.atan2(dz, dx)) - 90F;
+                        float pitch = (float) -Math.toDegrees(Mth.atan2(dy, Math.sqrt(dx * dx + dz * dz)));
+                        p.connection.teleport(p.getX(), p.getY(), p.getZ(), yaw, pitch);
+                    }
+                    if (n % 3 != 0) continue;
                     // And whether, from where it stands, it could get in to the player right now.
                     Path way = k.wayIn(p.blockPosition());
                     String route = way == null ? "none" : way.getNodeCount() + " nodes, reaches " + way.canReach() + ", ends "
                             + (way.getNodeCount() > 0 ? way.getEndNode().asBlockPos().offset(0, -Y, 0).toShortString() : "-");
-                    LOG.info("[smoke] knocker hunt {}: state {} pose {} creeping {} at {} {} {}; way in: {}", n, k.getState(), k.getPose(),
-                            k.isCreeping(), String.format("%.1f", k.getX()), String.format("%.1f", k.getY() - Y), String.format("%.1f", k.getZ()), route);
+                    LOG.info("[smoke] knocker hunt {}: state {} pose {} creeping {} at {} {} {} (player at {} {}); way in: {}", n, k.getState(),
+                            k.getPose(), k.isCreeping(), String.format("%.1f", k.getX()), String.format("%.1f", k.getY() - Y),
+                            String.format("%.1f", k.getZ()), String.format("%.1f", p.getX()), String.format("%.1f", p.getZ()), route);
                 }
             }));
-            shot("knocker_hunt_" + n);
+            step(1, () -> {
+                if (huntGap > 0 && huntShots.add("gap")) grabNow("knocker_hunt_gap");
+                else if (huntLunge >= 2 && huntShots.add("face")) grabNow("knocker_hunt_face");
+                else if (huntLunge >= 6 && huntShots.add("face_close")) grabNow("knocker_hunt_face_close");
+                else if (n % 4 == 0) grabNow("knocker_hunt_" + n / 4);
+            });
         }
         step(10, () -> server((srv, p) -> {
             killMobs(p.serverLevel());
@@ -777,6 +807,14 @@ public final class SmokeTest {
 
     private static void step(int delay, Runnable action) {
         STEPS.add(new Step(delay, action));
+    }
+
+    /** A screenshot at once, for moments that will not wait for the usual pause. */
+    private static void grabNow(String name) {
+        Minecraft mc = Minecraft.getInstance();
+        mc.getToasts().clear();
+        Screenshot.grab(mc.gameDirectory, "smoke_" + name + ".png", mc.getMainRenderTarget(), msg -> {});
+        LOG.info("[smoke] screenshot {}", name);
     }
 
     private static void shot(String name) {
