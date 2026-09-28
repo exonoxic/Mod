@@ -7,7 +7,9 @@ import com.exonoxic.palimpsest.client.screen.CodexScreen;
 import com.exonoxic.palimpsest.client.screen.EndingScreen;
 import com.exonoxic.palimpsest.client.screen.LoreScreen;
 import com.exonoxic.palimpsest.codex.CodexEntry;
+import com.exonoxic.palimpsest.entity.CopyistEntity;
 import com.exonoxic.palimpsest.entity.FairCopyEntity;
+import com.exonoxic.palimpsest.entity.KnockerEntity;
 import com.exonoxic.palimpsest.entity.LonghandEntity;
 import com.exonoxic.palimpsest.entity.PalehandEntity;
 import com.exonoxic.palimpsest.horror.EventContext;
@@ -22,24 +24,28 @@ import com.mojang.datafixers.util.Pair;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.tutorial.TutorialSteps;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BiomeTags;
 import net.minecraft.tags.TagKey;
+import net.minecraft.util.Mth;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.item.BlockItem;
@@ -72,9 +78,11 @@ import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * Development-only visual smoke test. Inert unless the game is started with
@@ -101,6 +109,8 @@ public final class SmokeTest {
     private static int stepIndex;
     private static int wait;
     private static String lastScreen = "";
+    private static final List<Entity> MANNEQUINS = new ArrayList<>();
+    private static int nextMannequinId = 2_000_000;
 
     private SmokeTest() {}
 
@@ -226,6 +236,7 @@ public final class SmokeTest {
             }));
             shot("creature_" + name);
         }
+        featuredCreatures();
         // Apparitions only exist for one player and keep their distance: a Longhand watcher vanishes
         // inside 24 blocks and a Fair Copy walks away inside 12, so these are taken zoomed in.
         step(40, () -> server((srv, p) -> {
@@ -380,6 +391,215 @@ public final class SmokeTest {
             LOG.info("[smoke] PALIMPSEST SMOKE TEST COMPLETE");
         });
         step(20, () -> Minecraft.getInstance().stop());
+    }
+
+    // ------------------------------------------------------------------ featured creatures
+
+    /**
+     * The four creatures with the most detail, posed by hand in the states players meet them in and
+     * seen from several sides. They exist only on this client, so nothing on the server walks them
+     * out of the pose or makes them vanish.
+     */
+    private static void featuredCreatures() {
+        // The Knocker at a door: mid-knock from the side, then from behind, lunging, and its face.
+        step(40, () -> {
+            clearMannequins();
+            server((srv, p) -> {
+                ServerLevel level = p.serverLevel();
+                killMobs(level);
+                clear(level, -12, Y - 1, -12, 12, Y + 12, 24, Blocks.SMOOTH_STONE.defaultBlockState());
+                fill(level, -2, Y, 3, 2, Y + 3, 3, Blocks.SPRUCE_PLANKS.defaultBlockState());
+                BlockState lower = Blocks.SPRUCE_DOOR.defaultBlockState().setValue(DoorBlock.FACING, Direction.NORTH);
+                level.setBlock(new BlockPos(0, Y, 3), lower, Block.UPDATE_ALL);
+                level.setBlock(new BlockPos(0, Y + 1, 3), lower.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER), Block.UPDATE_ALL);
+                view(p, 3.3, Y + 2.1, 0.2, 0.5, Y + 1.6, 1.9);
+            });
+            mannequin(ModEntities.KNOCKER.get(), 0.5, Y, 2.0, 0F, k -> {
+                data(k, "STATE", KnockerEntity.KNOCKING);
+                data(k, "KNOCK_ANIM", 5);
+            });
+        });
+        shot("featured_knocker_knocking");
+        step(10, () -> {
+            MANNEQUINS.forEach(k -> data(k, "KNOCK_ANIM", 0));
+            server((srv, p) -> view(p, -1.4, Y + 2.3, -2.2, 0.5, Y + 1.5, 1.6));
+        });
+        shot("featured_knocker_listening_behind");
+        step(20, () -> {
+            clearMannequins();
+            server((srv, p) -> {
+                clear(p.serverLevel(), -12, Y - 1, -12, 12, Y + 12, 24, Blocks.SMOOTH_STONE.defaultBlockState());
+                view(p, 1.4, Y + 2.0, -2.6, 0.5, Y + 1.5, 0.5);
+            });
+            mannequin(ModEntities.KNOCKER.get(), 0.5, Y, 0.5, 200F, k -> data(k, "STATE", KnockerEntity.LUNGE));
+        });
+        shot("featured_knocker_lunge");
+        step(10, () -> {
+            MANNEQUINS.forEach(k -> data(k, "STATE", 0));
+            server((srv, p) -> view(p, 1.1, Y + 2.4, -1.4, 0.5, Y + 2.1, 0.5));
+        });
+        shot("featured_knocker_face");
+        step(10, () -> server((srv, p) -> view(p, -2.6, Y + 1.9, 2.4, 0.5, Y + 1.4, 0.5)));
+        shot("featured_knocker_back");
+
+        // The Longhand: every frozen pose in a row, then each one close, then unwatched.
+        step(20, () -> {
+            clearMannequins();
+            server((srv, p) -> view(p, 0.5, Y + 2.4, -6.8, 0.5, Y + 1.8, 0.5));
+            for (int i = 0; i < LonghandEntity.POSES; i++) {
+                int pose = i;
+                mannequin(ModEntities.LONGHAND.get(), 0.5 + (i - 2) * 2.7, Y, 0.5, 180F, l -> {
+                    data(l, "FROZEN", true);
+                    data(l, "POSE_INDEX", pose);
+                });
+            }
+        });
+        shot("featured_longhand_poses");
+        for (int i = 0; i < LonghandEntity.POSES; i++) {
+            int pose = i;
+            step(10, () -> {
+                clearMannequins();
+                server((srv, p) -> view(p, 2.3, Y + 2.6, -2.7, 0.5, Y + 2.0, 0.5));
+                mannequin(ModEntities.LONGHAND.get(), 0.5, Y, 0.5, 195F, l -> {
+                    data(l, "FROZEN", true);
+                    data(l, "POSE_INDEX", pose);
+                });
+            });
+            shot("featured_longhand_pose" + pose);
+        }
+        step(20, () -> {
+            clearMannequins();
+            mannequin(ModEntities.LONGHAND.get(), 0.5, Y, 0.5, 160F, l -> data(l, "FROZEN", false));
+        });
+        shot("featured_longhand_unwatched");
+        step(10, () -> server((srv, p) -> view(p, -1.8, Y + 2.6, 3.4, 0.5, Y + 1.8, 0.5)));
+        shot("featured_longhand_back");
+
+        // The Copyist: pretending, all four skins from the front and back, a close look, and a reveal.
+        step(20, () -> {
+            clearMannequins();
+            server((srv, p) -> view(p, 2.0, Y + 1.9, -2.6, 0.5, Y + 0.8, 0.5));
+            mannequin(ModEntities.COPYIST.get(), 0.5, Y, 0.5, 200F, c -> {
+                data(c, "HIDE", CopyistEntity.COW);
+                data(c, "DISGUISE", CopyistEntity.COW);
+            });
+        });
+        shot("featured_copyist_disguised");
+        step(20, () -> {
+            clearMannequins();
+            server((srv, p) -> view(p, 0.5, Y + 2.4, -5.6, 0.5, Y + 1.2, 0.5));
+            for (int hide = 0; hide < 4; hide++) {
+                int h = hide;
+                mannequin(ModEntities.COPYIST.get(), 0.5 + (hide - 1.5) * 2.3, Y, 0.5, 190F, c -> data(c, "HIDE", h));
+            }
+        });
+        shot("featured_copyist_skins");
+        step(10, () -> {
+            for (Entity c : MANNEQUINS) turn(c, 10F);
+            server((srv, p) -> view(p, 0.5, Y + 2.4, -5.6, 0.5, Y + 1.2, 0.5));
+        });
+        shot("featured_copyist_skins_back");
+        step(10, () -> {
+            clearMannequins();
+            server((srv, p) -> view(p, 1.6, Y + 2.1, -1.8, 0.5, Y + 1.5, 0.5));
+            mannequin(ModEntities.COPYIST.get(), 0.5, Y, 0.5, 205F, c -> data(c, "HIDE", CopyistEntity.COW));
+        });
+        shot("featured_copyist_close");
+        step(10, () -> server((srv, p) -> view(p, 3.0, Y + 1.8, 1.6, 0.5, Y + 1.1, 0.5)));
+        shot("featured_copyist_side");
+        step(30, () -> {
+            clearMannequins();
+            server((srv, p) -> view(p, 1.8, Y + 2.2, -3.2, 0.5, Y + 1.0, 0.5));
+            mannequin(ModEntities.COPYIST.get(), 0.5, Y, 0.5, 200F, c -> {
+                data(c, "HIDE", CopyistEntity.PIG);
+                data(c, "DISGUISE", CopyistEntity.PIG);
+            });
+        });
+        // Taken about half-way through the unfolding.
+        step(7, () -> MANNEQUINS.forEach(c -> data(c, "DISGUISE", CopyistEntity.REVEALED)));
+        shot("featured_copyist_revealing");
+
+        // The Erratum: still among real blocks (the eye opens when you look slightly away), then walking.
+        step(20, () -> {
+            clearMannequins();
+            server((srv, p) -> {
+                ServerLevel level = p.serverLevel();
+                level.setBlock(new BlockPos(-1, Y, 0), Blocks.BOOKSHELF.defaultBlockState(), Block.UPDATE_ALL);
+                level.setBlock(new BlockPos(1, Y, 0), Blocks.BOOKSHELF.defaultBlockState(), Block.UPDATE_ALL);
+                level.setBlock(new BlockPos(1, Y, 1), Blocks.BOOKSHELF.defaultBlockState(), Block.UPDATE_ALL);
+                view(p, 0.5, Y + 1.3, -2.4, -1.4, Y + 0.5, 0.5);
+            });
+            mannequin(ModEntities.ERRATUM.get(), 0.5, Y, 0.5, 0F, e -> data(e, "MIMIC", Blocks.BOOKSHELF.defaultBlockState()));
+        });
+        step(30, () -> {});
+        shot("featured_erratum_eye");
+        step(10, () -> server((srv, p) -> view(p, 0.5, Y + 1.3, -2.4, 0.5, Y + 0.5, 0.5)));
+        shot("featured_erratum_stared_at");
+        step(30, () -> {
+            server((srv, p) -> {
+                clear(p.serverLevel(), -12, Y - 1, -12, 12, Y + 12, 24, Blocks.SMOOTH_STONE.defaultBlockState());
+                view(p, 2.3, Y + 1.1, -1.7, 0.5, Y + 0.45, 0.5);
+            });
+            MANNEQUINS.forEach(e -> data(e, "MOVING", true));
+        });
+        shot("featured_erratum_walking");
+        // From a pit in the floor, to look up under the block at the mouth.
+        step(10, () -> server((srv, p) -> {
+            fill(p.serverLevel(), 0, Y - 3, -2, 0, Y - 1, -2, Blocks.AIR.defaultBlockState());
+            view(p, 0.5, Y + 0.08, -1.5, 0.5, Y + 0.3, 0.5);
+        }));
+        shot("featured_erratum_underneath");
+        step(10, SmokeTest::clearMannequins);
+    }
+
+    /** Adds a creature to this client's world only, facing {@code yaw}, and lets {@code pose} set it up. */
+    private static <T extends Entity> void mannequin(EntityType<T> type, double x, double y, double z, float yaw, Consumer<T> pose) {
+        ClientLevel level = Minecraft.getInstance().level;
+        if (level == null) return;
+        T e = type.create(level);
+        if (e == null) return;
+        e.setId(nextMannequinId++);
+        e.moveTo(x, y, z, yaw, 0F);
+        turn(e, yaw);
+        if (e instanceof Mob mob) mob.setNoAi(true);
+        pose.accept(e);
+        level.putNonPlayerEntity(e.getId(), e);
+        MANNEQUINS.add(e);
+    }
+
+    private static void turn(Entity e, float yaw) {
+        e.setYRot(yaw);
+        e.yRotO = yaw;
+        if (e instanceof LivingEntity living) {
+            living.yBodyRot = living.yBodyRotO = yaw;
+            living.yHeadRot = living.yHeadRotO = yaw;
+        }
+    }
+
+    private static void clearMannequins() {
+        ClientLevel level = Minecraft.getInstance().level;
+        if (level != null) MANNEQUINS.forEach(e -> level.removeEntity(e.getId(), Entity.RemovalReason.DISCARDED));
+        MANNEQUINS.clear();
+    }
+
+    /** Sets one of a creature's synced values by the name of its (private) accessor field. */
+    @SuppressWarnings("unchecked")
+    private static <V> void data(Entity e, String field, V value) {
+        try {
+            Field f = e.getClass().getDeclaredField(field);
+            f.setAccessible(true);
+            e.getEntityData().set((EntityDataAccessor<V>) f.get(null), value);
+        } catch (ReflectiveOperationException | ClassCastException ex) {
+            LOG.error("[smoke] SMOKE_FAIL cannot set {} on {}", field, e.getClass().getSimpleName(), ex);
+        }
+    }
+
+    /** Puts the camera (the player's eyes) at the given point, looking at another. */
+    private static void view(ServerPlayer p, double ex, double ey, double ez, double tx, double ty, double tz) {
+        double dx = tx - ex, dy = ty - ey, dz = tz - ez;
+        float yaw = (float) Math.toDegrees(Mth.atan2(dz, dx)) - 90F;
+        float pitch = (float) -Math.toDegrees(Mth.atan2(dy, Math.sqrt(dx * dx + dz * dz)));
+        moveTo(p, p.serverLevel(), ex, ey - p.getEyeHeight(), ez, yaw, pitch);
     }
 
     // ------------------------------------------------------------------ helpers
