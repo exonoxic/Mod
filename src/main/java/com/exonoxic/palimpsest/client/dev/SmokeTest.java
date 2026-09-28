@@ -26,6 +26,7 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.tutorial.TutorialSteps;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -247,6 +248,7 @@ public final class SmokeTest {
             shot("creature_" + name);
         }
         featuredCreatures();
+        bestiaryPortraits();
         // A real Knocker nobody answers, end to end: a hut at night with a door on one side and a
         // one-block gap in the far wall; the player stands inside looking at the gap. The Knocker is
         // put at the door with its knocking nearly done, and should go quiet, find the gap, crawl in.
@@ -495,6 +497,52 @@ public final class SmokeTest {
      * seen from several sides. They exist only on this client, so nothing on the server walks them
      * out of the pose or makes them vanish.
      */
+    /**
+     * The rest of the bestiary, each close up in daylight on a bare floor, some in the state that
+     * shows them at their worst (a mannequin is created at the start of its step, so its animation
+     * clock reads about 32 ticks when the photograph is taken).
+     */
+    private static void bestiaryPortraits() {
+        portrait("inkhound", ModEntities.INKHOUND.get(), 200F, 1.6, 1.1, -1.5, 0.6, e -> {});
+        portrait("inkhound_hunting", ModEntities.INKHOUND.get(), 200F, 1.3, 0.9, -1.2, 0.55, e -> ((Mob) e).setAggressive(true));
+        portrait("pale_stag", ModEntities.PALE_STAG.get(), 195F, 2.4, 2.1, -3.4, 1.5, e -> {});
+        portrait("pale_stag_face", ModEntities.PALE_STAG.get(), 190F, 1.0, 2.3, -1.6, 2.1, e -> {});
+        portrait("smudge", ModEntities.SMUDGE.get(), 190F, 1.3, 1.9, -2.2, 1.4, e -> {});
+        portrait("redacted", ModEntities.REDACTED.get(), 195F, 1.5, 2.0, -2.5, 1.4, e -> {});
+        // Coming for you, the bar over the eyes slides off them.
+        portrait("redacted_revealed", ModEntities.REDACTED.get(), 190F, 0.9, 1.95, -1.3, 1.8, e -> ((Mob) e).setAggressive(true));
+        portrait("rubricator", ModEntities.RUBRICATOR.get(), 195F, 1.3, 2.0, -2.1, 1.5, e -> {});
+        portrait("quillcrow", ModEntities.QUILLCROW.get(), 205F, 1.0, 0.7, -1.1, 0.3, e -> {});
+        portrait("foxing_moth", ModEntities.FOXING_MOTH.get(), 180F, 0.5, 1.3, -0.2, 0.1, e -> {});
+        portrait("blotling", ModEntities.BLOTLING.get(), 200F, 1.3, 0.9, -1.5, 0.4, e -> {});
+        portrait("margin_crawler", ModEntities.MARGIN_CRAWLER.get(), 205F, 1.1, 0.75, -1.2, 0.3, e -> ((Mob) e).setAggressive(true));
+        portrait("bookbinder", ModEntities.BOOKBINDER.get(), 200F, 3.4, 2.9, -4.4, 1.5, e -> {});
+        portrait("bookbinder_face", ModEntities.BOOKBINDER.get(), 195F, 1.2, 3.0, -1.9, 2.8, e -> {});
+        portrait("rasure", ModEntities.RASURE.get(), 195F, 3.2, 3.4, -5.6, 2.6, e -> {});
+        portrait("rasure_face", ModEntities.RASURE.get(), 190F, 1.0, 4.4, -2.4, 4.4, e -> {});
+        // Its face is yours, except for the eyes.
+        portrait("fair_copy_face", ModEntities.FAIR_COPY.get(), 180F, 0.5, 1.55, -1.0, 1.5, e -> {
+            LocalPlayer me = Minecraft.getInstance().player;
+            if (me != null) data(e, "COPY_OF", Optional.of(me.getUUID()));
+        });
+    }
+
+    /** One mannequin at (0.5, 0.5) facing the camera, seen from (0.5 + dx, Y + eyeY, 0.5 + dz) looking at height lookY. */
+    private static <T extends Entity> void portrait(String name, EntityType<T> type, float yaw, double dx, double eyeY, double dz, double lookY,
+                                                    Consumer<Entity> setup) {
+        step(20, () -> {
+            clearMannequins();
+            server((srv, p) -> {
+                ServerLevel level = p.serverLevel();
+                killMobs(level);
+                clear(level, -12, Y - 1, -12, 12, Y + 12, 24, Blocks.SMOOTH_STONE.defaultBlockState());
+                view(p, 0.5 + dx, Y + eyeY, 0.5 + dz, 0.5, Y + lookY, 0.5);
+            });
+            mannequin(type, 0.5, Y, 0.5, yaw, setup::accept);
+        });
+        shot("portrait_" + name);
+    }
+
     private static void featuredCreatures() {
         // The Knocker at a door: mid-knock in profile, then from behind, lunging, and its face.
         step(40, () -> {

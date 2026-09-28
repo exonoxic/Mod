@@ -20,51 +20,114 @@ public class RasureModel<T extends RasureEntity> extends HierarchicalModel<T> {
     public static final ModelLayerLocation LAYER = new ModelLayerLocation(Palimpsest.id("rasure"), "main");
     private final ModelPart root;
     protected final ModelPart robe;
+    protected final ModelPart robeStrip0;
+    protected final ModelPart robeStrip1;
     protected final ModelPart body;
+    protected final ModelPart neck;
     protected final ModelPart head;
+    protected final ModelPart faceLeft;
+    protected final ModelPart faceRight;
     protected final ModelPart bladeArm;
+    protected final ModelPart bladeForearm;
     protected final ModelPart blade;
-    protected final ModelPart bladeTip;
+    protected final ModelPart blade0;
+    protected final ModelPart blade1;
+    protected final ModelPart blade2;
+    protected final ModelPart blade3;
+    protected final ModelPart blade4;
+    protected final ModelPart blade5;
+    protected final ModelPart blade6;
     protected final ModelPart leftArm;
-    protected final ModelPart fingers;
+    protected final ModelPart leftForearm;
+    protected final ModelPart finger0;
+    protected final ModelPart finger1;
+    protected final ModelPart finger2;
+    protected final ModelPart finger3;
     protected final ModelPart page0;
     protected final ModelPart page1;
     protected final ModelPart page2;
     protected final ModelPart page3;
+    protected final ModelPart page4;
+    protected final ModelPart page5;
+    protected final ModelPart knife0;
+    protected final ModelPart knife1;
+    protected final ModelPart knife2;
 
     public RasureModel(ModelPart root) {
         super(RenderType::entityCutoutNoCull);
         this.root = root;
         this.robe = root.getChild("robe");
+        this.robeStrip0 = this.robe.getChild("robe_strip_0");
+        this.robeStrip1 = this.robe.getChild("robe_strip_1");
         this.body = root.getChild("body");
-        this.head = this.body.getChild("head");
+        this.neck = this.body.getChild("neck");
+        this.head = this.neck.getChild("head");
+        this.faceLeft = this.head.getChild("face_left");
+        this.faceRight = this.head.getChild("face_right");
         this.bladeArm = this.body.getChild("blade_arm");
-        this.blade = this.bladeArm.getChild("blade");
-        this.bladeTip = this.blade.getChild("blade_tip");
+        this.bladeForearm = this.bladeArm.getChild("blade_forearm");
+        this.blade = this.bladeForearm.getChild("blade");
+        this.blade0 = this.blade.getChild("blade_0");
+        this.blade1 = this.blade.getChild("blade_1");
+        this.blade2 = this.blade.getChild("blade_2");
+        this.blade3 = this.blade.getChild("blade_3");
+        this.blade4 = this.blade.getChild("blade_4");
+        this.blade5 = this.blade.getChild("blade_5");
+        this.blade6 = this.blade.getChild("blade_6");
         this.leftArm = this.body.getChild("left_arm");
-        this.fingers = this.leftArm.getChild("fingers");
+        this.leftForearm = this.leftArm.getChild("left_forearm");
+        this.finger0 = this.leftForearm.getChild("finger_0");
+        this.finger1 = this.leftForearm.getChild("finger_1");
+        this.finger2 = this.leftForearm.getChild("finger_2");
+        this.finger3 = this.leftForearm.getChild("finger_3");
         this.page0 = this.body.getChild("page_0");
         this.page1 = this.body.getChild("page_1");
         this.page2 = this.body.getChild("page_2");
         this.page3 = this.body.getChild("page_3");
+        this.page4 = this.body.getChild("page_4");
+        this.page5 = this.body.getChild("page_5");
+        this.knife0 = this.body.getChild("knife_0");
+        this.knife1 = this.body.getChild("knife_1");
+        this.knife2 = this.body.getChild("knife_2");
     }
 
     public static LayerDefinition createBodyLayer() {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
-        PartDefinition robeDef = root.addOrReplaceChild("robe", CubeListBuilder.create().texOffs(12, 0).addBox(-6.0F, -14.0F, -4.0F, 12.0F, 14.0F, 8.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 24.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition bodyDef = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(52, 0).addBox(-5.0F, -14.0F, -3.0F, 10.0F, 14.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 10.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition headDef = bodyDef.addOrReplaceChild("head", CubeListBuilder.create().texOffs(84, 0).addBox(-4.0F, -12.0F, -4.0F, 8.0F, 12.0F, 8.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -14.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition bladeArmDef = bodyDef.addOrReplaceChild("blade_arm", CubeListBuilder.create().texOffs(0, 25).mirror().addBox(-1.5F, 0.0F, -1.5F, 3.0F, 14.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-6.0F, -12.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition bladeDef = bladeArmDef.addOrReplaceChild("blade", CubeListBuilder.create().texOffs(0, 0).addBox(-0.5F, 0.0F, -4.0F, 1.0F, 20.0F, 5.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 14.0F, 0.0F, 0.2F, 0.0F, 0.0F));
-        PartDefinition bladeTipDef = bladeDef.addOrReplaceChild("blade_tip", CubeListBuilder.create().texOffs(12, 25).addBox(-0.5F, 0.0F, -3.0F, 1.0F, 10.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 20.0F, 0.0F, -0.5F, 0.0F, 0.0F));
-        PartDefinition leftArmDef = bodyDef.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(116, 0).addBox(-1.5F, 0.0F, -1.5F, 3.0F, 16.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(6.0F, -12.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition fingersDef = leftArmDef.addOrReplaceChild("fingers", CubeListBuilder.create().texOffs(20, 25).addBox(-2.0F, 0.0F, -1.0F, 4.0F, 8.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 16.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition page0Def = bodyDef.addOrReplaceChild("page_0", CubeListBuilder.create().texOffs(32, 25).addBox(9.0F, -3.0F, 0.0F, 4.0F, 5.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -22.0F, 0.0F, 0.0F, 0.0F, 0.2F));
-        PartDefinition page1Def = bodyDef.addOrReplaceChild("page_1", CubeListBuilder.create().texOffs(40, 25).addBox(9.0F, -3.0F, 0.0F, 4.0F, 5.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -22.0F, 0.0F, 0.0F, 1.5708F, 0.2F));
-        PartDefinition page2Def = bodyDef.addOrReplaceChild("page_2", CubeListBuilder.create().texOffs(48, 25).addBox(9.0F, -3.0F, 0.0F, 4.0F, 5.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -22.0F, 0.0F, 0.0F, 3.1416F, 0.2F));
-        PartDefinition page3Def = bodyDef.addOrReplaceChild("page_3", CubeListBuilder.create().texOffs(56, 25).addBox(9.0F, -3.0F, 0.0F, 4.0F, 5.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -22.0F, 0.0F, 0.0F, 4.7124F, 0.2F));
-        return LayerDefinition.create(mesh, 128, 64);
+        PartDefinition robeDef = root.addOrReplaceChild("robe", CubeListBuilder.create().texOffs(0, 0).addBox(-6.5F, -16.0F, -4.5F, 13.0F, 16.0F, 9.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 23.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition robeStrip0Def = robeDef.addOrReplaceChild("robe_strip_0", CubeListBuilder.create().texOffs(68, 40).addBox(-1.0F, 0.0F, 0.0F, 2.0F, 5.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-3.0F, 0.0F, -4.6F, 0.0F, 0.0F, 0.0F));
+        PartDefinition robeStrip1Def = robeDef.addOrReplaceChild("robe_strip_1", CubeListBuilder.create().texOffs(72, 40).addBox(-1.0F, 0.0F, 0.0F, 2.0F, 4.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(3.5F, 0.0F, -4.6F, 0.0F, 0.0F, 0.0F));
+        PartDefinition bodyDef = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(44, 0).addBox(-5.0F, -16.0F, -3.0F, 10.0F, 16.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 8.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition neckDef = bodyDef.addOrReplaceChild("neck", CubeListBuilder.create().texOffs(50, 25).addBox(-1.5F, -4.0F, -1.5F, 3.0F, 4.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -16.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition headDef = neckDef.addOrReplaceChild("head", CubeListBuilder.create().texOffs(76, 0).addBox(-3.5F, -14.0F, -3.5F, 7.0F, 14.0F, 7.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -4.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition faceLeftDef = headDef.addOrReplaceChild("face_left", CubeListBuilder.create().texOffs(20, 25).addBox(0.0F, -7.0F, 0.0F, 3.5F, 14.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -7.0F, -3.55F, 0.0F, 0.0F, 0.0F));
+        PartDefinition faceRightDef = headDef.addOrReplaceChild("face_right", CubeListBuilder.create().texOffs(27, 25).addBox(-3.5F, -7.0F, 0.0F, 3.5F, 14.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -7.0F, -3.55F, 0.0F, 0.0F, 0.0F));
+        PartDefinition bladeArmDef = bodyDef.addOrReplaceChild("blade_arm", CubeListBuilder.create().texOffs(116, 0).mirror().addBox(-1.5F, 0.0F, -1.5F, 3.0F, 14.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-6.5F, -15.0F, 0.0F, 0.0F, 0.0F, 0.12F));
+        PartDefinition bladeForearmDef = bladeArmDef.addOrReplaceChild("blade_forearm", CubeListBuilder.create().texOffs(0, 25).mirror().addBox(-1.5F, 0.0F, -1.5F, 3.0F, 12.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 14.0F, 0.0F, -0.3F, 0.0F, 0.0F));
+        PartDefinition bladeDef = bladeForearmDef.addOrReplaceChild("blade", CubeListBuilder.create().texOffs(62, 25).addBox(-1.0F, 0.0F, -1.0F, 2.0F, 5.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 12.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition blade0Def = bladeDef.addOrReplaceChild("blade_0", CubeListBuilder.create().texOffs(70, 25).addBox(-0.5F, -1.0F, -2.0F, 1.0F, 2.5F, 4.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 1.7177F, -6.9903F, -1.2F, 0.0F, 0.0F));
+        PartDefinition blade1Def = bladeDef.addOrReplaceChild("blade_1", CubeListBuilder.create().texOffs(80, 25).addBox(-0.5F, -1.0F, -2.0F, 1.0F, 2.5F, 4.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 4.2253F, -5.3802F, -0.8F, 0.0F, 0.0F));
+        PartDefinition blade2Def = bladeDef.addOrReplaceChild("blade_2", CubeListBuilder.create().texOffs(90, 25).addBox(-0.5F, -1.0F, -2.0F, 1.0F, 2.5F, 4.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 5.908F, -2.9206F, -0.4F, 0.0F, 0.0F));
+        PartDefinition blade3Def = bladeDef.addOrReplaceChild("blade_3", CubeListBuilder.create().texOffs(100, 25).addBox(-0.5F, -1.0F, -2.0F, 1.0F, 2.5F, 4.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 6.5F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition blade4Def = bladeDef.addOrReplaceChild("blade_4", CubeListBuilder.create().texOffs(110, 25).addBox(-0.5F, -1.0F, -2.0F, 1.0F, 2.5F, 4.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 5.908F, 2.9206F, 0.4F, 0.0F, 0.0F));
+        PartDefinition blade5Def = bladeDef.addOrReplaceChild("blade_5", CubeListBuilder.create().texOffs(0, 40).addBox(-0.5F, -1.0F, -2.0F, 1.0F, 2.5F, 4.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 4.2253F, 5.3802F, 0.8F, 0.0F, 0.0F));
+        PartDefinition blade6Def = bladeDef.addOrReplaceChild("blade_6", CubeListBuilder.create().texOffs(10, 40).addBox(-0.5F, -1.0F, -2.0F, 1.0F, 2.5F, 4.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 1.7177F, 6.9903F, 1.2F, 0.0F, 0.0F));
+        PartDefinition leftArmDef = bodyDef.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(104, 0).addBox(-1.5F, 0.0F, -1.5F, 3.0F, 16.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(6.5F, -15.0F, 0.0F, 0.0F, 0.0F, -0.1F));
+        PartDefinition leftForearmDef = leftArmDef.addOrReplaceChild("left_forearm", CubeListBuilder.create().texOffs(12, 25).addBox(-1.0F, 0.0F, -1.0F, 2.0F, 12.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 16.0F, 0.0F, -0.25F, 0.0F, 0.0F));
+        PartDefinition finger0Def = leftForearmDef.addOrReplaceChild("finger_0", CubeListBuilder.create().texOffs(34, 25).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 10.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-0.8F, 12.0F, 0.0F, -0.2F, 0.0F, 0.12F));
+        PartDefinition finger1Def = leftForearmDef.addOrReplaceChild("finger_1", CubeListBuilder.create().texOffs(38, 25).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 10.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.2F, 12.0F, 0.0F, -0.2F, 0.0F, 0.04F));
+        PartDefinition finger2Def = leftForearmDef.addOrReplaceChild("finger_2", CubeListBuilder.create().texOffs(42, 25).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 10.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.9F, 12.0F, 0.0F, -0.2F, 0.0F, -0.08F));
+        PartDefinition finger3Def = leftForearmDef.addOrReplaceChild("finger_3", CubeListBuilder.create().texOffs(46, 25).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 10.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-0.2F, 12.0F, 0.0F, -0.2F, 0.0F, -0.16F));
+        PartDefinition page0Def = bodyDef.addOrReplaceChild("page_0", CubeListBuilder.create().texOffs(20, 40).addBox(10.0F, -3.0F, 0.0F, 4.0F, 5.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -24.0F, 0.0F, 0.0F, 0.0F, 0.25F));
+        PartDefinition page1Def = bodyDef.addOrReplaceChild("page_1", CubeListBuilder.create().texOffs(28, 40).addBox(10.0F, -3.0F, 0.0F, 4.0F, 5.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -19.0F, 0.0F, 0.0F, 1.0472F, 0.1F));
+        PartDefinition page2Def = bodyDef.addOrReplaceChild("page_2", CubeListBuilder.create().texOffs(36, 40).addBox(10.0F, -3.0F, 0.0F, 4.0F, 5.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -24.0F, 0.0F, 0.0F, 2.0944F, -0.05F));
+        PartDefinition page3Def = bodyDef.addOrReplaceChild("page_3", CubeListBuilder.create().texOffs(44, 40).addBox(10.0F, -3.0F, 0.0F, 4.0F, 5.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -19.0F, 0.0F, 0.0F, 3.1416F, 0.25F));
+        PartDefinition page4Def = bodyDef.addOrReplaceChild("page_4", CubeListBuilder.create().texOffs(52, 40).addBox(10.0F, -3.0F, 0.0F, 4.0F, 5.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -24.0F, 0.0F, 0.0F, 4.1888F, 0.1F));
+        PartDefinition page5Def = bodyDef.addOrReplaceChild("page_5", CubeListBuilder.create().texOffs(60, 40).addBox(10.0F, -3.0F, 0.0F, 4.0F, 5.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -19.0F, 0.0F, 0.0F, 5.236F, -0.05F));
+        PartDefinition knife0Def = bodyDef.addOrReplaceChild("knife_0", CubeListBuilder.create().texOffs(76, 40).addBox(12.0F, -2.0F, 0.0F, 1.0F, 4.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -19.0F, 0.0F, 0.0F, 0.5F, 1.2F));
+        PartDefinition knife1Def = bodyDef.addOrReplaceChild("knife_1", CubeListBuilder.create().texOffs(78, 40).addBox(12.0F, -2.0F, 0.0F, 1.0F, 4.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -19.0F, 0.0F, 0.0F, 2.5944F, 1.2F));
+        PartDefinition knife2Def = bodyDef.addOrReplaceChild("knife_2", CubeListBuilder.create().texOffs(80, 40).addBox(12.0F, -2.0F, 0.0F, 1.0F, 4.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -19.0F, 0.0F, 0.0F, 4.6888F, 1.2F));
+        return LayerDefinition.create(mesh, 128, 128);
     }
 
     @Override
@@ -81,11 +144,20 @@ public class RasureModel<T extends RasureEntity> extends HierarchicalModel<T> {
         body.y += bob;
         robe.y += bob * 0.6F;
         robe.xRot += Mth.cos(limbSwing * 0.6F) * 0.12F * limbSwingAmount;
+        robeStrip0.xRot += Mth.sin(ageInTicks * 0.12F) * 0.15F;
+        robeStrip1.xRot += Mth.sin(ageInTicks * 0.1F + 1.0F) * 0.15F;
         float spin = ageInTicks * 0.05F;
         page0.yRot += spin;
         page1.yRot += spin;
         page2.yRot += spin;
         page3.yRot += spin;
+        page4.yRot += spin;
+        page5.yRot += spin;
+        knife0.yRot -= spin * 2.0F;
+        knife1.yRot -= spin * 2.0F;
+        knife2.yRot -= spin * 2.0F;
+        // The cut down its face: a crack of red that widens when it strikes.
+        float open = 0.25F + Math.max(0.0F, Mth.sin(ageInTicks * 0.04F) - 0.7F) * 3.0F;
         int phase = entity.getPhase();
         if (entity.isShielded()) {
             bladeArm.xRot -= 2.6F;
@@ -96,11 +168,20 @@ public class RasureModel<T extends RasureEntity> extends HierarchicalModel<T> {
             bladeArm.xRot -= 2.2F * s;
             bladeArm.yRot += 0.8F * s;
             body.yRot -= 0.4F * s;
+            open += 1.5F * s;
         } else {
             bladeArm.xRot += -0.25F + Mth.sin(ageInTicks * 0.06F) * 0.08F;
             leftArm.xRot += -0.15F + Mth.cos(ageInTicks * 0.06F) * 0.08F;
-            fingers.xRot += Mth.sin(ageInTicks * 0.2F) * 0.2F;
+            finger0.xRot += Mth.sin(ageInTicks * 0.2F) * 0.2F;
+            finger1.xRot += Mth.sin(ageInTicks * 0.2F + 0.7F) * 0.2F;
+            finger2.xRot += Mth.sin(ageInTicks * 0.2F + 1.4F) * 0.2F;
+            finger3.xRot += Mth.sin(ageInTicks * 0.2F + 2.1F) * 0.2F;
         }
-        if (phase == com.exonoxic.palimpsest.entity.boss.RasureEntity.BLANK_PAGE) head.zRot += 0.4F;
+        if (phase == com.exonoxic.palimpsest.entity.boss.RasureEntity.BLANK_PAGE) {
+            head.zRot += 0.4F;
+            open += 1.0F;
+        }
+        faceLeft.x += open;
+        faceRight.x -= open;
     }
 }

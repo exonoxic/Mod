@@ -29,6 +29,7 @@ public class FairCopyRenderer extends LivingEntityRenderer<FairCopyEntity, Playe
         this.wide = this.model;
         this.slim = new PlayerModel<>(ctx.bakeLayer(ModelLayers.PLAYER_SLIM), true);
         addLayer(new ItemInHandLayer<>(this, ctx.getItemInHandRenderer()));
+        addLayer(new FairCopyFaceLayer(this));
     }
 
     @Override

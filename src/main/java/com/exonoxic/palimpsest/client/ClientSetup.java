@@ -60,9 +60,9 @@ public final class ClientSetup {
         event.registerEntityRenderer(ModEntities.SMUDGE.get(), ctx -> new SimpleMobRenderer<>(ctx,
                 new SmudgeModel<>(ctx.bakeLayer(SmudgeModel.LAYER)), "smudge", 0.0F, 1.0F));
         event.registerEntityRenderer(ModEntities.MARGIN_CRAWLER.get(), ctx -> new SimpleMobRenderer<>(ctx,
-                new MarginCrawlerModel<>(ctx.bakeLayer(MarginCrawlerModel.LAYER)), "margin_crawler", 0.35F, 1.0F));
+                new MarginCrawlerModel<>(ctx.bakeLayer(MarginCrawlerModel.LAYER)), "margin_crawler", 0.35F, 1.0F).withGlow());
         event.registerEntityRenderer(ModEntities.QUILLCROW.get(), ctx -> new SimpleMobRenderer<>(ctx,
-                new QuillcrowModel<>(ctx.bakeLayer(QuillcrowModel.LAYER)), "quillcrow", 0.25F, 1.0F));
+                new QuillcrowModel<>(ctx.bakeLayer(QuillcrowModel.LAYER)), "quillcrow", 0.25F, 1.0F).withGlow());
         event.registerEntityRenderer(ModEntities.PALE_STAG.get(), ctx -> new SimpleMobRenderer<>(ctx,
                 new PaleStagModel<>(ctx.bakeLayer(PaleStagModel.LAYER)), "pale_stag", 0.6F, 1.0F));
         event.registerEntityRenderer(ModEntities.INKHOUND.get(), ctx -> new SimpleMobRenderer<>(ctx,
@@ -75,7 +75,7 @@ public final class ClientSetup {
         event.registerEntityRenderer(ModEntities.LONGHAND.get(), ctx -> new SimpleMobRenderer<>(ctx,
                 new LonghandModel<>(ctx.bakeLayer(LonghandModel.LAYER)), "longhand", 0.4F, 1.0F).withGlow());
         event.registerEntityRenderer(ModEntities.REDACTED.get(), ctx -> new SimpleMobRenderer<>(ctx,
-                new RedactedModel<>(ctx.bakeLayer(RedactedModel.LAYER)), "redacted", 0.5F, 1.0F));
+                new RedactedModel<>(ctx.bakeLayer(RedactedModel.LAYER)), "redacted", 0.5F, 1.0F).withGlow());
         event.registerEntityRenderer(ModEntities.FAIR_COPY.get(), FairCopyRenderer::new);
         event.registerEntityRenderer(ModEntities.ERRATUM.get(), ErratumRenderer::new);
         event.registerEntityRenderer(ModEntities.PALEHAND.get(), PalehandRenderer::new);

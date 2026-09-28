@@ -5,17 +5,27 @@ import com.exonoxic.palimpsest.client.model.BlotlingModel;
 import com.exonoxic.palimpsest.entity.BlotlingEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
+import net.minecraft.client.renderer.entity.layers.EyesLayer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
 /** Squashes and stretches like a slime, sized by the blot's size. */
 public class BlotlingRenderer extends MobRenderer<BlotlingEntity, BlotlingModel<BlotlingEntity>> {
     private static final ResourceLocation TEXTURE = Palimpsest.id("textures/entity/blotling.png");
+    private static final RenderType GLOW = RenderType.eyes(Palimpsest.id("textures/entity/blotling_glow.png"));
 
     public BlotlingRenderer(EntityRendererProvider.Context ctx) {
         super(ctx, new BlotlingModel<>(ctx.bakeLayer(BlotlingModel.LAYER)), 0.25F);
+        // Its eyes catch the light even where there is none.
+        addLayer(new EyesLayer<>(this) {
+            @Override
+            public RenderType renderType() {
+                return GLOW;
+            }
+        });
     }
 
     @Override

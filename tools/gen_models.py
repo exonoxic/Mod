@@ -932,12 +932,30 @@ def rasure():
 
 
 import creature_designs  # noqa: E402
+import bestiary  # noqa: E402
 
-MODELS = [creature_designs.knocker(), creature_designs.longhand(), smudge(), redacted(), rubricator(), creature_designs.copyist(), inkhound(), pale_stag(), quillcrow(),
-          foxing_moth(), blotling(), margin_crawler(), creature_designs.erratum(), creature_designs.erratum_eye(), palehand(), bookbinder(), rasure()]
+MODELS = [creature_designs.knocker(), creature_designs.longhand(), bestiary.smudge(), bestiary.redacted(), bestiary.rubricator(), creature_designs.copyist(), bestiary.inkhound(), bestiary.pale_stag(), bestiary.quillcrow(),
+          bestiary.foxing_moth(), bestiary.blotling(), bestiary.margin_crawler(), creature_designs.erratum(), creature_designs.erratum_eye(), bestiary.palehand(), bestiary.bookbinder(), bestiary.rasure()]
+
+
+def fair_copy_face():
+    """The Fair Copy's wrong face: a player-skin-shaped overlay with black hollows where the eyes
+    sit on most skins (row 12 of the face) and black run down from them. Everything else clear."""
+    c = Canvas(64, 64)
+    hollow = (6, 5, 8)
+    run = (14, 12, 16)
+    # Face front is x 8..15, y 8..15.
+    for x in (9, 10, 13, 14):
+        c.set(x, 11, (30, 26, 30))
+        c.set(x, 12, hollow)
+    for x, drop in ((9, 3), (10, 1), (13, 2), (14, 3)):
+        for y in range(13, 13 + drop):
+            c.set(x, y, run)
+    c.save(os.path.join(TEX_DIR, "fair_copy_face.png"))
 
 
 def main():
+    fair_copy_face()
     for m in MODELS:
         pack(m)
         paint_model(m)

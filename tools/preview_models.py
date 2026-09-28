@@ -205,6 +205,16 @@ POSES = {
         "walk": {"left_thigh": (0.8, 0, 0), "right_thigh": (-0.8, 0, 0), "right_shin": (1.0, 0, 0),
                  "left_upper_arm": (-0.4, 0, 0), "right_upper_arm": (0.4, 0, 0), "shroud_back": (-0.2, 0, 0)},
     },
+    "inkhound": {
+        "hunting": {"jaw": (0.8, 0, 0), "head": (-0.2, 0, 0), "neck": (0.25, 0, 0), "left_ear": (0.9, 0, 0),
+                    "right_ear": (0.9, 0, 0), "tail": (0.4, 0, 0)},
+    },
+    "redacted": {
+        "revealed": {"bar_eyes": (0, 0, 0, 4.5, 0, 0), "right_arm": (-0.9, 0, 0), "right_forearm": (-0.4, 0, 0)},
+    },
+    "rasure": {
+        "opened": {"face_left": (0, 0, 0, 1.6, 0, 0), "face_right": (0, 0, 0, -1.6, 0, 0), "blade_arm": (-0.8, 0, 0)},
+    },
     "erratum": {
         "walking": dict({p: (0, 0, 0, 0, -5, 0) for p in ["maw"] + [f"{s}_leg_{i}" for s in ("left", "right") for i in range(3)]}),
     },

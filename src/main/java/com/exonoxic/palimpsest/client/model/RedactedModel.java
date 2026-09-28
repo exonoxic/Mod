@@ -19,45 +19,78 @@ import net.minecraft.util.Mth;
 public class RedactedModel<T extends RedactedEntity> extends HierarchicalModel<T> {
     public static final ModelLayerLocation LAYER = new ModelLayerLocation(Palimpsest.id("redacted"), "main");
     private final ModelPart root;
+    protected final ModelPart hips;
+    protected final ModelPart leftLeg;
+    protected final ModelPart leftShin;
+    protected final ModelPart leftFoot;
+    protected final ModelPart kneeBar;
+    protected final ModelPart rightLeg;
+    protected final ModelPart rightShin;
+    protected final ModelPart rightFoot;
+    protected final ModelPart body;
+    protected final ModelPart looseSheet;
+    protected final ModelPart barChest;
+    protected final ModelPart barWaist;
+    protected final ModelPart leftArm;
+    protected final ModelPart leftForearm;
+    protected final ModelPart rightArm;
+    protected final ModelPart rightForearm;
+    protected final ModelPart knife;
+    protected final ModelPart neck;
     protected final ModelPart head;
     protected final ModelPart barEyes;
     protected final ModelPart barMouth;
-    protected final ModelPart body;
-    protected final ModelPart barChest;
-    protected final ModelPart rightArm;
-    protected final ModelPart blade;
-    protected final ModelPart leftArm;
-    protected final ModelPart rightLeg;
-    protected final ModelPart leftLeg;
 
     public RedactedModel(ModelPart root) {
         super(RenderType::entityCutoutNoCull);
         this.root = root;
-        this.head = root.getChild("head");
+        this.hips = root.getChild("hips");
+        this.leftLeg = this.hips.getChild("left_leg");
+        this.leftShin = this.leftLeg.getChild("left_shin");
+        this.leftFoot = this.leftShin.getChild("left_foot");
+        this.kneeBar = this.leftShin.getChild("knee_bar");
+        this.rightLeg = this.hips.getChild("right_leg");
+        this.rightShin = this.rightLeg.getChild("right_shin");
+        this.rightFoot = this.rightShin.getChild("right_foot");
+        this.body = this.hips.getChild("body");
+        this.looseSheet = this.body.getChild("loose_sheet");
+        this.barChest = this.body.getChild("bar_chest");
+        this.barWaist = this.body.getChild("bar_waist");
+        this.leftArm = this.body.getChild("left_arm");
+        this.leftForearm = this.leftArm.getChild("left_forearm");
+        this.rightArm = this.body.getChild("right_arm");
+        this.rightForearm = this.rightArm.getChild("right_forearm");
+        this.knife = this.rightForearm.getChild("knife");
+        this.neck = this.body.getChild("neck");
+        this.head = this.neck.getChild("head");
         this.barEyes = this.head.getChild("bar_eyes");
         this.barMouth = this.head.getChild("bar_mouth");
-        this.body = root.getChild("body");
-        this.barChest = this.body.getChild("bar_chest");
-        this.rightArm = root.getChild("right_arm");
-        this.blade = this.rightArm.getChild("blade");
-        this.leftArm = root.getChild("left_arm");
-        this.rightLeg = root.getChild("right_leg");
-        this.leftLeg = root.getChild("left_leg");
     }
 
     public static LayerDefinition createBodyLayer() {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
-        PartDefinition headDef = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 0).addBox(-4.0F, -8.0F, -4.0F, 8.0F, 8.0F, 8.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition barEyesDef = headDef.addOrReplaceChild("bar_eyes", CubeListBuilder.create().texOffs(6, 32).addBox(-5.0F, -6.0F, -4.6F, 10.0F, 2.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition barMouthDef = headDef.addOrReplaceChild("bar_mouth", CubeListBuilder.create().texOffs(0, 44).addBox(-4.0F, -3.0F, -4.6F, 8.0F, 2.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition bodyDef = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 0).addBox(-4.0F, 0.0F, -2.0F, 8.0F, 12.0F, 4.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition barChestDef = bodyDef.addOrReplaceChild("bar_chest", CubeListBuilder.create().texOffs(28, 32).addBox(-5.0F, 3.0F, -2.6F, 10.0F, 2.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition rightArmDef = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 16).addBox(-3.0F, -2.0F, -2.0F, 4.0F, 12.0F, 4.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-5.0F, 2.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition bladeDef = rightArmDef.addOrReplaceChild("blade", CubeListBuilder.create().texOffs(0, 32).addBox(-0.5F, 0.0F, -1.0F, 1.0F, 10.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-1.0F, 9.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition leftArmDef = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(16, 16).mirror().addBox(-1.0F, -2.0F, -2.0F, 4.0F, 12.0F, 4.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(5.0F, 2.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition rightLegDef = root.addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(32, 16).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 12.0F, 4.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-1.9F, 12.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition leftLegDef = root.addOrReplaceChild("left_leg", CubeListBuilder.create().texOffs(48, 16).mirror().addBox(-2.0F, 0.0F, -2.0F, 4.0F, 12.0F, 4.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(1.9F, 12.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition hipsDef = root.addOrReplaceChild("hips", CubeListBuilder.create().texOffs(20, 25).addBox(-3.0F, -1.0F, -1.5F, 6.0F, 2.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 12.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition leftLegDef = hipsDef.addOrReplaceChild("left_leg", CubeListBuilder.create().texOffs(25, 14).addBox(-1.0F, 0.0F, -1.0F, 2.0F, 6.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(1.6F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition leftShinDef = leftLegDef.addOrReplaceChild("left_shin", CubeListBuilder.create().texOffs(33, 14).addBox(-1.0F, 0.0F, -1.0F, 2.0F, 6.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 6.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition leftFootDef = leftShinDef.addOrReplaceChild("left_foot", CubeListBuilder.create().texOffs(50, 25).addBox(-1.0F, 0.0F, -2.5F, 2.0F, 0.5F, 3.5F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 6.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition kneeBarDef = leftShinDef.addOrReplaceChild("knee_bar", CubeListBuilder.create().texOffs(38, 25).addBox(-1.5F, -1.0F, -1.5F, 3.0F, 2.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -0.5F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition rightLegDef = hipsDef.addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(41, 14).mirror().addBox(-1.0F, 0.0F, -1.0F, 2.0F, 6.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-1.6F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition rightShinDef = rightLegDef.addOrReplaceChild("right_shin", CubeListBuilder.create().texOffs(49, 14).mirror().addBox(-1.0F, 0.0F, -1.0F, 2.0F, 6.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 6.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition rightFootDef = rightShinDef.addOrReplaceChild("right_foot", CubeListBuilder.create().texOffs(0, 30).mirror().addBox(-1.0F, 0.0F, -2.5F, 2.0F, 0.5F, 3.5F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 6.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition bodyDef = hipsDef.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 0).addBox(-3.5F, -11.0F, -1.5F, 7.0F, 11.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -1.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition looseSheetDef = bodyDef.addOrReplaceChild("loose_sheet", CubeListBuilder.create().texOffs(11, 14).addBox(-3.5F, 0.0F, 0.0F, 7.0F, 8.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.4F, -10.5F, -1.65F, 0.0F, 0.0F, -0.06F));
+        PartDefinition barChestDef = bodyDef.addOrReplaceChild("bar_chest", CubeListBuilder.create().texOffs(23, 30).addBox(-5.0F, -1.0F, -0.5F, 10.0F, 2.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -7.0F, -2.2F, 0.0F, 0.0F, 0.12F));
+        PartDefinition barWaistDef = bodyDef.addOrReplaceChild("bar_waist", CubeListBuilder.create().texOffs(45, 30).addBox(-4.5F, -1.0F, -0.5F, 8.0F, 2.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -2.5F, -2.1F, 0.0F, 0.0F, -0.05F));
+        PartDefinition leftArmDef = bodyDef.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(20, 0).addBox(-1.0F, -1.0F, -1.0F, 2.0F, 11.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(4.5F, -10.0F, 0.0F, 0.05F, 0.0F, -0.08F));
+        PartDefinition leftForearmDef = leftArmDef.addOrReplaceChild("left_forearm", CubeListBuilder.create().texOffs(36, 0).addBox(-1.0F, 0.0F, -1.0F, 2.0F, 10.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 10.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition rightArmDef = bodyDef.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(28, 0).mirror().addBox(-1.0F, -1.0F, -1.0F, 2.0F, 11.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-4.5F, -10.0F, 0.0F, 0.05F, 0.0F, 0.08F));
+        PartDefinition rightForearmDef = rightArmDef.addOrReplaceChild("right_forearm", CubeListBuilder.create().texOffs(0, 14).mirror().addBox(-1.0F, 0.0F, -1.0F, 2.0F, 9.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 10.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition knifeDef = rightForearmDef.addOrReplaceChild("knife", CubeListBuilder.create().texOffs(19, 30).addBox(-0.5F, -1.0F, -0.5F, 1.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)).texOffs(8, 14).addBox(-0.5F, 2.0F, -0.5F, 1.0F, 8.0F, 0.5F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 9.0F, -0.5F, 1.35F, 0.0F, 0.0F));
+        PartDefinition neckDef = bodyDef.addOrReplaceChild("neck", CubeListBuilder.create().texOffs(11, 30).addBox(-1.0F, -2.0F, -1.0F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -11.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition headDef = neckDef.addOrReplaceChild("head", CubeListBuilder.create().texOffs(44, 0).addBox(-3.0F, -8.0F, -1.5F, 6.0F, 8.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -2.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition barEyesDef = headDef.addOrReplaceChild("bar_eyes", CubeListBuilder.create().texOffs(0, 25).addBox(-4.5F, -2.0F, -1.0F, 9.0F, 4.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -5.5F, -1.6F, 0.0F, 0.0F, 0.0F));
+        PartDefinition barMouthDef = headDef.addOrReplaceChild("bar_mouth", CubeListBuilder.create().texOffs(0, 34).addBox(-3.5F, -1.0F, -0.5F, 7.0F, 2.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -1.5F, -1.8F, 0.0F, 0.0F, -0.08F));
         return LayerDefinition.create(mesh, 64, 64);
     }
 
@@ -71,16 +104,38 @@ public class RedactedModel<T extends RedactedEntity> extends HierarchicalModel<T
         root().getAllParts().forEach(ModelPart::resetPose);
         head.yRot += netHeadYaw * Mth.DEG_TO_RAD;
         head.xRot += headPitch * Mth.DEG_TO_RAD;
-        rightArm.xRot += Mth.cos(limbSwing * 0.6662F + Mth.PI) * 1.2F * limbSwingAmount * 0.5F;
-        leftArm.xRot += Mth.cos(limbSwing * 0.6662F) * 1.2F * limbSwingAmount * 0.5F;
-        rightLeg.xRot += Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
-        leftLeg.xRot += Mth.cos(limbSwing * 0.6662F + Mth.PI) * 1.4F * limbSwingAmount;
-        if (attackTime > 0) {
-            float swing = Mth.sin(Mth.sqrt(attackTime) * Mth.PI);
-            rightArm.xRot -= 1.6F * swing;
-            body.yRot += 0.3F * swing;
+        float a = Math.min(1.0F, limbSwingAmount);
+        float w = limbSwing * 0.6662F;
+        boolean hunting = entity.isAggressive();
+        leftLeg.xRot += Mth.cos(w) * 1.0F * a;
+        rightLeg.xRot += Mth.cos(w + Mth.PI) * 1.0F * a;
+        leftShin.xRot += Math.max(0.0F, Mth.sin(w)) * 0.7F * a;
+        rightShin.xRot += Math.max(0.0F, -Mth.sin(w)) * 0.7F * a;
+        leftArm.xRot += Mth.cos(w + Mth.PI) * 0.4F * a;
+        rightArm.xRot += Mth.cos(w) * 0.4F * a;
+        // It moves in jerks, like a page being turned.
+        float jerk = (float) Math.floor(ageInTicks * 0.25F);
+        head.zRot += Mth.sin(jerk * 1.7F) * 0.12F;
+        // The bars will not keep still: they twitch, and the one over the eyes slides off them
+        // for a moment every so often (for longer when it is coming for you).
+        barChest.x += Mth.sin(ageInTicks * 0.9F) * 0.25F;
+        barWaist.x -= Mth.sin(ageInTicks * 0.7F + 1.0F) * 0.3F;
+        barMouth.x += Mth.sin(jerk * 2.3F) * 0.3F;
+        kneeBar.x += Mth.sin(ageInTicks * 0.6F) * 0.2F;
+        float reveal = Mth.sin(ageInTicks * 0.045F);
+        float slide = reveal > (hunting ? 0.3F : 0.85F) ? (reveal - (hunting ? 0.3F : 0.85F)) * (hunting ? 9.0F : 30.0F) : 0.0F;
+        barEyes.x += Math.min(4.5F, slide) + Mth.sin(ageInTicks * 1.1F) * 0.15F;
+        looseSheet.zRot += Mth.sin(ageInTicks * 0.08F) * 0.04F + Mth.sin(w) * 0.05F * a;
+        if (hunting) {
+            rightArm.xRot -= 0.9F;
+            rightForearm.xRot -= 0.4F;
+            head.xRot -= 0.15F;
         }
-        barEyes.x += Mth.sin(ageInTicks * 0.7F) * 0.15F;
-        barChest.x -= Mth.sin(ageInTicks * 0.5F) * 0.15F;
+        if (attackTime > 0.0F) {
+            float s = Mth.sin(Mth.sqrt(attackTime) * Mth.PI);
+            rightArm.xRot -= 1.4F * s;
+            rightArm.yRot += 0.4F * s;
+            body.yRot += 0.3F * s;
+        }
     }
 }

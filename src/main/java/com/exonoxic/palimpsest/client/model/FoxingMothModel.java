@@ -24,6 +24,7 @@ public class FoxingMothModel<T extends FoxingMothEntity> extends HierarchicalMod
     protected final ModelPart antennae;
     protected final ModelPart leftWing;
     protected final ModelPart rightWing;
+    protected final ModelPart legs;
 
     public FoxingMothModel(ModelPart root) {
         super(RenderType::entityCutoutNoCull);
@@ -33,6 +34,7 @@ public class FoxingMothModel<T extends FoxingMothEntity> extends HierarchicalMod
         this.antennae = this.head.getChild("antennae");
         this.leftWing = this.body.getChild("left_wing");
         this.rightWing = this.body.getChild("right_wing");
+        this.legs = this.body.getChild("legs");
     }
 
     public static LayerDefinition createBodyLayer() {
@@ -40,9 +42,10 @@ public class FoxingMothModel<T extends FoxingMothEntity> extends HierarchicalMod
         PartDefinition root = mesh.getRoot();
         PartDefinition bodyDef = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 14).addBox(-1.0F, -1.0F, -3.0F, 2.0F, 2.0F, 5.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 20.0F, 0.0F, 0.0F, 0.0F, 0.0F));
         PartDefinition headDef = bodyDef.addOrReplaceChild("head", CubeListBuilder.create().texOffs(14, 14).addBox(-1.0F, -1.0F, -2.0F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, -3.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition antennaeDef = headDef.addOrReplaceChild("antennae", CubeListBuilder.create().texOffs(22, 14).addBox(-1.5F, -2.0F, 0.0F, 3.0F, 2.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -1.0F, -2.0F, -0.5F, 0.0F, 0.0F));
+        PartDefinition antennaeDef = headDef.addOrReplaceChild("antennae", CubeListBuilder.create().texOffs(22, 14).addBox(-2.0F, -3.0F, 0.0F, 4.0F, 3.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -1.0F, -2.0F, -0.5F, 0.0F, 0.0F));
         PartDefinition leftWingDef = bodyDef.addOrReplaceChild("left_wing", CubeListBuilder.create().texOffs(0, 0).addBox(0.0F, 0.0F, -3.0F, 7.0F, 0.0F, 7.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(1.0F, -1.0F, -1.0F, 0.0F, 0.0F, 0.0F));
         PartDefinition rightWingDef = bodyDef.addOrReplaceChild("right_wing", CubeListBuilder.create().texOffs(0, 7).mirror().addBox(-7.0F, 0.0F, -3.0F, 7.0F, 0.0F, 7.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-1.0F, -1.0F, -1.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition legsDef = bodyDef.addOrReplaceChild("legs", CubeListBuilder.create().texOffs(0, 21).addBox(-1.5F, 0.0F, -1.0F, 3.0F, 1.0F, 0.0F, new CubeDeformation(0.0F)).texOffs(6, 21).addBox(-1.5F, 0.0F, 0.5F, 3.0F, 1.0F, 0.0F, new CubeDeformation(0.0F)).texOffs(12, 21).addBox(-1.5F, 0.0F, 2.0F, 3.0F, 1.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 1.0F, -1.0F, 0.0F, 0.0F, 0.0F));
         return LayerDefinition.create(mesh, 32, 32);
     }
 
@@ -58,5 +61,6 @@ public class FoxingMothModel<T extends FoxingMothEntity> extends HierarchicalMod
         leftWing.zRot += -0.2F + flap;
         rightWing.zRot -= -0.2F + flap;
         body.y += Mth.sin(ageInTicks * 0.2F) * 0.6F;
+        antennae.xRot += Mth.sin(ageInTicks * 0.3F) * 0.1F;
     }
 }

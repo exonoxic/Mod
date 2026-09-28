@@ -19,42 +19,78 @@ import net.minecraft.util.Mth;
 public class RubricatorModel<T extends RubricatorEntity> extends HierarchicalModel<T> {
     public static final ModelLayerLocation LAYER = new ModelLayerLocation(Palimpsest.id("rubricator"), "main");
     private final ModelPart root;
+    protected final ModelPart skirt;
+    protected final ModelPart leftFoot;
+    protected final ModelPart rightFoot;
+    protected final ModelPart body;
+    protected final ModelPart belt;
+    protected final ModelPart ropeEnd;
+    protected final ModelPart inkpot;
+    protected final ModelPart chainedBook;
     protected final ModelPart head;
     protected final ModelPart hoodTop;
     protected final ModelPart hoodLeft;
     protected final ModelPart hoodRight;
     protected final ModelPart hoodBack;
-    protected final ModelPart body;
-    protected final ModelPart foldedArms;
+    protected final ModelPart hoodTail;
+    protected final ModelPart leftArm;
+    protected final ModelPart leftHand;
+    protected final ModelPart heldBook;
+    protected final ModelPart rightArm;
+    protected final ModelPart rightHand;
     protected final ModelPart quill;
-    protected final ModelPart skirt;
+    protected final ModelPart quillVane;
 
     public RubricatorModel(ModelPart root) {
         super(RenderType::entityCutoutNoCull);
         this.root = root;
-        this.head = root.getChild("head");
+        this.skirt = root.getChild("skirt");
+        this.leftFoot = this.skirt.getChild("left_foot");
+        this.rightFoot = this.skirt.getChild("right_foot");
+        this.body = root.getChild("body");
+        this.belt = this.body.getChild("belt");
+        this.ropeEnd = this.belt.getChild("rope_end");
+        this.inkpot = this.belt.getChild("inkpot");
+        this.chainedBook = this.belt.getChild("chained_book");
+        this.head = this.body.getChild("head");
         this.hoodTop = this.head.getChild("hood_top");
         this.hoodLeft = this.head.getChild("hood_left");
         this.hoodRight = this.head.getChild("hood_right");
         this.hoodBack = this.head.getChild("hood_back");
-        this.body = root.getChild("body");
-        this.foldedArms = this.body.getChild("folded_arms");
-        this.quill = this.foldedArms.getChild("quill");
-        this.skirt = root.getChild("skirt");
+        this.hoodTail = this.head.getChild("hood_tail");
+        this.leftArm = this.body.getChild("left_arm");
+        this.leftHand = this.leftArm.getChild("left_hand");
+        this.heldBook = this.leftHand.getChild("held_book");
+        this.rightArm = this.body.getChild("right_arm");
+        this.rightHand = this.rightArm.getChild("right_hand");
+        this.quill = this.rightHand.getChild("quill");
+        this.quillVane = this.quill.getChild("quill_vane");
     }
 
     public static LayerDefinition createBodyLayer() {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
-        PartDefinition headDef = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 19).addBox(-4.0F, -8.0F, -4.0F, 8.0F, 8.0F, 8.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition hoodTopDef = headDef.addOrReplaceChild("hood_top", CubeListBuilder.create().texOffs(32, 19).addBox(-5.0F, -9.0F, -5.0F, 10.0F, 1.0F, 10.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition hoodLeftDef = headDef.addOrReplaceChild("hood_left", CubeListBuilder.create().texOffs(32, 0).addBox(4.0F, -8.0F, -5.0F, 1.0F, 9.0F, 10.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition hoodRightDef = headDef.addOrReplaceChild("hood_right", CubeListBuilder.create().texOffs(54, 0).mirror().addBox(-5.0F, -8.0F, -5.0F, 1.0F, 9.0F, 10.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition hoodBackDef = headDef.addOrReplaceChild("hood_back", CubeListBuilder.create().texOffs(72, 19).addBox(-4.0F, -8.0F, 4.0F, 8.0F, 9.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition bodyDef = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(76, 0).addBox(-4.0F, 0.0F, -3.0F, 8.0F, 12.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition foldedArmsDef = bodyDef.addOrReplaceChild("folded_arms", CubeListBuilder.create().texOffs(94, 19).addBox(-4.0F, -2.0F, -3.0F, 8.0F, 4.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 4.0F, -3.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition quillDef = foldedArmsDef.addOrReplaceChild("quill", CubeListBuilder.create().texOffs(90, 19).addBox(-0.5F, -8.0F, -0.5F, 1.0F, 9.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(2.0F, -1.0F, -2.0F, 0.3F, 0.0F, -0.35F));
-        PartDefinition skirtDef = root.addOrReplaceChild("skirt", CubeListBuilder.create().texOffs(0, 0).addBox(-4.5F, 0.0F, -3.5F, 9.0F, 12.0F, 7.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 12.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition skirtDef = root.addOrReplaceChild("skirt", CubeListBuilder.create().texOffs(0, 0).addBox(-4.5F, 0.0F, -3.0F, 9.0F, 12.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 12.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition leftFootDef = skirtDef.addOrReplaceChild("left_foot", CubeListBuilder.create().texOffs(62, 31).addBox(-1.0F, 0.0F, -1.0F, 2.0F, 0.5F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(1.8F, 11.5F, -2.8F, 0.0F, 0.0F, 0.0F));
+        PartDefinition rightFootDef = skirtDef.addOrReplaceChild("right_foot", CubeListBuilder.create().texOffs(70, 31).addBox(-1.0F, 0.0F, -1.0F, 2.0F, 0.5F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-1.8F, 11.5F, -2.8F, 0.0F, 0.0F, 0.0F));
+        PartDefinition bodyDef = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(70, 0).addBox(-4.0F, -12.0F, -2.5F, 8.0F, 12.0F, 5.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 12.0F, 0.0F, 0.18F, 0.0F, 0.0F));
+        PartDefinition beltDef = bodyDef.addOrReplaceChild("belt", CubeListBuilder.create().texOffs(0, 31).addBox(-4.0F, 0.0F, -2.5F, 8.0F, 1.0F, 5.0F, new CubeDeformation(0.25F)), PartPose.offsetAndRotation(0.0F, -1.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition ropeEndDef = beltDef.addOrReplaceChild("rope_end", CubeListBuilder.create().texOffs(104, 18).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 6.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(2.5F, 1.0F, -2.7F, 0.0F, 0.0F, 0.1F));
+        PartDefinition inkpotDef = beltDef.addOrReplaceChild("inkpot", CubeListBuilder.create().texOffs(38, 31).addBox(-1.0F, 0.0F, -1.0F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-3.0F, 1.0F, -2.4F, 0.0F, 0.0F, 0.0F));
+        PartDefinition chainedBookDef = beltDef.addOrReplaceChild("chained_book", CubeListBuilder.create().texOffs(96, 18).addBox(0.0F, 0.0F, -2.0F, 1.0F, 4.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(4.3F, 1.0F, 0.0F, 0.0F, 0.0F, -0.12F));
+        PartDefinition headDef = bodyDef.addOrReplaceChild("head", CubeListBuilder.create().texOffs(96, 0).addBox(-3.5F, -7.0F, -3.5F, 7.0F, 7.0F, 7.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -12.0F, -0.5F, 0.2F, 0.0F, 0.0F));
+        PartDefinition hoodTopDef = headDef.addOrReplaceChild("hood_top", CubeListBuilder.create().texOffs(36, 18).addBox(-4.5F, -8.5F, -4.5F, 9.0F, 1.5F, 9.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition hoodLeftDef = headDef.addOrReplaceChild("hood_left", CubeListBuilder.create().texOffs(30, 0).addBox(3.5F, -7.5F, -4.5F, 1.0F, 8.5F, 9.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition hoodRightDef = headDef.addOrReplaceChild("hood_right", CubeListBuilder.create().texOffs(50, 0).mirror().addBox(-4.5F, -7.5F, -4.5F, 1.0F, 8.5F, 9.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition hoodBackDef = headDef.addOrReplaceChild("hood_back", CubeListBuilder.create().texOffs(76, 18).addBox(-3.5F, -7.5F, 3.5F, 7.0F, 8.5F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition hoodTailDef = headDef.addOrReplaceChild("hood_tail", CubeListBuilder.create().texOffs(28, 18).addBox(-1.5F, 0.0F, 0.0F, 3.0F, 12.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -5.0F, 4.4F, -0.25F, 0.0F, 0.0F));
+        PartDefinition leftArmDef = bodyDef.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(0, 18).addBox(-1.5F, -1.0F, -2.0F, 3.0F, 9.0F, 4.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(4.8F, -11.0F, 0.0F, -0.5F, 0.0F, -0.1F));
+        PartDefinition leftHandDef = leftArmDef.addOrReplaceChild("left_hand", CubeListBuilder.create().texOffs(46, 31).addBox(-1.0F, 0.0F, -1.0F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 8.0F, -0.5F, 0.0F, 0.0F, 0.0F));
+        PartDefinition heldBookDef = leftHandDef.addOrReplaceChild("held_book", CubeListBuilder.create().texOffs(26, 31).addBox(-2.5F, 0.0F, -1.0F, 5.0F, 4.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 1.5F, -1.0F, 0.9F, 0.0F, 0.0F));
+        PartDefinition rightArmDef = bodyDef.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(14, 18).mirror().addBox(-1.5F, -1.0F, -2.0F, 3.0F, 9.0F, 4.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-4.8F, -11.0F, 0.0F, -0.95F, 0.0F, 0.15F));
+        PartDefinition rightHandDef = rightArmDef.addOrReplaceChild("right_hand", CubeListBuilder.create().texOffs(54, 31).mirror().addBox(-1.0F, 0.0F, -1.0F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 8.0F, -0.5F, 0.0F, 0.0F, 0.0F));
+        PartDefinition quillDef = rightHandDef.addOrReplaceChild("quill", CubeListBuilder.create().texOffs(72, 18).addBox(-0.5F, -8.0F, -0.5F, 1.0F, 9.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 1.0F, -0.5F, 0.4F, 0.0F, 0.3F));
+        PartDefinition quillVaneDef = quillDef.addOrReplaceChild("quill_vane", CubeListBuilder.create().texOffs(92, 18).addBox(0.0F, 0.0F, -0.5F, 0.0F, 6.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -8.0F, 0.0F, 0.0F, 0.0F, 0.0F));
         return LayerDefinition.create(mesh, 128, 64);
     }
 
@@ -66,12 +102,23 @@ public class RubricatorModel<T extends RubricatorEntity> extends HierarchicalMod
     @Override
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         root().getAllParts().forEach(ModelPart::resetPose);
-        head.yRot += netHeadYaw * Mth.DEG_TO_RAD;
-        head.xRot += headPitch * Mth.DEG_TO_RAD;
+        head.yRot += netHeadYaw * Mth.DEG_TO_RAD * 0.8F;
+        head.xRot += headPitch * Mth.DEG_TO_RAD * 0.6F;
+        float a = Math.min(1.0F, limbSwingAmount);
         float sway = Mth.sin(ageInTicks * 0.05F) * 0.03F;
         body.zRot += sway;
-        skirt.zRot += sway * 0.5F;
-        skirt.xRot += Mth.cos(limbSwing * 0.6662F) * 0.15F * limbSwingAmount;
-        quill.xRot += Mth.sin(ageInTicks * 0.1F) * 0.08F;
+        skirt.zRot += sway * 0.4F;
+        skirt.xRot += Mth.cos(limbSwing * 0.6662F) * 0.12F * a;
+        leftFoot.xRot += Mth.cos(limbSwing * 0.6662F) * 0.6F * a;
+        rightFoot.xRot += Mth.cos(limbSwing * 0.6662F + Mth.PI) * 0.6F * a;
+        hoodTail.xRot += Mth.sin(ageInTicks * 0.06F) * 0.05F + a * 0.2F;
+        ropeEnd.xRot += Mth.cos(limbSwing * 0.6662F) * 0.2F * a;
+        chainedBook.zRot += Mth.cos(limbSwing * 0.6662F) * 0.1F * a;
+        // Always writing: the quill hand traces letters in the air, pauses, starts again.
+        float write = Mth.sin(ageInTicks * 0.021F) > -0.3F ? 1.0F : 0.0F;
+        rightArm.xRot += Mth.sin(ageInTicks * 0.45F) * 0.08F * write;
+        rightArm.yRot += Mth.cos(ageInTicks * 0.3F) * 0.1F * write;
+        rightHand.zRot += Mth.sin(ageInTicks * 0.6F) * 0.2F * write;
+        head.xRot += 0.15F * write;
     }
 }

@@ -21,37 +21,79 @@ public class QuillcrowModel<T extends QuillcrowEntity> extends HierarchicalModel
     private final ModelPart root;
     protected final ModelPart body;
     protected final ModelPart head;
+    protected final ModelPart ruff;
     protected final ModelPart beak;
+    protected final ModelPart beakTip;
+    protected final ModelPart beakDrip;
     protected final ModelPart leftWing;
+    protected final ModelPart leftQuill0;
+    protected final ModelPart leftQuill1;
+    protected final ModelPart leftQuill2;
     protected final ModelPart rightWing;
+    protected final ModelPart rightQuill0;
+    protected final ModelPart rightQuill1;
+    protected final ModelPart rightQuill2;
     protected final ModelPart tail;
+    protected final ModelPart tailQuill0;
+    protected final ModelPart tailQuill1;
+    protected final ModelPart tailQuill2;
     protected final ModelPart leftLeg;
+    protected final ModelPart leftTalons;
     protected final ModelPart rightLeg;
+    protected final ModelPart rightTalons;
 
     public QuillcrowModel(ModelPart root) {
         super(RenderType::entityCutoutNoCull);
         this.root = root;
         this.body = root.getChild("body");
         this.head = this.body.getChild("head");
+        this.ruff = this.head.getChild("ruff");
         this.beak = this.head.getChild("beak");
+        this.beakTip = this.beak.getChild("beak_tip");
+        this.beakDrip = this.beakTip.getChild("beak_drip");
         this.leftWing = this.body.getChild("left_wing");
+        this.leftQuill0 = this.leftWing.getChild("left_quill_0");
+        this.leftQuill1 = this.leftWing.getChild("left_quill_1");
+        this.leftQuill2 = this.leftWing.getChild("left_quill_2");
         this.rightWing = this.body.getChild("right_wing");
+        this.rightQuill0 = this.rightWing.getChild("right_quill_0");
+        this.rightQuill1 = this.rightWing.getChild("right_quill_1");
+        this.rightQuill2 = this.rightWing.getChild("right_quill_2");
         this.tail = this.body.getChild("tail");
+        this.tailQuill0 = this.tail.getChild("tail_quill_0");
+        this.tailQuill1 = this.tail.getChild("tail_quill_1");
+        this.tailQuill2 = this.tail.getChild("tail_quill_2");
         this.leftLeg = root.getChild("left_leg");
+        this.leftTalons = this.leftLeg.getChild("left_talons");
         this.rightLeg = root.getChild("right_leg");
+        this.rightTalons = this.rightLeg.getChild("right_talons");
     }
 
     public static LayerDefinition createBodyLayer() {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
-        PartDefinition bodyDef = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 0).addBox(-2.0F, -2.0F, -3.0F, 4.0F, 4.0F, 7.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 19.0F, 0.0F, 0.35F, 0.0F, 0.0F));
-        PartDefinition headDef = bodyDef.addOrReplaceChild("head", CubeListBuilder.create().texOffs(50, 0).addBox(-1.5F, -3.0F, -2.5F, 3.0F, 3.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -2.0F, -3.0F, -0.35F, 0.0F, 0.0F));
-        PartDefinition beakDef = headDef.addOrReplaceChild("beak", CubeListBuilder.create().texOffs(14, 11).addBox(-0.5F, -0.5F, -3.0F, 1.0F, 1.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -1.5F, -2.5F, 0.0F, 0.0F, 0.0F));
-        PartDefinition leftWingDef = bodyDef.addOrReplaceChild("left_wing", CubeListBuilder.create().texOffs(22, 0).addBox(0.0F, 0.0F, 0.0F, 1.0F, 3.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(2.0F, -2.0F, -2.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition rightWingDef = bodyDef.addOrReplaceChild("right_wing", CubeListBuilder.create().texOffs(36, 0).mirror().addBox(-1.0F, 0.0F, 0.0F, 1.0F, 3.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-2.0F, -2.0F, -2.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition tailDef = bodyDef.addOrReplaceChild("tail", CubeListBuilder.create().texOffs(0, 11).addBox(-1.5F, 0.0F, 0.0F, 3.0F, 1.0F, 4.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -1.0F, 4.0F, -0.3F, 0.0F, 0.0F));
-        PartDefinition leftLegDef = root.addOrReplaceChild("left_leg", CubeListBuilder.create().texOffs(22, 11).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(1.0F, 21.0F, 0.5F, 0.0F, 0.0F, 0.0F));
-        PartDefinition rightLegDef = root.addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(26, 11).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-1.0F, 21.0F, 0.5F, 0.0F, 0.0F, 0.0F));
+        PartDefinition bodyDef = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 0).addBox(-2.0F, -2.0F, -3.0F, 4.0F, 4.0F, 7.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 19.5F, 0.0F, 0.3F, 0.0F, 0.0F));
+        PartDefinition headDef = bodyDef.addOrReplaceChild("head", CubeListBuilder.create().texOffs(16, 23).addBox(-1.5F, -3.0F, -2.5F, 3.0F, 3.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -2.0F, -3.0F, -0.3F, 0.0F, 0.0F));
+        PartDefinition ruffDef = headDef.addOrReplaceChild("ruff", CubeListBuilder.create().texOffs(28, 23).addBox(-2.0F, -1.5F, -1.5F, 4.0F, 2.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.5F, 0.0F, 0.0F, 0.0F));
+        PartDefinition beakDef = headDef.addOrReplaceChild("beak", CubeListBuilder.create().texOffs(0, 29).addBox(-1.0F, -0.5F, -2.0F, 2.0F, 1.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -1.5F, -2.5F, 0.0F, 0.0F, 0.0F));
+        PartDefinition beakTipDef = beakDef.addOrReplaceChild("beak_tip", CubeListBuilder.create().texOffs(8, 29).addBox(-0.5F, -0.5F, -2.0F, 1.0F, 1.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, -2.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition beakDripDef = beakTipDef.addOrReplaceChild("beak_drip", CubeListBuilder.create().texOffs(14, 29).addBox(0.0F, 0.0F, -0.5F, 0.0F, 2.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.5F, -1.6F, 0.0F, 0.0F, 0.0F));
+        PartDefinition leftWingDef = bodyDef.addOrReplaceChild("left_wing", CubeListBuilder.create().texOffs(22, 0).addBox(0.0F, 0.0F, 0.0F, 1.0F, 4.0F, 7.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(2.0F, -1.8F, -2.0F, -0.05F, 0.0F, 0.0F));
+        PartDefinition leftQuill0Def = leftWingDef.addOrReplaceChild("left_quill_0", CubeListBuilder.create().texOffs(0, 11).addBox(0.0F, 0.0F, 0.0F, 2.0F, 0.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.5F, 1.0F, 6.5F, -0.3F, 0.0F, 0.0F));
+        PartDefinition leftQuill1Def = leftWingDef.addOrReplaceChild("left_quill_1", CubeListBuilder.create().texOffs(16, 11).addBox(0.0F, 0.0F, 0.0F, 2.0F, 0.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.5F, 2.0F, 6.5F, -0.42F, 0.08F, 0.0F));
+        PartDefinition leftQuill2Def = leftWingDef.addOrReplaceChild("left_quill_2", CubeListBuilder.create().texOffs(32, 11).addBox(0.0F, 0.0F, 0.0F, 2.0F, 0.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.5F, 3.0F, 6.5F, -0.54F, 0.16F, 0.0F));
+        PartDefinition rightWingDef = bodyDef.addOrReplaceChild("right_wing", CubeListBuilder.create().texOffs(38, 0).mirror().addBox(-1.0F, 0.0F, 0.0F, 1.0F, 4.0F, 7.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-2.0F, -1.8F, -2.0F, -0.05F, 0.0F, 0.0F));
+        PartDefinition rightQuill0Def = rightWingDef.addOrReplaceChild("right_quill_0", CubeListBuilder.create().texOffs(48, 11).addBox(-1.0F, 0.0F, 0.0F, 2.0F, 0.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-0.5F, 1.0F, 6.5F, -0.3F, 0.0F, 0.0F));
+        PartDefinition rightQuill1Def = rightWingDef.addOrReplaceChild("right_quill_1", CubeListBuilder.create().texOffs(0, 17).addBox(-1.0F, 0.0F, 0.0F, 2.0F, 0.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-0.5F, 2.0F, 6.5F, -0.42F, -0.08F, 0.0F));
+        PartDefinition rightQuill2Def = rightWingDef.addOrReplaceChild("right_quill_2", CubeListBuilder.create().texOffs(16, 17).addBox(-1.0F, 0.0F, 0.0F, 2.0F, 0.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-0.5F, 3.0F, 6.5F, -0.54F, -0.16F, 0.0F));
+        PartDefinition tailDef = bodyDef.addOrReplaceChild("tail", CubeListBuilder.create().texOffs(50, 23).addBox(-1.5F, 0.0F, 0.0F, 3.0F, 1.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -1.0F, 4.0F, -0.55F, 0.0F, 0.0F));
+        PartDefinition tailQuill0Def = tailDef.addOrReplaceChild("tail_quill_0", CubeListBuilder.create().texOffs(32, 17).addBox(-1.0F, 0.0F, 0.0F, 2.0F, 0.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-1.0F, 0.5F, 1.5F, 0.0F, -0.25F, 0.0F));
+        PartDefinition tailQuill1Def = tailDef.addOrReplaceChild("tail_quill_1", CubeListBuilder.create().texOffs(48, 17).addBox(-1.0F, 0.0F, 0.0F, 2.0F, 0.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.5F, 1.5F, 0.0F, 0.0F, 0.0F));
+        PartDefinition tailQuill2Def = tailDef.addOrReplaceChild("tail_quill_2", CubeListBuilder.create().texOffs(0, 23).addBox(-1.0F, 0.0F, 0.0F, 2.0F, 0.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(1.0F, 0.5F, 1.5F, 0.0F, 0.25F, 0.0F));
+        PartDefinition leftLegDef = root.addOrReplaceChild("left_leg", CubeListBuilder.create().texOffs(42, 23).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(1.0F, 21.0F, 0.5F, 0.0F, 0.0F, 0.0F));
+        PartDefinition leftTalonsDef = leftLegDef.addOrReplaceChild("left_talons", CubeListBuilder.create().texOffs(16, 29).addBox(-1.0F, 0.0F, -1.5F, 2.0F, 0.5F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 2.5F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition rightLegDef = root.addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(46, 23).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-1.0F, 21.0F, 0.5F, 0.0F, 0.0F, 0.0F));
+        PartDefinition rightTalonsDef = rightLegDef.addOrReplaceChild("right_talons", CubeListBuilder.create().texOffs(24, 29).addBox(-1.0F, 0.0F, -1.5F, 2.0F, 0.5F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 2.5F, 0.0F, 0.0F, 0.0F, 0.0F));
         return LayerDefinition.create(mesh, 64, 32);
     }
 
@@ -63,18 +105,29 @@ public class QuillcrowModel<T extends QuillcrowEntity> extends HierarchicalModel
     @Override
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         root().getAllParts().forEach(ModelPart::resetPose);
-        head.yRot += netHeadYaw * Mth.DEG_TO_RAD;
+        // A crow's head: it holds still, then snaps to a new angle, always coming back to you.
+        float snap = (float) Math.floor(ageInTicks / 9.0F);
+        head.yRot += netHeadYaw * Mth.DEG_TO_RAD + Mth.sin(snap * 2.7F) * 0.35F;
         head.xRot += headPitch * Mth.DEG_TO_RAD;
+        head.zRot += Mth.sin(snap * 1.3F) > 0.6F ? 0.7F : 0.0F;
+        beakDrip.zRot += Mth.sin(ageInTicks * 0.2F) * 0.2F;
         if (entity.isFlying()) {
             float flap = Mth.cos(ageInTicks * 1.6F) * 1.1F;
             leftWing.zRot -= 0.3F + flap;
             rightWing.zRot += 0.3F + flap;
+            leftQuill2.xRot -= flap * 0.2F;
+            rightQuill2.xRot -= flap * 0.2F;
             leftLeg.xRot += 1.2F;
             rightLeg.xRot += 1.2F;
+            tail.xRot += 0.2F;
         } else {
-            head.zRot += Mth.sin(ageInTicks * 0.07F) > 0.92F ? 0.4F : 0.0F;
             leftLeg.xRot += Mth.cos(limbSwing * 0.6662F) * 1.2F * limbSwingAmount;
             rightLeg.xRot += Mth.cos(limbSwing * 0.6662F + Mth.PI) * 1.2F * limbSwingAmount;
+            // Now and then it rouses its feathers.
+            float rouse = Mth.sin(ageInTicks * 0.05F) > 0.97F ? Mth.sin(ageInTicks * 2.0F) * 0.15F : 0.0F;
+            leftWing.zRot -= rouse;
+            rightWing.zRot += rouse;
+            ruff.y -= Math.abs(rouse) * 2.0F;
         }
     }
 }

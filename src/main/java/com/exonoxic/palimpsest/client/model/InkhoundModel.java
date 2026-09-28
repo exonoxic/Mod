@@ -19,46 +19,115 @@ import net.minecraft.util.Mth;
 public class InkhoundModel<T extends InkhoundEntity> extends HierarchicalModel<T> {
     public static final ModelLayerLocation LAYER = new ModelLayerLocation(Palimpsest.id("inkhound"), "main");
     private final ModelPart root;
-    protected final ModelPart body;
+    protected final ModelPart chest;
+    protected final ModelPart vertebra0;
+    protected final ModelPart vertebra1;
+    protected final ModelPart vertebra2;
+    protected final ModelPart neck;
     protected final ModelPart head;
-    protected final ModelPart snout;
+    protected final ModelPart jaw;
+    protected final ModelPart jawDrip;
     protected final ModelPart leftEar;
     protected final ModelPart rightEar;
     protected final ModelPart frontLeftLeg;
+    protected final ModelPart frontLeftShin;
+    protected final ModelPart frontLeftPaw;
     protected final ModelPart frontRightLeg;
+    protected final ModelPart frontRightShin;
+    protected final ModelPart frontRightPaw;
+    protected final ModelPart chestDrip;
+    protected final ModelPart loins;
+    protected final ModelPart loinVertebra0;
+    protected final ModelPart loinVertebra1;
+    protected final ModelPart loinVertebra2;
+    protected final ModelPart haunch;
     protected final ModelPart hindLeftLeg;
+    protected final ModelPart hindLeftHock;
+    protected final ModelPart hindLeftFoot;
+    protected final ModelPart hindLeftPaw;
     protected final ModelPart hindRightLeg;
+    protected final ModelPart hindRightHock;
+    protected final ModelPart hindRightFoot;
+    protected final ModelPart hindRightPaw;
     protected final ModelPart tail;
+    protected final ModelPart tailTip;
+    protected final ModelPart tailDrip;
 
     public InkhoundModel(ModelPart root) {
         super(RenderType::entityCutoutNoCull);
         this.root = root;
-        this.body = root.getChild("body");
-        this.head = root.getChild("head");
-        this.snout = this.head.getChild("snout");
+        this.chest = root.getChild("chest");
+        this.vertebra0 = this.chest.getChild("vertebra_0");
+        this.vertebra1 = this.chest.getChild("vertebra_1");
+        this.vertebra2 = this.chest.getChild("vertebra_2");
+        this.neck = this.chest.getChild("neck");
+        this.head = this.neck.getChild("head");
+        this.jaw = this.head.getChild("jaw");
+        this.jawDrip = this.jaw.getChild("jaw_drip");
         this.leftEar = this.head.getChild("left_ear");
         this.rightEar = this.head.getChild("right_ear");
-        this.frontLeftLeg = root.getChild("front_left_leg");
-        this.frontRightLeg = root.getChild("front_right_leg");
-        this.hindLeftLeg = root.getChild("hind_left_leg");
-        this.hindRightLeg = root.getChild("hind_right_leg");
-        this.tail = root.getChild("tail");
+        this.frontLeftLeg = this.chest.getChild("front_left_leg");
+        this.frontLeftShin = this.frontLeftLeg.getChild("front_left_shin");
+        this.frontLeftPaw = this.frontLeftShin.getChild("front_left_paw");
+        this.frontRightLeg = this.chest.getChild("front_right_leg");
+        this.frontRightShin = this.frontRightLeg.getChild("front_right_shin");
+        this.frontRightPaw = this.frontRightShin.getChild("front_right_paw");
+        this.chestDrip = this.chest.getChild("chest_drip");
+        this.loins = this.chest.getChild("loins");
+        this.loinVertebra0 = this.loins.getChild("loin_vertebra_0");
+        this.loinVertebra1 = this.loins.getChild("loin_vertebra_1");
+        this.loinVertebra2 = this.loins.getChild("loin_vertebra_2");
+        this.haunch = this.loins.getChild("haunch");
+        this.hindLeftLeg = this.haunch.getChild("hind_left_leg");
+        this.hindLeftHock = this.hindLeftLeg.getChild("hind_left_hock");
+        this.hindLeftFoot = this.hindLeftHock.getChild("hind_left_foot");
+        this.hindLeftPaw = this.hindLeftFoot.getChild("hind_left_paw");
+        this.hindRightLeg = this.haunch.getChild("hind_right_leg");
+        this.hindRightHock = this.hindRightLeg.getChild("hind_right_hock");
+        this.hindRightFoot = this.hindRightHock.getChild("hind_right_foot");
+        this.hindRightPaw = this.hindRightFoot.getChild("hind_right_paw");
+        this.tail = this.haunch.getChild("tail");
+        this.tailTip = this.tail.getChild("tail_tip");
+        this.tailDrip = this.tailTip.getChild("tail_drip");
     }
 
     public static LayerDefinition createBodyLayer() {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
-        PartDefinition bodyDef = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 0).addBox(-3.0F, -3.0F, -7.0F, 6.0F, 6.0F, 13.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 13.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition headDef = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(8, 19).addBox(-2.5F, -3.0F, -5.0F, 5.0F, 5.0F, 5.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 11.0F, -7.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition snoutDef = headDef.addOrReplaceChild("snout", CubeListBuilder.create().texOffs(44, 19).addBox(-1.5F, -1.0F, -3.0F, 3.0F, 3.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, -5.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition leftEarDef = headDef.addOrReplaceChild("left_ear", CubeListBuilder.create().texOffs(56, 19).addBox(-0.5F, -3.0F, -0.5F, 1.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(1.5F, -3.0F, -2.0F, -0.3F, 0.0F, 0.3F));
-        PartDefinition rightEarDef = headDef.addOrReplaceChild("right_ear", CubeListBuilder.create().texOffs(60, 19).addBox(-0.5F, -3.0F, -0.5F, 1.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-1.5F, -3.0F, -2.0F, -0.3F, 0.0F, -0.3F));
-        PartDefinition frontLeftLegDef = root.addOrReplaceChild("front_left_leg", CubeListBuilder.create().texOffs(38, 0).addBox(-1.0F, 0.0F, -1.0F, 2.0F, 9.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(2.0F, 15.0F, -5.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition frontRightLegDef = root.addOrReplaceChild("front_right_leg", CubeListBuilder.create().texOffs(46, 0).mirror().addBox(-1.0F, 0.0F, -1.0F, 2.0F, 9.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-2.0F, 15.0F, -5.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition hindLeftLegDef = root.addOrReplaceChild("hind_left_leg", CubeListBuilder.create().texOffs(54, 0).addBox(-1.0F, 0.0F, -1.0F, 2.0F, 9.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(2.0F, 15.0F, 5.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition hindRightLegDef = root.addOrReplaceChild("hind_right_leg", CubeListBuilder.create().texOffs(0, 19).mirror().addBox(-1.0F, 0.0F, -1.0F, 2.0F, 9.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-2.0F, 15.0F, 5.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition tailDef = root.addOrReplaceChild("tail", CubeListBuilder.create().texOffs(28, 19).addBox(-0.5F, 0.0F, 0.0F, 1.0F, 1.0F, 7.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 11.0F, 6.0F, -0.9F, 0.0F, 0.0F));
-        return LayerDefinition.create(mesh, 64, 32);
+        PartDefinition chestDef = root.addOrReplaceChild("chest", CubeListBuilder.create().texOffs(0, 0).addBox(-2.5F, -3.0F, -5.0F, 5.0F, 6.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 11.5F, -3.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition vertebra0Def = chestDef.addOrReplaceChild("vertebra_0", CubeListBuilder.create().texOffs(32, 35).addBox(-0.5F, -1.0F, -0.5F, 1.0F, 1.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -3.2F, -4.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition vertebra1Def = chestDef.addOrReplaceChild("vertebra_1", CubeListBuilder.create().texOffs(36, 35).addBox(-0.5F, -1.0F, -0.5F, 1.0F, 1.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -3.2F, -2.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition vertebra2Def = chestDef.addOrReplaceChild("vertebra_2", CubeListBuilder.create().texOffs(40, 35).addBox(-0.5F, -1.0F, -0.5F, 1.0F, 1.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -3.2F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition neckDef = chestDef.addOrReplaceChild("neck", CubeListBuilder.create().texOffs(36, 12).addBox(-1.5F, -1.5F, -5.0F, 3.0F, 3.0F, 5.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -1.5F, -4.5F, 0.42F, 0.0F, 0.0F));
+        PartDefinition headDef = neckDef.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 21).addBox(-2.0F, -2.5F, -4.0F, 4.0F, 4.0F, 4.0F, new CubeDeformation(0.0F)).texOffs(16, 21).addBox(-1.5F, -1.0F, -8.5F, 3.0F, 2.0F, 5.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -0.5F, -4.5F, 0.15F, 0.0F, 0.0F));
+        PartDefinition jawDef = headDef.addOrReplaceChild("jaw", CubeListBuilder.create().texOffs(48, 21).addBox(-1.5F, 0.0F, -4.6F, 3.0F, 1.0F, 5.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 1.0F, -3.8F, 0.18F, 0.0F, 0.0F));
+        PartDefinition jawDripDef = jawDef.addOrReplaceChild("jaw_drip", CubeListBuilder.create().texOffs(28, 35).addBox(0.0F, 0.0F, -0.5F, 0.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.6F, 1.0F, -3.5F, 0.0F, 0.0F, 0.0F));
+        PartDefinition leftEarDef = headDef.addOrReplaceChild("left_ear", CubeListBuilder.create().texOffs(22, 0).addBox(-0.5F, -7.0F, -1.5F, 1.0F, 7.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(1.4F, -2.2F, -1.2F, -0.25F, -0.25F, 0.3F));
+        PartDefinition rightEarDef = headDef.addOrReplaceChild("right_ear", CubeListBuilder.create().texOffs(30, 0).mirror().addBox(-0.5F, -7.0F, -1.5F, 1.0F, 7.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-1.4F, -2.2F, -1.2F, -0.25F, 0.25F, -0.3F));
+        PartDefinition frontLeftLegDef = chestDef.addOrReplaceChild("front_left_leg", CubeListBuilder.create().texOffs(32, 21).addBox(-1.0F, 0.0F, -1.0F, 2.0F, 5.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(1.9F, 2.2F, -1.5F, 0.05F, 0.0F, 0.0F));
+        PartDefinition frontLeftShinDef = frontLeftLegDef.addOrReplaceChild("front_left_shin", CubeListBuilder.create().texOffs(32, 29).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 4.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 5.0F, 0.2F, -0.05F, 0.0F, 0.0F));
+        PartDefinition frontLeftPawDef = frontLeftShinDef.addOrReplaceChild("front_left_paw", CubeListBuilder.create().texOffs(42, 29).addBox(-1.0F, 0.0F, -2.5F, 2.0F, 1.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 4.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition frontRightLegDef = chestDef.addOrReplaceChild("front_right_leg", CubeListBuilder.create().texOffs(40, 21).mirror().addBox(-1.0F, 0.0F, -1.0F, 2.0F, 5.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-1.9F, 2.2F, -1.5F, 0.05F, 0.0F, 0.0F));
+        PartDefinition frontRightShinDef = frontRightLegDef.addOrReplaceChild("front_right_shin", CubeListBuilder.create().texOffs(36, 29).mirror().addBox(-0.5F, 0.0F, -0.5F, 1.0F, 4.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 5.0F, 0.2F, -0.05F, 0.0F, 0.0F));
+        PartDefinition frontRightPawDef = frontRightShinDef.addOrReplaceChild("front_right_paw", CubeListBuilder.create().texOffs(52, 29).mirror().addBox(-1.0F, 0.0F, -2.5F, 2.0F, 1.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 4.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition chestDripDef = chestDef.addOrReplaceChild("chest_drip", CubeListBuilder.create().texOffs(40, 29).addBox(0.0F, 0.0F, -0.5F, 0.0F, 4.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-1.2F, 3.0F, -2.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition loinsDef = chestDef.addOrReplaceChild("loins", CubeListBuilder.create().texOffs(38, 0).addBox(-1.5F, -1.3F, 0.0F, 3.0F, 3.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -1.2F, 1.0F, -0.08F, 0.0F, 0.0F));
+        PartDefinition loinVertebra0Def = loinsDef.addOrReplaceChild("loin_vertebra_0", CubeListBuilder.create().texOffs(44, 35).addBox(-0.5F, -1.0F, -0.5F, 1.0F, 1.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -1.2F, 1.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition loinVertebra1Def = loinsDef.addOrReplaceChild("loin_vertebra_1", CubeListBuilder.create().texOffs(48, 35).addBox(-0.5F, -1.0F, -0.5F, 1.0F, 1.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -1.2F, 3.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition loinVertebra2Def = loinsDef.addOrReplaceChild("loin_vertebra_2", CubeListBuilder.create().texOffs(52, 35).addBox(-0.5F, -1.0F, -0.5F, 1.0F, 1.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -1.2F, 5.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition haunchDef = loinsDef.addOrReplaceChild("haunch", CubeListBuilder.create().texOffs(0, 12).addBox(-2.0F, -1.8F, -0.5F, 4.0F, 5.0F, 4.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 6.0F, 0.1F, 0.0F, 0.0F));
+        PartDefinition hindLeftLegDef = haunchDef.addOrReplaceChild("hind_left_leg", CubeListBuilder.create().texOffs(16, 12).addBox(-1.0F, -0.5F, -1.5F, 2.0F, 6.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(1.8F, 0.5F, 1.8F, -0.45F, 0.0F, 0.0F));
+        PartDefinition hindLeftHockDef = hindLeftLegDef.addOrReplaceChild("hind_left_hock", CubeListBuilder.create().texOffs(24, 29).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 5.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 5.0F, 0.0F, 1.0F, 0.0F, 0.0F));
+        PartDefinition hindLeftFootDef = hindLeftHockDef.addOrReplaceChild("hind_left_foot", CubeListBuilder.create().texOffs(20, 35).addBox(-0.5F, 0.0F, -0.5F, 1.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 5.0F, 0.0F, -0.55F, 0.0F, 0.0F));
+        PartDefinition hindLeftPawDef = hindLeftFootDef.addOrReplaceChild("hind_left_paw", CubeListBuilder.create().texOffs(0, 35).addBox(-1.0F, 0.0F, -2.5F, 2.0F, 1.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 3.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition hindRightLegDef = haunchDef.addOrReplaceChild("hind_right_leg", CubeListBuilder.create().texOffs(26, 12).mirror().addBox(-1.0F, -0.5F, -1.5F, 2.0F, 6.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-1.8F, 0.5F, 1.8F, -0.45F, 0.0F, 0.0F));
+        PartDefinition hindRightHockDef = hindRightLegDef.addOrReplaceChild("hind_right_hock", CubeListBuilder.create().texOffs(28, 29).mirror().addBox(-0.5F, 0.0F, -0.5F, 1.0F, 5.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 5.0F, 0.0F, 1.0F, 0.0F, 0.0F));
+        PartDefinition hindRightFootDef = hindRightHockDef.addOrReplaceChild("hind_right_foot", CubeListBuilder.create().texOffs(24, 35).mirror().addBox(-0.5F, 0.0F, -0.5F, 1.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 5.0F, 0.0F, -0.55F, 0.0F, 0.0F));
+        PartDefinition hindRightPawDef = hindRightFootDef.addOrReplaceChild("hind_right_paw", CubeListBuilder.create().texOffs(10, 35).mirror().addBox(-1.0F, 0.0F, -2.5F, 2.0F, 1.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 3.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition tailDef = haunchDef.addOrReplaceChild("tail", CubeListBuilder.create().texOffs(0, 29).addBox(-0.5F, -0.5F, 0.0F, 1.0F, 1.0F, 5.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -1.3F, 3.2F, -0.55F, 0.0F, 0.0F));
+        PartDefinition tailTipDef = tailDef.addOrReplaceChild("tail_tip", CubeListBuilder.create().texOffs(12, 29).addBox(-0.5F, -0.5F, 0.0F, 1.0F, 1.0F, 5.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 5.0F, 0.7F, 0.0F, 0.0F));
+        PartDefinition tailDripDef = tailTipDef.addOrReplaceChild("tail_drip", CubeListBuilder.create().texOffs(30, 35).addBox(0.0F, 0.0F, -0.5F, 0.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.5F, 4.5F, 0.0F, 0.0F, 0.0F));
+        return LayerDefinition.create(mesh, 64, 64);
     }
 
     @Override
@@ -69,13 +138,52 @@ public class InkhoundModel<T extends InkhoundEntity> extends HierarchicalModel<T
     @Override
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         root().getAllParts().forEach(ModelPart::resetPose);
-        head.yRot += netHeadYaw * Mth.DEG_TO_RAD;
-        head.xRot += 0.25F + Mth.sin(ageInTicks * 0.15F) * 0.08F;
-        frontLeftLeg.xRot += Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
-        hindRightLeg.xRot += Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
-        frontRightLeg.xRot += Mth.cos(limbSwing * 0.6662F + Mth.PI) * 1.4F * limbSwingAmount;
-        hindLeftLeg.xRot += Mth.cos(limbSwing * 0.6662F + Mth.PI) * 1.4F * limbSwingAmount;
-        tail.yRot += Mth.cos(ageInTicks * 0.3F) * 0.25F;
-        leftEar.zRot += Mth.sin(ageInTicks * 0.2F) * 0.1F;
+        float a = Math.min(1.0F, limbSwingAmount);
+        float w = limbSwing * 0.62F;
+        boolean hunting = entity.isAggressive();
+        // Always listening: each ear turns on its own, the head sweeps and tilts.
+        neck.yRot += netHeadYaw * Mth.DEG_TO_RAD * 0.4F;
+        head.yRot += netHeadYaw * Mth.DEG_TO_RAD * 0.6F + Mth.sin(ageInTicks * 0.05F) * 0.18F * (1.0F - a);
+        head.xRot += headPitch * Mth.DEG_TO_RAD * 0.5F;
+        head.zRot += Mth.sin(ageInTicks * 0.033F) * 0.2F * (1.0F - a);
+        leftEar.yRot += Mth.sin(ageInTicks * 0.11F) * 0.35F;
+        rightEar.yRot += Mth.sin(ageInTicks * 0.09F + 2.1F) * 0.35F;
+        leftEar.xRot += Mth.sin(ageInTicks * 0.23F) > 0.9F ? -0.3F : 0.0F;
+        rightEar.xRot += Mth.sin(ageInTicks * 0.19F + 1.0F) > 0.9F ? -0.3F : 0.0F;
+        // The jaw never quite closes; it trembles.
+        jaw.xRot += 0.08F + Mth.sin(ageInTicks * 0.6F) * 0.025F;
+        // A long, low lope: the spine flexes, the chest dips.
+        frontLeftLeg.xRot += Mth.cos(w) * 1.0F * a;
+        frontRightLeg.xRot += Mth.cos(w + 0.4F) * 1.0F * a;
+        frontLeftShin.xRot -= Math.max(0.0F, Mth.sin(w)) * 0.9F * a;
+        frontRightShin.xRot -= Math.max(0.0F, Mth.sin(w + 0.4F)) * 0.9F * a;
+        hindLeftLeg.xRot += Mth.cos(w + Mth.PI) * 0.9F * a;
+        hindRightLeg.xRot += Mth.cos(w + Mth.PI + 0.4F) * 0.9F * a;
+        hindLeftHock.xRot += Math.max(0.0F, Mth.sin(w + Mth.PI)) * 0.6F * a;
+        hindRightHock.xRot += Math.max(0.0F, Mth.sin(w + Mth.PI + 0.4F)) * 0.6F * a;
+        loins.xRot += Mth.sin(w) * 0.12F * a;
+        haunch.xRot -= Mth.sin(w) * 0.1F * a;
+        chest.y += Mth.abs(Mth.sin(w)) * 0.8F * a;
+        neck.xRot -= Mth.sin(w) * 0.1F * a;
+        tail.yRot += Mth.sin(ageInTicks * 0.2F) * 0.2F;
+        tailTip.yRot += Mth.sin(ageInTicks * 0.2F - 0.8F) * 0.3F;
+        tail.xRot -= a * 0.35F;
+        jawDrip.zRot += Mth.sin(ageInTicks * 0.1F) * 0.2F;
+        chestDrip.zRot += Mth.sin(ageInTicks * 0.08F + 1.0F) * 0.15F;
+        if (hunting) {
+            // It has heard you: head low, ears flat, the mouth wide on its little pale teeth.
+            jaw.xRot += 0.75F + Mth.sin(ageInTicks * 1.3F) * 0.05F;
+            head.xRot -= 0.2F;
+            neck.xRot += 0.25F;
+            leftEar.xRot += 0.9F;
+            rightEar.xRot += 0.9F;
+            tail.xRot += 0.4F;
+        }
+        if (attackTime > 0.0F) {
+            float s = Mth.sin(Mth.sqrt(attackTime) * Mth.PI);
+            jaw.xRot += 0.6F * s;
+            neck.xRot -= 0.35F * s;
+            head.xRot -= 0.3F * s;
+        }
     }
 }
