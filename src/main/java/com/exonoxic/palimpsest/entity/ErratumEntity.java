@@ -42,6 +42,15 @@ public class ErratumEntity extends PathfinderMob implements Apparition {
     private final ApparitionState apparition = new ApparitionState();
     private int hits;
 
+    // Client-side presentation state, advanced by ErratumRenderer each frame.
+    public float animLegs;
+    public float animEye;
+    public float animTime = Float.NaN;
+    public boolean animWasMoving;
+    private float renderLegs;
+    private float renderIrisX;
+    private float renderIrisY;
+
     public ErratumEntity(EntityType<? extends PathfinderMob> type, Level level) {
         super(type, level);
     }
@@ -67,6 +76,25 @@ public class ErratumEntity extends PathfinderMob implements Apparition {
 
     public boolean isMoving() {
         return entityData.get(MOVING);
+    }
+
+    /** 0 folded under the block, 1 fully unfolded (client, for the model). */
+    public float legExtension() {
+        return renderLegs;
+    }
+
+    public float irisX() {
+        return renderIrisX;
+    }
+
+    public float irisY() {
+        return renderIrisY;
+    }
+
+    public void setRenderState(float legs, float irisX, float irisY) {
+        this.renderLegs = legs;
+        this.renderIrisX = irisX;
+        this.renderIrisY = irisY;
     }
 
     @Override

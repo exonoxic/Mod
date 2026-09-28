@@ -99,15 +99,18 @@ LIGHT = np.array([0.25, 1.0, -0.65])
 LIGHT = LIGHT / np.linalg.norm(LIGHT)
 
 
-def render(model, tex, glow, pose, yaw_deg, size=360, scale=None, pitch_deg=8.0, bg=(58, 58, 64)):
-    quads = collect(model, pose)
+def render(model, tex, glow, pose, yaw_deg, size=360, scale=None, pitch_deg=8.0, bg=(58, 58, 64), extra=()):
+    """extra: further (model, tex, glow, pose) sets drawn into the same frame (e.g. the Erratum's block)."""
+    quads = [(q, tex, glow) for q in collect(model, pose)]
+    for m2, t2, g2, p2 in extra:
+        quads += [(q, t2, g2) for q in collect(m2, p2)]
     yaw, pitch = math.radians(yaw_deg), math.radians(pitch_deg)
     ry = np.array([[math.cos(yaw), 0, -math.sin(yaw)], [0, 1, 0], [math.sin(yaw), 0, math.cos(yaw)]])
     rx = np.array([[1, 0, 0], [0, math.cos(pitch), -math.sin(pitch)], [0, math.sin(pitch), math.cos(pitch)]])
     view = rx @ ry
     pts = []
-    for verts, uvs in quads:
-        pts.append(([view @ v for v in verts], uvs))
+    for (verts, uvs), qt, qg in quads:
+        pts.append(([view @ v for v in verts], uvs, qt, qg))
     allv = np.array([v for q in pts for v in q[0]])
     lo, hi = allv.min(axis=0), allv.max(axis=0)
     height = max(hi[1] - lo[1], 1.0)
@@ -122,9 +125,9 @@ def render(model, tex, glow, pose, yaw_deg, size=360, scale=None, pitch_deg=8.0,
         t = yy / size
         img[yy, :] = np.array(bg) * (1.1 - 0.35 * t)
     depth = np.full((size, size), np.inf)
-    texw, texh = tex.shape[1], tex.shape[0]
 
-    for verts, uvs in pts:
+    for verts, uvs, tex, glow in pts:
+        texw, texh = tex.shape[1], tex.shape[0]
         v = np.array(verts)
         n = np.cross(v[1] - v[0], v[2] - v[0])
         nn = np.linalg.norm(n)
@@ -202,6 +205,9 @@ POSES = {
         "walk": {"left_thigh": (0.8, 0, 0), "right_thigh": (-0.8, 0, 0), "right_shin": (1.0, 0, 0),
                  "left_upper_arm": (-0.4, 0, 0), "right_upper_arm": (0.4, 0, 0), "shroud_back": (-0.2, 0, 0)},
     },
+    "erratum": {
+        "walking": dict({p: (0, 0, 0, 0, -5, 0) for p in ["maw"] + [f"{s}_leg_{i}" for s in ("left", "right") for i in range(3)]}),
+    },
     "longhand": {
         "freeze0": {"left_upper_arm": (-1.35, 0, 0), "right_upper_arm": (-1.2, 0, 0), "left_forearm": (-0.25, 0, 0),
                     "right_forearm": (-0.35, 0, 0), "left_finger_0": (0, 0, 0.5), "left_finger_3": (0, 0, -0.5),
@@ -253,6 +259,24 @@ def closeup(name, pose_name=None, angles=(0, 30, 160), frac=0.42):
 BG = (58, 58, 64)
 
 
+def block_stub(lift_px):
+    """A stand-in cobblestone block for previewing the Erratum."""
+    from modelkit import B as _B, P as _P, Model as _M
+    from pixel import Canvas, rng_for, jitter
+    m = _M("block", "Block", "x", (64, 32), [_P("block", (0, 24 - lift_px, 0), boxes=[_B(-8, -16, -8, 16, 16, 16)])], "")
+    gm.pack(m)
+    c = Canvas(64, 32)
+    r = rng_for("stub")
+    for y in range(32):
+        for x in range(64):
+            g = 118 + ((x * 7 + y * 13) % 5) * 9
+            c.set(x, y, jitter((g, g, g + 4), 10, r))
+    return (m, c.px, Canvas(64, 32).px, {})
+
+
+EXTRAS = {"erratum": lambda pose: [block_stub(5 if pose else 0)]}
+
+
 def preview(name, pose_name=None, angles=(0, 35, 90, 160)):
     name, _, variant = name.partition(":")
     m = model_by_name(name)
@@ -263,8 +287,9 @@ def preview(name, pose_name=None, angles=(0, 35, 90, 160)):
     tex, gtex = canvas.px, glow.px
     pose = POSES.get(name, {}).get(pose_name, {}) if pose_name else {}
     tiles = []
+    extra = EXTRAS.get(name.split("_")[0] if name.startswith("erratum") and not name.startswith("erratum_eye") else "", lambda p: [])(pose_name)
     for a in angles:
-        im, scale = render(m, tex, gtex, pose, a, bg=BG)
+        im, scale = render(m, tex, gtex, pose, a, bg=BG, extra=extra)
         ruler(im, scale, None)
         ImageDraw.Draw(im).text((8, 6), f"{name} {pose_name or 'rest'} {a}deg", fill=(255, 255, 255))
         tiles.append(im)

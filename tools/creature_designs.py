@@ -803,3 +803,133 @@ def copyist():
         }
 """
     return Model("copyist", "CopyistModel", E + "CopyistEntity", (128, 64), parts, anim, variants=variants)
+
+
+# ================================================================ the Erratum
+R_CHITIN = (22, 20, 26)
+R_SHEEN = (74, 66, 96)
+R_JOINT = (208, 198, 172)
+R_TIP = (124, 128, 140)
+R_GUM = (112, 30, 36)
+R_GUM_D = (70, 16, 22)
+R_TOOTH = (226, 216, 190)
+R_THROAT = (8, 6, 8)
+R_FLESH = (78, 24, 30)
+R_SCLERA = (226, 214, 178)
+R_VEIN = (170, 60, 56)
+R_IRIS = (40, 30, 52)
+R_PUPIL = (8, 6, 10)
+
+# Leg angles (radians, for the +x side; mirrored on the other): unfolded and folded.
+ERR_FEMUR_OUT, ERR_FEMUR_IN = -2.52, -0.35
+ERR_TIBIA_OUT, ERR_TIBIA_IN = 2.28, 2.95
+
+
+def maw():
+    """A round mouth: a ring of gum, a ring of teeth, and the throat."""
+    def fn(canvas, glow, u, v, w, h, r):
+        cx, cy = w / 2, h / 2
+        for y in range(h):
+            for x in range(w):
+                d = math.hypot(x + 0.5 - cx, y + 0.5 - cy)
+                ang = math.atan2(y + 0.5 - cy, x + 0.5 - cx)
+                if d > 6.6:
+                    canvas.set(u + x, v + y, (0, 0, 0), 0)
+                elif d > 5.2:
+                    canvas.set(u + x, v + y, jitter(R_GUM, 6, r))
+                elif d > 3.9:
+                    tooth = int((ang + math.pi) / (2 * math.pi) * 14) % 2 == 0
+                    canvas.set(u + x, v + y, jitter(R_TOOTH if tooth else R_GUM_D, 5, r))
+                elif d > 2.4:
+                    canvas.set(u + x, v + y, jitter(R_GUM_D, 5, r))
+                else:
+                    canvas.set(u + x, v + y, jitter(R_THROAT, 3, r))
+    return fn
+
+
+def erratum():
+    """Legs and underside of the Erratum. The block itself is drawn by the renderer."""
+    chitin = dict(base=R_CHITIN, noise=3, features={"all": [("draw", gloss(R_CHITIN, R_SHEEN)),
+                                                            ("ascii", ["j"], {"j": R_JOINT})]})
+    tip = dict(base=R_TIP, noise=4, features={"all": [("ascii", ["", "d"], {"d": (80, 84, 96)})]})
+    tooth = dict(base=R_TOOTH, noise=5, features={"all": [("ascii", ["", "d"], {"d": (180, 168, 140)})]})
+    parts = []
+    for side, sx in (("left", 1), ("right", -1)):
+        m = sx < 0
+        for i, z in enumerate((-5, 0, 5)):
+            splay = (0.45, 0.0, -0.45)[i] * sx
+            parts.append(P(f"{side}_leg_{i}", (7 * sx, 23.5, z), rot=(0, splay, 0),
+                           boxes=[B(0 if sx > 0 else -2, -0.5, -0.5, 2, 1, 1, mirror=m)], paint=chitin, children=[
+                               P(f"{side}_femur_{i}", (2 * sx, 0, 0), rot=(0, 0, ERR_FEMUR_OUT * sx),
+                                 boxes=[B(-0.5, 0, -0.5, 1, 9, 1, mirror=m)], paint=chitin, children=[
+                                     P(f"{side}_tibia_{i}", (0, 9, 0), rot=(0, 0, ERR_TIBIA_OUT * sx),
+                                       boxes=[B(-0.5, 0, -0.5, 1, 12, 1, mirror=m)], paint=chitin, children=[
+                                           P(f"{side}_tip_{i}", (0, 12, 0), boxes=[B(-0.5, 0, -0.5, 1, 2, 1, mirror=m)], paint=tip)])])]))
+    teeth = []
+    for k in range(8):
+        a = k / 8 * 2 * math.pi
+        teeth.append(P(f"tooth_{k}", (round(math.cos(a) * 4.6, 2), 0, round(math.sin(a) * 4.6, 2)),
+                       rot=(round(-math.sin(a) * 0.5, 3), 0, round(math.cos(a) * 0.5, 3)),
+                       boxes=[B(-0.5, 0, -0.5, 1, 2, 1)], paint=tooth))
+    parts.append(P("maw", (0, 24.05, 0), boxes=[B(-7, 0, -7, 14, 0, 14)],
+                   paint=dict(base=R_GUM, noise=0, features={"bottom": [("draw", maw())]}), children=teeth))
+    anim = """        float ext = entity.legExtension();
+        float w = limbSwing * 1.3F;
+        // Folded flat under the block, the legs swing out and up as it rises.
+        float femurOut = Mth.lerp(ext, %sF, %sF);
+        float tibiaOut = Mth.lerp(ext, %sF, %sF);
+        ModelPart[][] legs = {
+            {leftLeg0, leftFemur0, leftTibia0}, {leftLeg1, leftFemur1, leftTibia1}, {leftLeg2, leftFemur2, leftTibia2},
+            {rightLeg0, rightFemur0, rightTibia0}, {rightLeg1, rightFemur1, rightTibia1}, {rightLeg2, rightFemur2, rightTibia2}};
+        for (int i = 0; i < 6; i++) {
+            float side = i < 3 ? 1.0F : -1.0F;
+            // Tripod gait: legs 0 and 2 on one side step with leg 1 on the other.
+            boolean groupA = (i %% 2 == 0) == (i < 3);
+            float phase = groupA ? 0.0F : Mth.PI;
+            float step = Mth.sin(w + phase) * limbSwingAmount * ext;
+            legs[i][0].yRot += step * 0.35F * side;
+            legs[i][1].zRot = femurOut * side - Math.max(0.0F, Mth.cos(w + phase)) * 0.35F * limbSwingAmount * ext * side;
+            legs[i][2].zRot = tibiaOut * side;
+            // Twitch while still, like something trying not to move.
+            legs[i][1].zRot += Mth.sin(ageInTicks * 0.8F + i * 1.9F) * 0.03F * ext;
+        }
+        float gnash = Mth.sin(ageInTicks * 0.6F) * 0.2F * ext;
+        for (ModelPart t : new ModelPart[]{tooth0, tooth1, tooth2, tooth3, tooth4, tooth5, tooth6, tooth7}) t.xRot += gnash;
+""" % (ERR_FEMUR_IN, ERR_FEMUR_OUT, ERR_TIBIA_IN, ERR_TIBIA_OUT)
+    return Model("erratum", "ErratumModel", E + "ErratumEntity", (64, 32), parts, anim)
+
+
+def erratum_eye():
+    """The eye that opens in the side of the block. The renderer scales it open and shut."""
+    def rows_shape(spans):
+        # spans[row] = (first, last) visible column on the front/back faces.
+        def shape(name, x, y, w, h):
+            if name not in ("front", "back"):
+                return 255
+            a, b = spans[y]
+            return 255 if a <= x <= b else 0
+        return shape
+    lid = (104, 40, 44)
+    wet = (46, 12, 16)
+    rim = dict(base=R_FLESH, noise=6, shape=rows_shape([(3, 9), (1, 11), (0, 12), (1, 11), (3, 9)]), features={
+        "all": [("ascii", ["...lllllll...",
+                           ".ll.......ll.",
+                           "w...........w",
+                           ".ww.......ww.",
+                           "...wwwwwww..."], {"l": lid, "w": wet})]})
+    sclera = dict(base=R_SCLERA, noise=5, shape=rows_shape([(2, 8), (0, 10), (2, 8)]), features={
+        "front": [("ascii", ["..v........",
+                             "p.........p",
+                             "........v.."], {"v": R_VEIN, "p": (214, 168, 150)})]})
+    ring = (26, 18, 34)
+    iris = dict(base=R_IRIS, noise=4, features={"front": [("ascii", ["oio", "iPi", "oio"],
+                                                           {"o": ring, "i": (72, 52, 98), "P": R_PUPIL})]})
+    glint = dict(base=(250, 250, 244), noise=0)
+    parts = [P("rim", (0, 0, 0), boxes=[B(-6.5, -2.5, 0, 13, 5, 0)], paint=rim, children=[
+        P("sclera", (0, 0, -0.04), boxes=[B(-5.5, -1.5, 0, 11, 3, 0)], paint=sclera, children=[
+            P("iris", (0, 0, -0.04), boxes=[B(-1.5, -1.5, 0, 3, 3, 0)], paint=iris, children=[
+                P("glint", (-1.5, -1.5, -0.03), boxes=[B(0, 0, 0, 1, 1, 0)], paint=glint)])])])]
+    anim = """        iris.x = entity.irisX();
+        iris.y = entity.irisY();
+"""
+    return Model("erratum_eye", "ErratumEyeModel", E + "ErratumEntity", (32, 16), parts, anim)

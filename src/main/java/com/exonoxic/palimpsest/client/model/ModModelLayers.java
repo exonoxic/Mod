@@ -17,7 +17,8 @@ public final class ModModelLayers {
         event.registerLayerDefinition(FoxingMothModel.LAYER, FoxingMothModel::createBodyLayer);
         event.registerLayerDefinition(BlotlingModel.LAYER, BlotlingModel::createBodyLayer);
         event.registerLayerDefinition(MarginCrawlerModel.LAYER, MarginCrawlerModel::createBodyLayer);
-        event.registerLayerDefinition(ErratumLegsModel.LAYER, ErratumLegsModel::createBodyLayer);
+        event.registerLayerDefinition(ErratumModel.LAYER, ErratumModel::createBodyLayer);
+        event.registerLayerDefinition(ErratumEyeModel.LAYER, ErratumEyeModel::createBodyLayer);
         event.registerLayerDefinition(PalehandModel.LAYER, PalehandModel::createBodyLayer);
         event.registerLayerDefinition(BookbinderModel.LAYER, BookbinderModel::createBodyLayer);
         event.registerLayerDefinition(RasureModel.LAYER, RasureModel::createBodyLayer);
