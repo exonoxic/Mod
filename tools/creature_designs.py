@@ -150,8 +150,10 @@ def knocker():
     """
     Taller than a door, and it has to stoop to listen at one. A burial shroud hangs off its
     shoulders, torn open down one side; an iron door-knocker ring is threaded through its lower
-    lip. The knuckles of its knocking hand are worn raw.
+    lip. The knuckles of its knocking hand are worn raw. The band of linen that was tied over its
+    head to keep its mouth shut has torn through on one side, and the jaw hangs.
     """
+    band = {"b": K_LINEN, "B": K_LINEN_D, "s": K_STAIN}
     face = _k_skin({
         "front": [("ascii", [
             "dddddd",
@@ -163,13 +165,18 @@ def knocker():
             "dTllcd",
         ], {"d": K_SKIN_D, "l": K_SKIN_L, "D": K_SKIN_DD, "S": K_SOCKET, "P": (K_PUPIL, "glow"),
             "T": K_TEAR, "n": K_SKIN_DD, "c": K_SKIN_D})],
-        "top": [("ascii", ["......", ".h....", "...h..", "......", "h...h.", "......"], {"h": (66, 62, 64)})],
-        "back": [("ascii", [".h..h.", "......", "..h...", "......"], {"h": (66, 62, 64)})],
+        "top": [("ascii", ["......", "......", "bbBbbb", "BbsbBb", "......", "......"], band)],
+        # Tied over the head and under the chin on one side; torn and frayed on the other.
+        "left": [("ascii", ["..bb..", "..bB..", "..sb..", "..bb..", "..Bb..", "..bb..", "..bB.."], band)],
+        "right": [("ascii", ["..bb..", "..Bb..", "..b...", "...B..", "......", "......", "......"], band)],
+        "back": [("ascii", ["......", "....s.", "......", "......"], band)],
         "bottom": [("ascii", ["mmmmmm", "mmmmmm", "mmmmmm", "mmmmmm", "mmmmmm", "tTtTtT"],
                     {"m": K_MOUTH, "t": K_TOOTH, "T": K_TOOTH_D})],
     })
     jaw = _k_skin({
         "front": [("ascii", ["LLoLL", "cllc."], {"L": K_LIP, "o": K_IRON, "c": K_SKIN_D, "l": K_SKIN_L})],
+        "left": [("ascii", [".bb..", ".bB.."], band)],
+        "bottom": [("ascii", ["", "", "Bbbbb", "bbbbB", ""], band)],
         "top": [("ascii", ["mmmmm", "mmmmm", "mmmmm", "mmmmm", "tTtTt"], {"m": K_MOUTH, "t": K_TOOTH, "T": K_TOOTH_D})],
     })
     ear = _k_skin({"right": [("ascii", ["..", ".D", ".."], {"D": K_SKIN_DD})],
@@ -236,13 +243,19 @@ def knocker():
         P("jaw", (0, -2, 2), rot=(0.06, 0, 0), boxes=[B(-2.5, 0, -5, 5, 2, 5)], paint=jaw, children=[ring]),
         P("left_ear", (3, -5.5, 0.5), rot=(0, -0.35, 0.1), boxes=[B(0, -1.5, -1, 1, 3, 2)], paint=ear),
         P("right_ear", (-3, -5.5, 0.5), rot=(0, 0.35, -0.1), boxes=[B(-1, -1.5, -1, 1, 3, 2, mirror=True)], paint=ear),
+        P("binding_knot", (2.2, -9, 0), rot=(0, 0.3, 0.2), boxes=[B(-1, -1, -1, 2, 1, 2)], paint=_k_linen(stains=1)),
+        P("binding_end", (-3.02, -6, 0.2), rot=(0.15, 0, 0.1), boxes=[B(0, 0, -1, 0, 7, 2)],
+          paint=_k_linen(ragged(3, seed=21), stains=1)),
         P("wisp_0", (-1.5, -8.8, 2.9), rot=(0.25, 0, 0.1), boxes=[B(-0.5, 0, 0, 1, 7, 0)],
           paint=dict(base=(62, 58, 58), noise=6, shape=ragged(2, seed=11))),
         P("wisp_1", (1.8, -8.6, 2.8), rot=(0.18, 0, -0.14), boxes=[B(-0.5, 0, 0, 1, 9, 0)],
           paint=dict(base=(70, 64, 62), noise=6, shape=ragged(3, seed=12))),
     ])
-    shroud_back = P("shroud_back", (0, -8, 2.2), rot=(-0.32, 0, 0), boxes=[B(-4.5, 0, 0, 9, 24, 0)],
-                    paint=_k_linen(ragged(4, holes=4, sides=True, seed=3), stains=5))
+    # The shroud lies along its stooped back, then hangs straight down from its hips.
+    shroud_back = P("shroud_back", (0, -8, 2.25), rot=(-0.03, 0, 0), boxes=[B(-4.5, 0, 0, 9, 9, 0)],
+                    paint=_k_linen(stains=3), children=[
+                        P("shroud_back_lower", (0, 9, 0), rot=(-0.36, 0, 0), boxes=[B(-4.5, 0, 0, 9, 16, 0)],
+                          paint=_k_linen(ragged(4, holes=4, sides=True, seed=3), stains=5))])
     shroud_flap = P("shroud_flap", (-0.5, -8, -2.3), rot=(-0.34, 0, 0.04), boxes=[B(-4, 0, 0, 4, 22, 0)],
                     paint=_k_linen(ragged(5, holes=3, sides=True, seed=5), stains=3))
     shroud_strip = P("shroud_strip", (3.2, -7.5, -2.25), rot=(-0.3, 0, -0.05), boxes=[B(-1, 0, 0, 2, 13, 0)],
@@ -283,7 +296,8 @@ def knocker():
         leftForearm.xRot -= Math.max(0.0F, Mth.cos(w)) * 0.35F * a;
         rightForearm.xRot -= Math.max(0.0F, -Mth.cos(w)) * 0.35F * a;
         // Cloth and iron move a beat behind the body.
-        shroudBack.xRot += -Mth.abs(Mth.sin(w)) * 0.22F * a + breath * 0.02F;
+        shroudBack.xRot += -Mth.abs(Mth.sin(w)) * 0.1F * a + breath * 0.02F;
+        shroudBackLower.xRot += -Mth.abs(Mth.sin(w + 0.4F)) * 0.25F * a + breath * 0.02F;
         shroudFlap.xRot += -Mth.abs(Mth.sin(w + 0.6F)) * 0.18F * a;
         shroudStrip.xRot += -Mth.abs(Mth.sin(w + 1.1F)) * 0.25F * a;
         shroudStrip.zRot += Mth.sin(ageInTicks * 0.05F) * 0.05F;
@@ -355,9 +369,9 @@ def knocker():
 L_INK = (14, 13, 18)
 L_INK_2 = (24, 22, 30)
 L_SHEEN = (84, 90, 132)
-L_STEEL = (64, 66, 76)
-L_STEEL_L = (128, 132, 146)
-L_STEEL_D = (38, 38, 46)
+L_STEEL = (96, 100, 112)
+L_STEEL_L = (164, 170, 184)
+L_STEEL_D = (46, 46, 56)
 L_EYE = (236, 234, 226)
 L_SLIT = (120, 118, 116)
 
@@ -406,15 +420,19 @@ def longhand():
     """
     body = _l_ink(seed=1)
     limb = _l_ink(ragged_edges=False)
-    nib_base = _l_steel({"front": [("ascii", ["kkkk", "k..k", "iiii"], {"k": L_STEEL_L, ".": L_STEEL, "i": L_INK})],
-                         "back": [("ascii", ["kkkk", "....", "iiii"], {"k": L_STEEL_L, ".": L_STEEL, "i": L_INK})]})
-    nib_mid = _l_steel({"front": [("ascii", ["iEi", "kSk", "kSk"], {"E": (L_EYE, "glow"), "S": (L_SLIT, "glow"),
-                                                                   "k": L_STEEL_L, "i": L_STEEL_D})],
-                        "back": [("ascii", ["k.k", "...", ".k."], {"k": L_STEEL_L, ".": L_STEEL})]})
-    nib_upper = dict(base=L_INK, noise=2, features={
-        "all": [("draw", gloss(L_INK, L_SHEEN))],
-        "front": [("ascii", ["S.", "S.", "S."], {"S": ((70, 68, 70), "glow")}, (0, 0))]})
+    # A fountain-pen nib: engraved shoulders, a blade with the breather hole for an eye and the
+    # slit running up from it, the point still wet from the ink, and the ribbed feed behind.
+    steel = {"k": L_STEEL_L, ".": L_STEEL, "~": L_STEEL_D, "i": L_INK, "s": L_SHEEN}
+    nib_base = _l_steel({"front": [("ascii", ["k.k.k", ".~k~.", "iisii"], steel)],
+                         "back": [("ascii", ["k...k", ".~.~.", "iiiii"], steel)],
+                         "top": [("ascii", ["", "", ".k~k."], steel)]})
+    nib_mid = _l_steel({"front": [("ascii", ["~E~", "kSk", ".S."], dict(steel, E=(L_EYE, "glow"), S=(L_SLIT, "glow")))],
+                        "back": [("ascii", ["k.k", "...", ".k."], steel)]})
+    nib_upper = _l_steel({"front": [("ascii", ["isi", ".S.", "kSk"], dict(steel, S=((86, 84, 86), "glow")))],
+                          "back": [("ascii", ["iii", "...", "k.k"], steel)],
+                          "left": [("ascii", ["i", "."], steel)], "right": [("ascii", ["i", "."], steel)]})
     nib_tip = dict(base=L_INK, noise=2, features={"all": [("draw", gloss(L_INK, L_SHEEN, 0))]})
+    feed = dict(base=L_INK_2, noise=2, features={"all": [("ascii", ["~~", "..", "~~", "..", "~~"], {"~": L_INK, ".": L_INK_2})]})
     drip = dict(base=L_INK, noise=2, features={"all": [("ascii", [".", ".", "s"], {"s": L_SHEEN})]})
     finger = _l_ink(ragged_edges=False)
 
@@ -442,10 +460,11 @@ def longhand():
                           P(f"{side}_shin", (0, 13, 0), rot=(0.1, 0, 0), boxes=[B(-0.5, 0, -0.5, 1, 10, 1, mirror=m)], paint=limb,
                             children=[P(f"{side}_point", (0, 10, 0), rot=(-0.06, 0, 0),
                                         boxes=[B(-0.5, 0, -1, 1, 2, 2, mirror=m)], paint=_l_steel())])]))
-    head = P("head", (0, -5, 0), rot=(-0.08, 0, 0.18), boxes=[B(-2, -3, -1.5, 4, 3, 3)], paint=nib_base, children=[
+    head = P("head", (0, -5, 0), rot=(-0.08, 0, 0.18), boxes=[B(-2.5, -3, -1.5, 5, 3, 3)], paint=nib_base, children=[
         P("nib_mid", (0, -3, 0), boxes=[B(-1.5, -3, -1, 3, 3, 2)], paint=nib_mid),
-        P("nib_upper", (0, -6, 0), boxes=[B(-1, -3, -0.5, 2, 3, 1)], paint=nib_upper),
-        P("nib_tip", (0, -9, 0), rot=(0.05, 0, 0), boxes=[B(-0.5, -2, -0.5, 1, 2, 1)], paint=nib_tip),
+        P("nib_upper", (0, -6, 0), boxes=[B(-1.5, -3, -0.5, 3, 3, 1)], paint=nib_upper),
+        P("nib_tip", (0, -9, 0), rot=(0.05, 0, 0), boxes=[B(-0.5, -3, -0.5, 1, 3, 1)], paint=nib_tip),
+        P("feed", (0, -2, 1), rot=(-0.06, 0, 0), boxes=[B(-1, -5, 0, 2, 5, 1)], paint=feed),
         P("chin_drip", (0.8, 0, -1.2), boxes=[B(-0.5, 0, 0, 1, 3, 0)], paint=drip),
     ])
     parts = [
@@ -581,6 +600,20 @@ def hide_paint(outer, seed, hem=3):
             dict(base=C_RAW, noise=0, shape=shape, features={"all": [("draw", raw_inside(seed))]})]
 
 
+def drape_paint(outer, seed):
+    """hide_paint for a piece lying flat over the shoulders: the torn hem is its front edge."""
+    tear = ragged(2, holes=1, sides=True, seed=seed)
+    shape = lambda name, x, y, w, h: tear("front", x, y, w, h) if name in ("top", "bottom") else 255
+    return [dict(base=(200, 190, 180), noise=0, shape=shape, features={"all": [("draw", outer)]}),
+            dict(base=C_RAW, noise=0, shape=shape, features={"all": [("draw", raw_inside(seed))]})]
+
+
+def limb_paint(outer, tip, tip_rows=2):
+    """An empty leg of skin, hanging limp, with the hoof (or wingtip) still on the end."""
+    return dict(base=(200, 190, 180), noise=0, features={"all": [
+        ("draw", outer), ("ascii", ["tt"] * tip_rows, {"t": tip}, (0, -tip_rows))]})
+
+
 def skin_layers(x, y, w, h, outward):
     """Two boxes for a hide piece: the coat layer sits 0.15 px further out than the raw layer."""
     dz = 0.15 if outward > 0 else -0.15
@@ -602,6 +635,9 @@ def _cow():
         "hide_leg_l": hide_paint(patches((226, 220, 210), (46, 38, 34), 1, 1.0, 2.0, 2), 22, 1),
         "hide_leg_r": hide_paint(patches((226, 220, 210), (46, 38, 34), 1, 1.0, 2.0, 3), 23, 1),
         "hide_tail": dict(base=(46, 38, 34), noise=5, features={"all": [("ascii", ["", "", "", "", "t", "t"], {"t": (30, 26, 24)})]}),
+        "hide_shoulder": drape_paint(patches((226, 220, 210), (46, 38, 34), 2, 1.5, 2.6, 9), 26),
+        "hide_foreleg_l": limb_paint(patches((226, 220, 210), (46, 38, 34), 1, 1.0, 1.8, 10), (58, 52, 50)),
+        "hide_foreleg_r": limb_paint(patches((226, 220, 210), (46, 38, 34), 1, 1.0, 1.8, 11), (58, 52, 50)),
         "mask": dict(base=(226, 220, 210), noise=5, features={
             "all": [("draw", patches((226, 220, 210), (46, 38, 34), 2, 1.5, 2.5, 4))],
             "front": [("ascii", [".......", ".HE.EH.", ".......", ".......", "......."],
@@ -621,6 +657,9 @@ def _pig():
         "hide_leg_l": hide_paint(coat, 32, 1),
         "hide_leg_r": hide_paint(coat, 33, 1),
         "hide_tail": dict(base=(222, 150, 150), noise=4),
+        "hide_shoulder": drape_paint(coat, 36),
+        "hide_foreleg_l": limb_paint(coat, (150, 96, 96)),
+        "hide_foreleg_r": limb_paint(coat, (150, 96, 96)),
         "mask": dict(base=(232, 164, 162), noise=5, features={
             "all": [("draw", patches((232, 164, 162), (212, 140, 140), 3, 1.0, 1.8, 6))],
             "front": [("ascii", [".......", ".HE.EH.", ".......", ".......", "......."],
@@ -647,6 +686,9 @@ def _sheep():
         "hide_leg_l": hide_paint(wool(42), 42, 1),
         "hide_leg_r": hide_paint(wool(43), 43, 1),
         "hide_tail": dict(base=(220, 214, 196), noise=5),
+        "hide_shoulder": drape_paint(wool(47), 47),
+        "hide_foreleg_l": limb_paint(wool(48), (96, 88, 82), 4),
+        "hide_foreleg_r": limb_paint(wool(49), (96, 88, 82), 4),
         "mask": dict(base=(224, 218, 200), noise=5, features={
             "all": [("draw", wool(44))],
             "front": [("ascii", [".......", ".HE.EH.", ".fffff.", ".fffff.", "......."],
@@ -672,6 +714,10 @@ def _chicken():
         "hide_leg_l": dict(base=(222, 170, 64), noise=4),
         "hide_leg_r": dict(base=(222, 170, 64), noise=4),
         "hide_tail": dict(base=(236, 234, 228), noise=4),
+        "hide_shoulder": drape_paint(feathers(55), 55),
+        # A chicken skin has wings where the others have forelegs.
+        "hide_foreleg_l": limb_paint(feathers(56), (196, 194, 188), 3),
+        "hide_foreleg_r": limb_paint(feathers(57), (196, 194, 188), 3),
         "mask": dict(base=(240, 238, 232), noise=4, features={
             "all": [("draw", feathers(52))],
             "front": [("ascii", [".......", ".HE.EH.", ".......", ".......", "......."],
@@ -736,6 +782,15 @@ def copyist():
     ])
     # The skin over its back, from the shoulders down past the ribs.
     hide = P("hide", (0, -7.2, 2.6), rot=(0.05, 0, 0), boxes=skin_layers(-5, 0, 10, 13, 1), paint=None)
+    # Draped over its shoulders like a cape, tied on by the animal's own empty forelegs, which
+    # hang straight down its front (the chest leans forward, so they are turned back to vertical).
+    shoulder = P("hide_shoulder", (0, -7.05, 0), boxes=[B(-4.5, -0.15, -3.4, 9, 0, 6), B(-4.5, 0, -3.4, 9, 0, 6)], paint=None,
+                 children=[
+                     P("hide_foreleg_l", (2.2, 0, -3.3), rot=(-0.72, 0, -0.08), boxes=[B(-1, 0, -0.5, 2, 9, 1)],
+                       paint=cow["hide_foreleg_l"]),
+                     P("hide_foreleg_r", (-2.2, 0, -3.3), rot=(-0.72, 0, 0.08), boxes=[B(-1, 0, -0.5, 2, 9, 1, mirror=True)],
+                       paint=cow["hide_foreleg_r"]),
+                 ])
     # The hindquarters of the skin hang over its rump, the animal's empty legs and tail swinging from them.
     rump = P("hide_rump", (0, -1.5, 2.3), rot=(0.08, 0, 0), boxes=skin_layers(-4.5, 0, 9, 8, 1), paint=None, children=[
         P("hide_leg_l", (3.3, 7.5, 0.1), rot=(0.05, 0, -0.06), boxes=skin_layers(-1, 0, 2, 7, 1), paint=None),
@@ -749,12 +804,12 @@ def copyist():
                 P("chest", (0, -7, 0), rot=(0.35, 0, 0), boxes=[B(-3.5, -7, -3, 7, 7, 5)], paint=chest, children=[
                     P("neck", (0, -6.5, -1.5), rot=(-0.55, 0, 0), boxes=[B(-1.5, -6, -1.5, 3, 6, 3)], paint=_c_skin(), children=[head]),
                     arm("left", 1), arm("right", -1),
-                    hide,
+                    hide, shoulder,
                 ]),
             ]),
         ]),
     ]
-    for part in (hide, rump, head):
+    for part in (hide, shoulder, rump, head):
         for p in part.walk():
             if p.name in cow and isinstance(cow[p.name], list):
                 for b, paint in zip(p.boxes, cow[p.name]):
@@ -794,6 +849,10 @@ def copyist():
         hideLegL.xRot += Mth.sin(w + 0.7F) * 0.35F * a + Mth.sin(ageInTicks * 0.1F) * 0.05F;
         hideLegR.xRot += Mth.sin(w + 2.2F) * 0.35F * a - Mth.sin(ageInTicks * 0.1F) * 0.05F;
         hideTail.zRot += Mth.sin(ageInTicks * 0.13F) * 0.2F;
+        hideForelegL.xRot += Mth.sin(w + 1.3F) * 0.3F * a + Mth.sin(ageInTicks * 0.09F) * 0.05F;
+        hideForelegR.xRot += Mth.sin(w + 2.9F) * 0.3F * a - Mth.sin(ageInTicks * 0.09F + 1.0F) * 0.05F;
+        hideForelegL.zRot += Mth.sin(ageInTicks * 0.05F) * 0.04F;
+        hideForelegR.zRot -= Mth.sin(ageInTicks * 0.05F + 0.8F) * 0.04F;
         if (attackTime > 0.0F) {
             float s = Mth.sin(Mth.sqrt(attackTime) * Mth.PI);
             leftUpperArm.xRot -= 1.3F * s;

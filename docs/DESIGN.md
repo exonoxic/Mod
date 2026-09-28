@@ -113,12 +113,12 @@ inside its cooldown.
 | **Pale Stag** | Both | Faceless white deer. Grazes in herds in the Undertext; in the Overworld it's a sighting at the treeline. |
 | **Inkhound** | Undertext | Blind. Hunts by sound (sprinting, jumping, breaking blocks). Crouch and keep still. |
 | **Rubricator** | Undertext / summoned | The only friendly NPC. Trades, and speaks twelve lines. |
-| **Knocker** *(major)* | Overworld doors | Knocks three, waits, knocks three. Lunges if the door is opened or you step outside. Leaves at dawn or if warded. |
-| **Copyist** *(major)* | Overworld herds | Disguised as a cow, pig, sheep or chicken. Tells: no shadow, never grazes, always faces you, low voice. The Reading Lens, food, damage or getting close reveals it. |
-| **Longhand** *(major)* | Both | A tall single pen-stroke. Moves only when unobserved (darkness counts as unobserved). Only inkbane hurts it. Light, wards and chalk hold it back. Comes as a distant Watcher or a Hunter. |
+| **Knocker** *(major)* | Overworld doors | A stooped, too-tall figure in a torn burial shroud, an iron knocker-ring through its lip. Knocks three, presses its head to the door and listens, knocks three. Lunges, jaw dropped, if the door is opened or you step outside. Leaves at dawn or if warded. |
+| **Copyist** *(major)* | Overworld herds | Disguised as a cow, pig, sheep or chicken. Tells: no shadow, a little too tall, never grazes, always faces you, a head that tilts slowly then snaps, low voice. The Reading Lens, food, damage or getting close reveals it: the animal flickers and a pale, too-long thing unfolds out of it, still wearing the animal's skin as a cloak and its head as a mask. |
+| **Longhand** *(major)* | Both | A tall single pen-stroke of wet ink with a steel nib for a head. Moves only when unobserved (darkness counts as unobserved), and is found in a different pose each time you look back. Only inkbane hurts it. Light, wards and chalk hold it back. Comes as a distant Watcher or a Hunter. |
 | **Redacted** *(major)* | Undertext / Rasure fight | Censor-barred figure. Its hits apply Erasure, and it can black out an item name (cosmetic, configurable). Blinks when struck. |
 | **Fair Copy** *(rare)* | Stage 5 | A clean copy of you, with your skin, name and held item. Keeps its distance, walks away around corners, and reflects damage. |
-| **Erratum** *(rare)* | Stage 4 | A block in the wrong place. Mimics the ground and creeps closer while unobserved. |
+| **Erratum** *(rare)* | Stage 4 | A block in the wrong place, a pixel off the grid. Mimics the ground and creeps closer while unobserved, on six jointed legs over a toothed mouth. Stand near it and look away and an eye opens in its side; it half-closes when you stare back. |
 | **Palehand** *(rare)* | Stage 5 | A hill-sized hand rising over the horizon, writing in the air, then sinking. Unreachable. It's scenery. |
 | **The Bookbinder** *(boss)* | Bindery | See §5. |
 | **The Rasure** *(final boss)* | Last Folio | See §5. |
