@@ -32,6 +32,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
@@ -238,6 +239,53 @@ public final class SmokeTest {
             shot("creature_" + name);
         }
         featuredCreatures();
+        // A real Knocker nobody answers, end to end: a hut at night with a door on one side and a
+        // one-block gap in the far wall; the player stands inside looking at the gap. The Knocker is
+        // put at the door with its knocking nearly done, and should go quiet, find the gap, crawl in.
+        step(40, () -> {
+            clearMannequins();
+            server((srv, p) -> {
+                ServerLevel level = p.serverLevel();
+                killMobs(level);
+                clear(level, -12, Y - 1, -12, 12, Y + 12, 24, Blocks.SMOOTH_STONE.defaultBlockState());
+                command(srv, p, "time set 18000");
+                fill(level, -3, Y, -3, 3, Y + 2, 3, Blocks.STONE_BRICKS.defaultBlockState());
+                fill(level, -3, Y + 3, -3, 3, Y + 3, 3, Blocks.SPRUCE_PLANKS.defaultBlockState());
+                fill(level, -2, Y, -2, 2, Y + 2, 2, Blocks.AIR.defaultBlockState());
+                BlockState lower = Blocks.OAK_DOOR.defaultBlockState().setValue(DoorBlock.FACING, Direction.NORTH);
+                level.setBlock(new BlockPos(0, Y, 3), lower, Block.UPDATE_ALL);
+                level.setBlock(new BlockPos(0, Y + 1, 3), lower.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER), Block.UPDATE_ALL);
+                level.setBlock(new BlockPos(0, Y, -3), Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+                level.setBlock(new BlockPos(1, Y, 1), Blocks.TORCH.defaultBlockState(), Block.UPDATE_ALL);
+                view(p, 0.5, Y + 1.62, 1.2, 0.5, Y + 0.4, -3.0);
+                if (!KnockerEntity.spawnAtDoor(level, new BlockPos(0, Y, 3), p)) {
+                    LOG.error("[smoke] SMOKE_FAIL the Knocker would not come to the hut door");
+                    return;
+                }
+                for (KnockerEntity k : level.getEntitiesOfClass(KnockerEntity.class, p.getBoundingBox().inflate(16))) {
+                    // Skip to the end of its third round of knocking.
+                    CompoundTag tag = new CompoundTag();
+                    k.saveWithoutId(tag);
+                    tag.putInt("Rounds", 3);
+                    k.load(tag);
+                }
+            });
+        });
+        for (int i = 0; i < 10; i++) {
+            int n = i;
+            step(20, () -> server((srv, p) -> {
+                for (KnockerEntity k : p.serverLevel().getEntitiesOfClass(KnockerEntity.class, p.getBoundingBox().inflate(32))) {
+                    LOG.info("[smoke] knocker hunt {}: state {} pose {} at {} {} {}", n, k.getState(), k.getPose(),
+                            String.format("%.1f", k.getX()), String.format("%.1f", k.getY() - Y), String.format("%.1f", k.getZ()));
+                }
+            }));
+            shot("knocker_hunt_" + n);
+        }
+        step(10, () -> server((srv, p) -> {
+            killMobs(p.serverLevel());
+            command(srv, p, "time set 6000");
+        }));
+
         // Apparitions only exist for one player and keep their distance: a Longhand watcher vanishes
         // inside 24 blocks and a Fair Copy walks away inside 12, so these are taken zoomed in.
         step(40, () -> server((srv, p) -> {

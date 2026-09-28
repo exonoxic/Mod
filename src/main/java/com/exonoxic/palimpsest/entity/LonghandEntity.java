@@ -91,11 +91,6 @@ public class LonghandEntity extends Monster implements Apparition, Squeezer {
     }
 
     @Override
-    public float getBbHeight() {
-        return squeeze == null ? super.getBbHeight() : squeeze.reportedHeight(super.getBbHeight());
-    }
-
-    @Override
     public EntityDimensions getDimensions(Pose pose) {
         return squeeze == null ? super.getDimensions(pose) : squeeze.dimensions(pose);
     }

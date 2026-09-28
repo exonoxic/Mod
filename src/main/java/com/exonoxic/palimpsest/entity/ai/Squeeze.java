@@ -26,7 +26,7 @@ import java.util.List;
  * It is heard before it is seen: joints crack as it folds itself down, and while it crawls the
  * floor carries the sound of something dragging itself along on its elbows.
  * <p>
- * Routes are planned at its crawling height ({@link SqueezeNavigation}), so any gap a block high
+ * Routes are planned for its crawling body ({@link SqueezeNavigation}), so any gap a block high
  * counts as a way through, including one it has to climb up into.
  */
 public final class Squeeze {
@@ -43,7 +43,6 @@ public final class Squeeze {
     private final EntityDimensions crawl;
     private int roomy;
     private int nextSound;
-    private boolean planning;
     private Pose held = Pose.STANDING;
     private float crawlO;
     private float crawlNow;
@@ -129,18 +128,9 @@ public final class Squeeze {
         held = rank(pose) < 0 ? Pose.STANDING : pose;
     }
 
-    /** Set by {@link SqueezeNavigation} while it works out a route. */
-    void planning(boolean on) {
-        planning = on;
-    }
-
-    /**
-     * The height the creature reports: its crawling height while a route is being planned (so the
-     * pathfinder lets it climb up into a one-high gap even from under a low ceiling), otherwise
-     * its real one. Entities return this from {@code getBbHeight()}.
-     */
-    public float reportedHeight(float height) {
-        return planning ? Math.min(height, crawl.height) : height;
+    /** How tall it is lying flat. */
+    public float crawlHeight() {
+        return crawl.height;
     }
 
     /** 0..1 how far into the crawl the model is (client). */

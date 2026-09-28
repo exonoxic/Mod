@@ -85,11 +85,6 @@ public class CopyistEntity extends Monster implements Squeezer {
     }
 
     @Override
-    public float getBbHeight() {
-        return squeeze == null ? super.getBbHeight() : squeeze.reportedHeight(super.getBbHeight());
-    }
-
-    @Override
     public AABB getBoundingBoxForCulling() {
         return squeeze == null ? super.getBoundingBoxForCulling() : squeeze.cullingBox(super.getBoundingBoxForCulling());
     }

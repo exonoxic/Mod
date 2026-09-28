@@ -13,6 +13,7 @@ import com.exonoxic.palimpsest.horror.WorldAlterations;
 import com.exonoxic.palimpsest.registry.ModEntities;
 import com.exonoxic.palimpsest.registry.ModSounds;
 import com.exonoxic.palimpsest.util.Advancements;
+import com.exonoxic.palimpsest.util.Sounds;
 import com.exonoxic.palimpsest.world.WardHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -111,6 +112,8 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
     private int watching;
     private int lookedAt;
     private int brightTicks;
+    private int heartbeatIn;
+    private int silence;
     /** Bends double under a doorway, crawls through anything a block high. */
     public final Squeeze squeeze = Squeeze.of(this, 0.7F, 2.7F);
 
@@ -127,11 +130,6 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
     @Override
     public Squeeze squeeze() {
         return squeeze;
-    }
-
-    @Override
-    public float getBbHeight() {
-        return squeeze == null ? super.getBbHeight() : squeeze.reportedHeight(super.getBbHeight());
     }
 
     @Override
@@ -367,7 +365,8 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
         patrol = null;
         watching = 0;
         // It stops. For a while there is nothing to hear at all.
-        pause = 60 + random.nextInt(60);
+        silence = 60 + random.nextInt(60);
+        pause = 0;
         taps = 0;
         getNavigation().stop();
     }
@@ -393,6 +392,10 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
         }
         if (creeping) {
             tickCreeping(p);
+            return;
+        }
+        if (searchTicks <= silence) {
+            getNavigation().stop();
             return;
         }
         // Every second it tries the house again: is there any way in at all?
@@ -459,8 +462,16 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
     /** Found a way in: it comes through quietly and only shows itself when it is close. */
     private void tickCreeping(Player p) {
         if (distanceToSqr(p) < 8 * 8 && hasLineOfSight(p)) {
+            if (p instanceof ServerPlayer sp) Sounds.playTo(sp, ModSounds.EVENT_STINGER.get(), SoundSource.HOSTILE, sp.getEyePosition(), 0.9F, 1.0F);
             lunge(p);
             return;
+        }
+        // Only the one it came for hears it: their own heart, faster the closer it gets.
+        if (p instanceof ServerPlayer sp && --heartbeatIn <= 0) {
+            float near = (float) Mth.clamp(1.0D - Math.sqrt(distanceToSqr(sp)) / 24.0D, 0.0D, 1.0D);
+            float pitch = 0.85F + 0.5F * near;
+            Sounds.playTo(sp, ModSounds.EVENT_HEARTBEAT.get(), SoundSource.AMBIENT, sp.getEyePosition(), 0.3F + 0.5F * near, pitch);
+            heartbeatIn = (int) (76 / pitch);
         }
         snuffAround();
         if (tooBright(13)) {
