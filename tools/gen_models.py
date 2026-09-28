@@ -23,43 +23,7 @@ TEX_DIR = os.path.join(ROOT, "src/main/resources/assets/palimpsest/textures/enti
 PKG = "com.exonoxic.palimpsest.client.model"
 
 
-class B:
-    def __init__(self, x, y, z, w, h, d, paint=None, mirror=False, inflate=0.0):
-        self.x, self.y, self.z, self.w, self.h, self.d = x, y, z, w, h, d
-        self.paint = paint
-        self.mirror = mirror
-        self.inflate = inflate
-        self.u = self.v = 0
-
-
-class P:
-    def __init__(self, name, pivot=(0, 0, 0), rot=(0, 0, 0), boxes=(), children=(), paint=None):
-        self.name = name
-        self.pivot = pivot
-        self.rot = rot
-        self.boxes = list(boxes)
-        self.children = list(children)
-        self.paint = paint
-
-    def walk(self):
-        yield self
-        for c in self.children:
-            yield from c.walk()
-
-
-class Model:
-    def __init__(self, name, cls, entity, tex, parts, anim, translucent=False, alpha=1.0, extra_imports=()):
-        self.name, self.cls, self.entity = name, cls, entity
-        self.tw, self.th = tex
-        self.parts = parts
-        self.anim = anim
-        self.translucent = translucent
-        self.alpha = alpha
-        self.extra_imports = extra_imports
-
-    def all_parts(self):
-        for p in self.parts:
-            yield from p.walk()
+from modelkit import B, P, Model, E, HEAD_LOOK  # noqa: E402  (shared with creature_designs.py)
 
 
 def camel(s):
@@ -165,6 +129,21 @@ def paint_box(canvas, glow, b, paint, r):
                 continue
             for feat in feats:
                 apply_feature(canvas, glow, feat, u, v, w, h, r)
+        if paint.get("rim"):
+            # Darken the lower edge (and a little of the sides) so joints read as separate pieces.
+            rc, ra = paint["rim"]
+            for xx in range(w):
+                canvas.blend(u + xx, v + h - 1, rc, ra)
+            if name not in ("top", "bottom"):
+                for yy in range(h):
+                    canvas.blend(u, v + yy, rc, ra * 0.6)
+                    canvas.blend(u + w - 1, v + yy, rc, ra * 0.6)
+        if shape is not None:
+            # Cut-outs must survive the features painted on top.
+            for yy in range(h):
+                for xx in range(w):
+                    if shape(name, xx, yy, w, h) == 0:
+                        canvas.set(u + xx, v + yy, (0, 0, 0), 0)
 
 
 def apply_feature(canvas, glow, feat, u, v, w, h, r):
@@ -226,6 +205,32 @@ def apply_feature(canvas, glow, feat, u, v, w, h, r):
             ln = r.randint(1, max(1, h // 2))
             for y in range(ln):
                 canvas.set(u + x, v + y, c)
+    elif kind == "ascii":
+        # Pixel art: rows of characters looked up in a palette. A palette value is a colour,
+        # (colour, "glow") for an emissive pixel, or None to cut the pixel out entirely.
+        _, rows, pal = feat[:3]
+        ox, oy = feat[3] if len(feat) > 3 else (0, 0)
+        ox, oy = resolve(ox, w), resolve(oy, h)
+        for j, row in enumerate(rows):
+            for i, ch in enumerate(row):
+                if ch in " .":
+                    continue
+                x, y = ox + i, oy + j
+                if not (0 <= x < w and 0 <= y < h):
+                    continue
+                spec = pal[ch]
+                if spec is None:
+                    canvas.set(u + x, v + y, (0, 0, 0), 0)
+                    continue
+                glowing = isinstance(spec, tuple) and len(spec) == 2 and spec[1] == "glow"
+                c = spec[0] if glowing else spec
+                a = c[3] if len(c) == 4 else 255
+                canvas.set(u + x, v + y, c[:3], a)
+                if glowing and glow is not None:
+                    glow.set(u + x, v + y, c[:3], a)
+    elif kind == "draw":
+        # Free-form: fn(canvas, glow, u, v, w, h, r) paints the face however it likes.
+        feat[1](canvas, glow, u, v, w, h, r)
     elif kind == "stitches":
         _, c = feat
         for x in range(1, w - 1, 2):
@@ -237,16 +242,26 @@ def apply_feature(canvas, glow, feat, u, v, w, h, r):
         raise ValueError(kind)
 
 
-def paint_model(model):
-    r = rng_for("model:" + model.name)
+def paint_canvases(model, variant=None):
+    """Paints the model's skin and emissive layer in memory (also used by preview_models.py)."""
+    overrides = model.variants.get(variant, {}) if variant else {}
+    r = rng_for("model:" + model.name + (":" + variant if variant else ""))
     canvas = Canvas(model.tw, model.th)
     glow = Canvas(model.tw, model.th)
     for p in model.all_parts():
         for b in p.boxes:
-            paint_box(canvas, glow, b, b.paint or p.paint, r)
-    canvas.save(os.path.join(TEX_DIR, model.name + ".png"))
-    if glow.px[:, :, 3].any():
-        glow.save(os.path.join(TEX_DIR, model.name + "_glow.png"))
+            paint = overrides.get(p.name) or b.paint or p.paint
+            paint_box(canvas, glow, b, paint, r)
+    return canvas, glow
+
+
+def paint_model(model):
+    for variant in [None] + list(model.variants):
+        canvas, glow = paint_canvases(model, variant)
+        name = model.name + ("_" + variant if variant else "")
+        canvas.save(os.path.join(TEX_DIR, name + ".png"))
+        if glow.px[:, :, 3].any():
+            glow.save(os.path.join(TEX_DIR, name + "_glow.png"))
 
 
 # ---------------------------------------------------------------- Java
@@ -365,10 +380,6 @@ public final class ModModelLayers {{
 
 
 # ================================================================ creature specs
-E = "com.exonoxic.palimpsest.entity."
-HEAD_LOOK = """        {head}.yRot += netHeadYaw * Mth.DEG_TO_RAD;
-        {head}.xRot += headPitch * Mth.DEG_TO_RAD;
-"""
 
 
 def walk(parts, speed="0.6662F", amount="1.2F"):
@@ -898,7 +909,9 @@ def rasure():
     return Model("rasure", "RasureModel", "com.exonoxic.palimpsest.entity.boss.RasureEntity", (128, 64), parts, anim)
 
 
-MODELS = [knocker(), longhand(), smudge(), redacted(), rubricator(), copyist(), inkhound(), pale_stag(), quillcrow(),
+import creature_designs  # noqa: E402
+
+MODELS = [creature_designs.knocker(), longhand(), smudge(), redacted(), rubricator(), copyist(), inkhound(), pale_stag(), quillcrow(),
           foxing_moth(), blotling(), margin_crawler(), erratum_legs(), palehand(), bookbinder(), rasure()]
 
 
