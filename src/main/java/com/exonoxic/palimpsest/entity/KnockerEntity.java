@@ -1,6 +1,8 @@
 package com.exonoxic.palimpsest.entity;
 
 import com.exonoxic.palimpsest.bleed.BleedManager;
+import com.exonoxic.palimpsest.entity.ai.Squeeze;
+import com.exonoxic.palimpsest.entity.ai.SqueezeNavigation;
 import com.exonoxic.palimpsest.entity.apparition.Apparition;
 import com.exonoxic.palimpsest.entity.apparition.ApparitionState;
 import com.exonoxic.palimpsest.entity.apparition.Apparitions;
@@ -21,18 +23,22 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
@@ -65,10 +71,27 @@ public class KnockerEntity extends Monster implements Apparition {
     private int lungeTicks;
     private int leaveTicks;
     private boolean opened;
+    /** Bends double under a doorway, crawls through anything a block high. */
+    public final Squeeze squeeze = Squeeze.of(this, 0.7F, 2.7F);
 
     public KnockerEntity(EntityType<? extends Monster> type, Level level) {
         super(type, level);
         xpReward = 12;
+    }
+
+    @Override
+    protected PathNavigation createNavigation(Level level) {
+        return new SqueezeNavigation(this, level);
+    }
+
+    @Override
+    public EntityDimensions getDimensions(Pose pose) {
+        return squeeze == null ? super.getDimensions(pose) : squeeze.dimensions(pose);
+    }
+
+    @Override
+    public AABB getBoundingBoxForCulling() {
+        return squeeze == null ? super.getBoundingBoxForCulling() : squeeze.cullingBox(super.getBoundingBoxForCulling());
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -186,6 +209,7 @@ public class KnockerEntity extends Monster implements Apparition {
 
     @Override
     public void tick() {
+        squeeze.tick(true);
         super.tick();
         if (level().isClientSide) return;
         int anim = entityData.get(KNOCK_ANIM);

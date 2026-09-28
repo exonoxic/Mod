@@ -227,6 +227,13 @@ POSES = {
 }
 
 
+def blend_poses():
+    """Each model's blend poses (crawling, stooping...) as named poses."""
+    for m in gm.MODELS:
+        for var, _, deltas in m.blends:
+            POSES.setdefault(m.name, {})[var] = deltas
+
+
 def model_by_name(name):
     for m in gm.MODELS:
         if m.name == name:
@@ -306,8 +313,44 @@ def preview(name, pose_name=None, angles=(0, 35, 90, 160)):
     return path
 
 
+def fit(name, pose_name=None):
+    """Side and front views, level, with the floor and 1- and 2-block ceilings drawn in, and the
+    pose's height and width in pixels, to check that a crawl or stoop really fits the hole."""
+    m = model_by_name(name)
+    gm.pack(m)
+    canvas, glow = gm.paint_canvases(m)
+    pose = POSES.get(name, {}).get(pose_name, {}) if pose_name else {}
+    verts = np.array([v for q in collect(m, pose) for v in q[0]])
+    top = 24 - verts[:, 1].min()
+    half_w = max(abs(verts[:, 0].min()), abs(verts[:, 0].max()))
+    length = verts[:, 2].max() - verts[:, 2].min()
+    tiles = []
+    for a in (90, 0):
+        im, scale = render(m, canvas.px, glow.px, pose, a, pitch_deg=0.0, bg=BG, size=420)
+        # Where model height y lands on screen: render() centres the model's extent.
+        ys = verts[:, 1]
+        cy = (ys.min() + ys.max()) / 2
+        d = ImageDraw.Draw(im)
+        for y, col, label in ((24, (90, 200, 90), "floor"), (8, (220, 80, 80), "1 block"), (-8, (220, 160, 60), "2 blocks")):
+            sy = (y - cy) * scale + im.height / 2
+            d.line([(0, sy), (im.width, sy)], fill=col, width=1)
+            d.text((4, sy - 12), label, fill=col)
+        d.text((8, 6), f"{name} {pose_name or 'rest'} {a}deg", fill=(255, 255, 255))
+        tiles.append(im)
+    sheet = Image.new("RGB", (sum(t.width for t in tiles), tiles[0].height))
+    x = 0
+    for t in tiles:
+        sheet.paste(t, (x, 0))
+        x += t.width
+    os.makedirs(OUT, exist_ok=True)
+    path = os.path.join(OUT, f"{name}_{pose_name or 'rest'}_fit.png")
+    sheet.save(path)
+    return f"{path}  height {top:.1f}px ({top / 16:.2f} blocks), half-width {half_w:.1f}px, length {length:.1f}px"
+
+
 def main(argv):
-    names, pose, close = [], None, False
+    blend_poses()
+    names, pose, close, fitting = [], None, False, False
     i = 0
     while i < len(argv):
         if argv[i] == "--light":
@@ -317,6 +360,10 @@ def main(argv):
             continue
         if argv[i] == "--close":
             close = True
+            i += 1
+            continue
+        if argv[i] == "--fit":
+            fitting = True
             i += 1
             continue
         if argv[i] == "--pose":
@@ -329,6 +376,9 @@ def main(argv):
             names.append(argv[i])
         i += 1
     for n in names:
+        if fitting:
+            print(fit(n, pose))
+            continue
         if close:
             print(closeup(n, pose))
             continue

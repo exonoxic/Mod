@@ -147,9 +147,12 @@ public class LonghandModel<T extends LonghandEntity> extends HierarchicalModel<T
     @Override
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         root().getAllParts().forEach(ModelPart::resetPose);
+        float crawl = entity.squeeze.crawl(ageInTicks - entity.tickCount);
+        float stoop = entity.squeeze.stoop(ageInTicks - entity.tickCount);
         if (entity.isFrozen()) {
-            // Caught. Every time you look back it is holding a different, wrong pose.
-            switch (entity.getPoseIndex()) {
+            // Caught. Every time you look back it is holding a different, wrong pose (or, caught
+            // squeezing through something, exactly the shape it was squeezing in).
+            if (crawl < 0.05F && stoop < 0.05F) switch (entity.getPoseIndex()) {
                 case 0 -> {
                     leftUpperArm.xRot -= 1.35F; rightUpperArm.xRot -= 1.2F;
                     leftForearm.xRot -= 0.25F; rightForearm.xRot -= 0.35F;
@@ -182,10 +185,10 @@ public class LonghandModel<T extends LonghandEntity> extends HierarchicalModel<T
                     head.xRot += 0.55F;
                 }
             }
-            return;
-        }
+        } else {
         head.yRot += netHeadYaw * Mth.DEG_TO_RAD;
         head.xRot += headPitch * Mth.DEG_TO_RAD;
+        limbSwingAmount *= 1.0F - 0.45F * crawl;
         // Unwatched, it moves in fast, broken strokes.
         float jerk = Mth.sin(ageInTicks * 2.3F) * 0.06F;
         float w = limbSwing * 0.5F;
@@ -204,5 +207,47 @@ public class LonghandModel<T extends LonghandEntity> extends HierarchicalModel<T
         tail2.xRot += Mth.sin(ageInTicks * 0.2F) * 0.08F;
         for (ModelPart f : new ModelPart[]{leftFinger0, leftFinger1, leftFinger2, leftFinger3}) f.xRot += Mth.sin(ageInTicks * 0.3F) * 0.2F;
         for (ModelPart f : new ModelPart[]{rightFinger0, rightFinger1, rightFinger2, rightFinger3}) f.xRot += Mth.cos(ageInTicks * 0.3F) * 0.2F;
+        }
+        if (crawl > 0.0F) {
+            pelvis.xRot += crawl * 1.47F;
+            pelvis.y += crawl * 22.5F;
+            pelvis.z += crawl * 2.0F;
+            leftThigh.zRot += crawl * -0.12F;
+            rightThigh.zRot += crawl * 0.12F;
+            leftShin.xRot += crawl * 0.1F;
+            rightShin.xRot += crawl * 0.1F;
+            neck.xRot += crawl * -0.34F;
+            head.xRot += crawl * -0.52F;
+            leftUpperArm.xRot += crawl * -3.64F;
+            leftUpperArm.zRot += crawl * -0.25F;
+            rightUpperArm.xRot += crawl * -3.5F;
+            rightUpperArm.zRot += crawl * 0.25F;
+            leftForearm.xRot += crawl * 3.1F;
+            rightForearm.xRot += crawl * 3.01F;
+            leftHand.xRot += crawl * -3.0F;
+            rightHand.xRot += crawl * -3.0F;
+            tail0.xRot += crawl * -0.3F;
+            tail1.xRot += crawl * 0.15F;
+            tail2.xRot += crawl * 0.1F;
+        }
+        if (stoop > 0.0F) {
+            pelvis.xRot += stoop * 2.35F;
+            pelvis.z += stoop * 12.0F;
+            leftThigh.xRot += stoop * -2.35F;
+            rightThigh.xRot += stoop * -2.35F;
+            neck.xRot += stoop * 0.23F;
+            head.xRot += stoop * -2.42F;
+            leftUpperArm.xRot += stoop * -2.47F;
+            leftUpperArm.zRot += stoop * -0.15F;
+            rightUpperArm.xRot += stoop * -2.47F;
+            rightUpperArm.zRot += stoop * 0.15F;
+            leftForearm.xRot += stoop * -1.49F;
+            rightForearm.xRot += stoop * -1.49F;
+            leftHand.xRot += stoop * -0.2F;
+            rightHand.xRot += stoop * -0.2F;
+            tail0.xRot += stoop * -2.59F;
+            tail1.xRot += stoop * -1.6F;
+            tail2.xRot += stoop * 0.3F;
+        }
     }
 }

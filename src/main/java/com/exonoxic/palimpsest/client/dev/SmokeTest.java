@@ -12,6 +12,7 @@ import com.exonoxic.palimpsest.entity.FairCopyEntity;
 import com.exonoxic.palimpsest.entity.KnockerEntity;
 import com.exonoxic.palimpsest.entity.LonghandEntity;
 import com.exonoxic.palimpsest.entity.PalehandEntity;
+import com.exonoxic.palimpsest.entity.ai.Squeeze;
 import com.exonoxic.palimpsest.horror.EventContext;
 import com.exonoxic.palimpsest.horror.HorrorDirector;
 import com.exonoxic.palimpsest.horror.HorrorEvent;
@@ -550,6 +551,37 @@ public final class SmokeTest {
             view(p, 0.5, Y + 0.08, -1.5, 0.5, Y + 0.3, 0.5);
         }));
         shot("featured_erratum_underneath");
+
+        // Squeezing through gaps: each one crawling out of a one-block hole in a wall, then the Knocker
+        // and the Longhand bent double through a doorway, seen as a player standing in the room would.
+        for (EntityType<?> type : List.of(ModEntities.KNOCKER.get(), ModEntities.LONGHAND.get(), ModEntities.COPYIST.get())) {
+            String name = ForgeRegistries.ENTITY_TYPES.getKey(type).getPath();
+            step(20, () -> {
+                clearMannequins();
+                server((srv, p) -> {
+                    ServerLevel level = p.serverLevel();
+                    clear(level, -12, Y - 1, -12, 12, Y + 12, 24, Blocks.SMOOTH_STONE.defaultBlockState());
+                    fill(level, -4, Y, 3, 4, Y + 3, 3, Blocks.STONE_BRICKS.defaultBlockState());
+                    level.setBlock(new BlockPos(0, Y, 3), Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
+                    view(p, 0.9, Y + 1.62, 0.1, 0.5, Y + 0.3, 3.0);
+                });
+                mannequin(type, 0.5, Y, 3.5, 180F, e -> e.setPose(Squeeze.CRAWL));
+            });
+            step(20, () -> {});
+            shot("squeeze_" + name + "_hole");
+            if (type == ModEntities.COPYIST.get()) continue;
+            step(20, () -> {
+                clearMannequins();
+                server((srv, p) -> {
+                    ServerLevel level = p.serverLevel();
+                    level.setBlock(new BlockPos(0, Y + 1, 3), Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
+                    view(p, 2.0, Y + 1.62, -0.6, 0.5, Y + 0.9, 3.0);
+                });
+                mannequin(type, 0.5, Y, 3.3, 180F, e -> e.setPose(Squeeze.STOOP));
+            });
+            step(20, () -> {});
+            shot("squeeze_" + name + "_doorway");
+        }
         step(10, SmokeTest::clearMannequins);
     }
 

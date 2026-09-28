@@ -315,6 +315,20 @@ def write_java(model):
     }}
 """
     extra = "".join(f"import {i};\n" for i in model.extra_imports)
+    blend_vars = "".join(f"        float {var} = {expr};\n" for var, expr, _ in model.blends)
+    blend_offsets = ""
+    names = {p.name for p in model.all_parts()}
+    for var, _, deltas in model.blends:
+        if deltas:
+            blend_offsets += f"        if ({var} > 0.0F) {{\n"
+        for part, d in deltas.items():
+            assert part in names, f"{model.name}: blend {var} names unknown part {part}"
+            d = tuple(d) + (0,) * (6 - len(d))
+            for attr, v in zip(("xRot", "yRot", "zRot", "x", "y", "z"), d):
+                if v:
+                    blend_offsets += f"            {camel(part)}.{attr} += {var} * {f(v)};\n"
+        if deltas:
+            blend_offsets += "        }\n"
     src = f"""package {PKG};
 
 import com.exonoxic.palimpsest.Palimpsest;
@@ -359,8 +373,8 @@ public class {model.cls}<T extends {model.entity.split('.')[-1]}> extends Hierar
     @Override
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {{
         root().getAllParts().forEach(ModelPart::resetPose);
-{model.anim.rstrip()}
-    }}
+{blend_vars}{model.anim.rstrip()}
+{blend_offsets}    }}
 {alpha_override}}}
 """
     os.makedirs(JAVA_DIR, exist_ok=True)

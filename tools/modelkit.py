@@ -31,7 +31,8 @@ class P:
 
 
 class Model:
-    def __init__(self, name, cls, entity, tex, parts, anim, translucent=False, alpha=1.0, extra_imports=(), variants=None):
+    def __init__(self, name, cls, entity, tex, parts, anim, translucent=False, alpha=1.0, extra_imports=(), variants=None,
+                 blends=()):
         self.name, self.cls, self.entity = name, cls, entity
         self.tw, self.th = tex
         self.parts = parts
@@ -41,6 +42,11 @@ class Model:
         self.extra_imports = extra_imports
         # Extra skins sharing this geometry: {suffix: {part name: paint}} -> <name>_<suffix>.png
         self.variants = variants or {}
+        # Whole-body poses blended in by an amount: [(java variable, java expression 0..1,
+        # {part name: (dxRot, dyRot, dzRot[, dx, dy, dz])})]. The variable is declared before the
+        # animation code (which may use it) and the offsets are added after it. The preview tool
+        # renders each one as a named pose.
+        self.blends = list(blends)
 
     def all_parts(self):
         for p in self.parts:

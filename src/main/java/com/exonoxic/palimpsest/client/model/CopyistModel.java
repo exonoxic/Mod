@@ -150,8 +150,11 @@ public class CopyistModel<T extends CopyistEntity> extends HierarchicalModel<T> 
     @Override
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         root().getAllParts().forEach(ModelPart::resetPose);
+        float crawl = entity.squeeze.crawl(ageInTicks - entity.tickCount);
+        float stoop = entity.squeeze.stoop(ageInTicks - entity.tickCount);
         float w = limbSwing * 0.55F;
-        float a = Math.min(1.0F, limbSwingAmount);
+        // Crawling, it claws itself along rather than striding.
+        float a = Math.min(1.0F, limbSwingAmount) * (1.0F - 0.45F * crawl);
         head.yRot += netHeadYaw * Mth.DEG_TO_RAD * 0.6F;
         neck.yRot += netHeadYaw * Mth.DEG_TO_RAD * 0.35F;
         head.xRot += headPitch * Mth.DEG_TO_RAD * 0.5F;
@@ -188,6 +191,51 @@ public class CopyistModel<T extends CopyistEntity> extends HierarchicalModel<T> 
             rightUpperArm.xRot -= 1.1F * s;
             jaw.xRot += 0.7F * s;
             head.xRot -= 0.4F * s;
+        }
+        if (crawl > 0.0F) {
+            pelvis.xRot += crawl * 0.77F;
+            pelvis.y += crawl * 11.0F;
+            pelvis.z += crawl * 11.0F;
+            leftThigh.xRot += crawl * 0.8F;
+            leftThigh.zRot += crawl * -0.3F;
+            rightThigh.xRot += crawl * 0.8F;
+            rightThigh.zRot += crawl * 0.3F;
+            leftShin.xRot += crawl * 0.3F;
+            rightShin.xRot += crawl * 0.3F;
+            leftHoof.xRot += crawl * 0.1F;
+            rightHoof.xRot += crawl * 0.1F;
+            hideRump.xRot += crawl * 0.3F;
+            neck.xRot += crawl * 0.28F;
+            head.xRot += crawl * -1.2F;
+            leftUpperArm.xRot += crawl * -1.92F;
+            leftUpperArm.zRot += crawl * -0.2F;
+            rightUpperArm.xRot += crawl * -1.92F;
+            rightUpperArm.zRot += crawl * 0.2F;
+            leftForearm.xRot += crawl * -0.42F;
+            rightForearm.xRot += crawl * -0.42F;
+            leftHand.xRot += crawl * 0.37F;
+            rightHand.xRot += crawl * 0.37F;
+            hideForelegL.xRot += crawl * 0.65F;
+            hideForelegR.xRot += crawl * 0.65F;
+        }
+        if (stoop > 0.0F) {
+            pelvis.xRot += stoop * 0.35F;
+            pelvis.y += stoop * 2.0F;
+            pelvis.z += stoop * 5.0F;
+            leftThigh.xRot += stoop * -0.65F;
+            rightThigh.xRot += stoop * -0.65F;
+            leftShin.xRot += stoop * 0.7F;
+            rightShin.xRot += stoop * 0.7F;
+            leftHoof.xRot += stoop * -0.35F;
+            rightHoof.xRot += stoop * -0.35F;
+            neck.xRot += stoop * 0.5F;
+            head.xRot += stoop * -0.6F;
+            leftUpperArm.xRot += stoop * -0.3F;
+            rightUpperArm.xRot += stoop * -0.3F;
+            leftForearm.xRot += stoop * 0.6F;
+            rightForearm.xRot += stoop * 0.6F;
+            leftHand.xRot += stoop * 1.2F;
+            rightHand.xRot += stoop * 1.2F;
         }
     }
 }

@@ -146,6 +146,132 @@ def _k_linen(shape=None, stains=3):
     return d
 
 
+# ================================================================ squeezing through gaps
+# Postures for fitting through holes (tuned with tools/preview_models.py --fit): offsets from the
+# rest pose, part -> (dxRot, dyRot, dzRot[, dx, dy, dz]), blended in by the entity's Squeeze.
+# Crawls fit under one block (and within one block's width), stoops under two.
+SQUEEZE_VARS = ("crawl", "entity.squeeze.crawl(ageInTicks - entity.tickCount)"), \
+               ("stoop", "entity.squeeze.stoop(ageInTicks - entity.tickCount)")
+
+
+def squeeze_blends(crawl, stoop):
+    return [(SQUEEZE_VARS[0][0], SQUEEZE_VARS[0][1], crawl), (SQUEEZE_VARS[1][0], SQUEEZE_VARS[1][1], stoop)]
+
+
+KNOCKER_CRAWL = {
+    "hips": (1.17, 0.0, 0.0, 0.0, 18.5, 12.0),
+    "left_thigh": (0.36, 0.0, -0.25),
+    "right_thigh": (0.36, 0.0, 0.25),
+    "left_shin": (0.6, 0.0, 0.0),
+    "right_shin": (0.6, 0.0, 0.0),
+    "left_foot": (-0.9, 0.0, 0.0),
+    "right_foot": (-0.9, 0.0, 0.0),
+    "neck": (-1.03, 0.0, 0.0),
+    "head": (-0.12, 0.0, 0.0),
+    "left_upper_arm": (-2.45, 0.0, -0.12),
+    "right_upper_arm": (-2.68, 0.0, 0.2),
+    "left_forearm": (-0.35, 0.0, 0.0),
+    "right_forearm": (0.06, 0.0, 0.0),
+    "left_hand": (0.2, 0.0, 0.0),
+    "right_hand": (-0.1, 0.0, 0.0),
+    "shroud_back": (0.0, 0.0, 0.0),
+    "shroud_back_lower": (0.39, 0.0, 0.0),
+    "shroud_flap": (0.34, 0.0, 0.0),
+    "shroud_strip": (0.3, 0.0, 0.0),
+}
+KNOCKER_STOOP = {
+    "hips": (0.8, 0.0, 0.0, 0.0, 7.0, 9.0),
+    "left_thigh": (-1.62, 0.0, -0.08),
+    "right_thigh": (-1.62, 0.0, 0.08),
+    "left_shin": (1.3, 0.0, 0.0),
+    "right_shin": (1.3, 0.0, 0.0),
+    "left_foot": (-0.62, 0.0, 0.0),
+    "right_foot": (-0.62, 0.0, 0.0),
+    "neck": (-0.4, 0.0, 0.0),
+    "head": (-0.25, 0.0, 0.0),
+    "left_upper_arm": (-1.5, 0.0, -0.1),
+    "right_upper_arm": (-1.5, 0.0, 0.1),
+    "left_forearm": (1.45, 0.0, 0.0),
+    "right_forearm": (1.45, 0.0, 0.0),
+    "left_hand": (1.1, 0.0, 0.0),
+    "right_hand": (1.1, 0.0, 0.0),
+    "shroud_back_lower": (-0.51, 0.0, 0.0),
+    "shroud_flap": (-0.35, 0.0, 0.0),
+    "shroud_strip": (-0.6, 0.0, 0.0),
+}
+LONGHAND_CRAWL = {
+    "pelvis": (1.47, 0.0, 0.0, 0.0, 22.5, 2.0),
+    "left_thigh": (0.0, 0.0, -0.12),
+    "right_thigh": (0.0, 0.0, 0.12),
+    "left_shin": (0.1, 0.0, 0.0),
+    "right_shin": (0.1, 0.0, 0.0),
+    "neck": (-0.34, 0.0, 0.0),
+    "head": (-0.52, 0.0, 0.0),
+    "left_upper_arm": (-3.64, 0.0, -0.25),
+    "right_upper_arm": (-3.5, 0.0, 0.25),
+    "left_forearm": (3.1, 0.0, 0.0),
+    "right_forearm": (3.01, 0.0, 0.0),
+    "left_hand": (-3.0, 0.0, 0.0),
+    "right_hand": (-3.0, 0.0, 0.0),
+    "tail_0": (-0.3, 0.0, 0.0),
+    "tail_1": (0.15, 0.0, 0.0),
+    "tail_2": (0.1, 0.0, 0.0),
+}
+LONGHAND_STOOP = {
+    "pelvis": (2.35, 0.0, 0.0, 0.0, 0.0, 12.0),
+    "left_thigh": (-2.35, 0.0, 0.0),
+    "right_thigh": (-2.35, 0.0, 0.0),
+    "neck": (0.23, 0.0, 0.0),
+    "head": (-2.42, 0.0, 0.0),
+    "left_upper_arm": (-2.47, 0.0, -0.15),
+    "right_upper_arm": (-2.47, 0.0, 0.15),
+    "left_forearm": (-1.49, 0.0, 0.0),
+    "right_forearm": (-1.49, 0.0, 0.0),
+    "left_hand": (-0.2, 0.0, 0.0),
+    "right_hand": (-0.2, 0.0, 0.0),
+    "tail_0": (-2.59, 0.0, 0.0),
+    "tail_1": (-1.6, 0.0, 0.0),
+    "tail_2": (0.3, 0.0, 0.0),
+}
+COPYIST_CRAWL = {
+    "pelvis": (0.77, 0.0, 0.0, 0.0, 11.0, 11.0),
+    "left_thigh": (0.8, 0.0, -0.3),
+    "right_thigh": (0.8, 0.0, 0.3),
+    "left_shin": (0.3, 0.0, 0.0),
+    "right_shin": (0.3, 0.0, 0.0),
+    "left_hoof": (0.1, 0.0, 0.0),
+    "right_hoof": (0.1, 0.0, 0.0),
+    "hide_rump": (0.3, 0.0, 0.0),
+    "neck": (0.28, 0.0, 0.0),
+    "head": (-1.2, 0.0, 0.0),
+    "left_upper_arm": (-1.92, 0.0, -0.2),
+    "right_upper_arm": (-1.92, 0.0, 0.2),
+    "left_forearm": (-0.42, 0.0, 0.0),
+    "right_forearm": (-0.42, 0.0, 0.0),
+    "left_hand": (0.37, 0.0, 0.0),
+    "right_hand": (0.37, 0.0, 0.0),
+    "hide_foreleg_l": (0.65, 0.0, 0.0),
+    "hide_foreleg_r": (0.65, 0.0, 0.0),
+}
+COPYIST_STOOP = {
+    "pelvis": (0.35, 0.0, 0.0, 0.0, 2.0, 5.0),
+    "left_thigh": (-0.65, 0.0, 0.0),
+    "right_thigh": (-0.65, 0.0, 0.0),
+    "left_shin": (0.7, 0.0, 0.0),
+    "right_shin": (0.7, 0.0, 0.0),
+    "left_hoof": (-0.35, 0.0, 0.0),
+    "right_hoof": (-0.35, 0.0, 0.0),
+    "neck": (0.5, 0.0, 0.0),
+    "head": (-0.6, 0.0, 0.0),
+    "left_upper_arm": (-0.3, 0.0, 0.0),
+    "right_upper_arm": (-0.3, 0.0, 0.0),
+    "left_forearm": (0.6, 0.0, 0.0),
+    "right_forearm": (0.6, 0.0, 0.0),
+    "left_hand": (1.2, 0.0, 0.0),
+    "right_hand": (1.2, 0.0, 0.0),
+}
+
+
 def knocker():
     """
     Taller than a door, and it has to stoop to listen at one. A burial shroud hangs off its
@@ -274,7 +400,8 @@ def knocker():
     ]
     K = "com.exonoxic.palimpsest.entity.KnockerEntity"
     anim = f"""        float breath = Mth.sin(ageInTicks * 0.07F);
-        float a = Math.min(1.0F, limbSwingAmount);
+        // Crawling, it claws itself along rather than striding.
+        float a = Math.min(1.0F, limbSwingAmount) * (1.0F - 0.45F * crawl);
         float w = limbSwing * 0.42F;
         chest.xRot += breath * 0.03F;
         neck.xRot += breath * 0.025F;
@@ -310,48 +437,50 @@ def knocker():
         rightFinger2.xRot -= Mth.sin(ageInTicks * 0.09F + 1.2F) * 0.1F;
 
         int state = entity.getState();
+        // Bent double or crawling, its body keeps that shape; only the jaw and hands still act.
+        float upright = 1.0F - Math.max(crawl, stoop);
         int knock = entity.getKnockAnim();
         if (knock > 0) {{
             // One knock: the arm is up at the door, the forearm swings in and the head presses close.
             float k = knock / 10.0F;
             float strike = Mth.sin(k * Mth.PI);
-            rightUpperArm.xRot += -1.45F;
-            rightUpperArm.zRot += 0.2F;
-            rightForearm.xRot += -0.45F - strike * 0.65F;
-            rightHand.xRot += 0.5F;
-            head.zRot += 0.38F;
-            neck.xRot += 0.18F;
-            chest.xRot += 0.08F + strike * 0.05F;
+            rightUpperArm.xRot += (-1.45F) * upright;
+            rightUpperArm.zRot += (0.2F) * upright;
+            rightForearm.xRot += (-0.45F - strike * 0.65F) * upright;
+            rightHand.xRot += (0.5F) * upright;
+            head.zRot += (0.38F) * upright;
+            neck.xRot += (0.18F) * upright;
+            chest.xRot += (0.08F + strike * 0.05F) * upright;
         }} else if (state == {K}.KNOCKING) {{
             // Between knocks the hand rests on the door and it listens.
-            rightUpperArm.xRot += -1.4F;
-            rightUpperArm.zRot += 0.2F;
-            rightForearm.xRot += -0.75F;
-            head.zRot += 0.42F;
-            neck.xRot += 0.22F;
+            rightUpperArm.xRot += (-1.4F) * upright;
+            rightUpperArm.zRot += (0.2F) * upright;
+            rightForearm.xRot += (-0.75F) * upright;
+            head.zRot += (0.42F) * upright;
+            neck.xRot += (0.22F) * upright;
             jaw.xRot += 0.08F;
         }}
         if (state == {K}.LUNGE) {{
             float shake = Mth.sin(ageInTicks * 1.7F) * 0.05F;
             jaw.xRot += 0.95F + shake;
             ring.xRot += 0.6F;
-            chest.xRot += 0.18F;
-            neck.xRot -= 0.25F;
-            head.xRot -= 0.25F;
-            leftUpperArm.xRot += -1.35F + shake;
-            rightUpperArm.xRot += -1.35F - shake;
-            leftUpperArm.zRot -= 0.18F;
-            rightUpperArm.zRot += 0.18F;
-            leftForearm.xRot += 0.15F;
-            rightForearm.xRot += 0.15F;
+            chest.xRot += (0.18F) * upright;
+            neck.xRot -= (0.25F) * upright;
+            head.xRot -= (0.25F) * upright;
+            leftUpperArm.xRot += (-1.35F + shake) * upright;
+            rightUpperArm.xRot += (-1.35F - shake) * upright;
+            leftUpperArm.zRot -= (0.18F) * upright;
+            rightUpperArm.zRot += (0.18F) * upright;
+            leftForearm.xRot += (0.15F) * upright;
+            rightForearm.xRot += (0.15F) * upright;
             leftFinger0.zRot += 0.35F;
             leftFinger2.zRot -= 0.35F;
             rightFinger0.zRot -= 0.35F;
             rightFinger2.zRot += 0.35F;
         }} else if (state == {K}.LEAVING) {{
-            neck.xRot += 0.4F;
-            head.xRot += 0.25F;
-            chest.xRot += 0.1F;
+            neck.xRot += (0.4F) * upright;
+            head.xRot += (0.25F) * upright;
+            chest.xRot += (0.1F) * upright;
         }} else {{
             jaw.xRot += 0.05F + Math.max(0.0F, Mth.sin(ageInTicks * 0.031F)) * 0.12F;
         }}
@@ -362,7 +491,8 @@ def knocker():
             jaw.xRot += 0.4F * s;
         }}
 """
-    return Model("knocker", "KnockerModel", E + "KnockerEntity", (128, 64), parts, anim)
+    return Model("knocker", "KnockerModel", E + "KnockerEntity", (128, 64), parts, anim,
+                 blends=squeeze_blends(KNOCKER_CRAWL, KNOCKER_STOOP))
 
 
 # ================================================================ the Longhand
@@ -483,8 +613,9 @@ def longhand():
         ]),
     ]
     anim = """        if (entity.isFrozen()) {
-            // Caught. Every time you look back it is holding a different, wrong pose.
-            switch (entity.getPoseIndex()) {
+            // Caught. Every time you look back it is holding a different, wrong pose (or, caught
+            // squeezing through something, exactly the shape it was squeezing in).
+            if (crawl < 0.05F && stoop < 0.05F) switch (entity.getPoseIndex()) {
                 case 0 -> {
                     leftUpperArm.xRot -= 1.35F; rightUpperArm.xRot -= 1.2F;
                     leftForearm.xRot -= 0.25F; rightForearm.xRot -= 0.35F;
@@ -517,10 +648,10 @@ def longhand():
                     head.xRot += 0.55F;
                 }
             }
-            return;
-        }
+        } else {
         head.yRot += netHeadYaw * Mth.DEG_TO_RAD;
         head.xRot += headPitch * Mth.DEG_TO_RAD;
+        limbSwingAmount *= 1.0F - 0.45F * crawl;
         // Unwatched, it moves in fast, broken strokes.
         float jerk = Mth.sin(ageInTicks * 2.3F) * 0.06F;
         float w = limbSwing * 0.5F;
@@ -539,8 +670,10 @@ def longhand():
         tail2.xRot += Mth.sin(ageInTicks * 0.2F) * 0.08F;
         for (ModelPart f : new ModelPart[]{leftFinger0, leftFinger1, leftFinger2, leftFinger3}) f.xRot += Mth.sin(ageInTicks * 0.3F) * 0.2F;
         for (ModelPart f : new ModelPart[]{rightFinger0, rightFinger1, rightFinger2, rightFinger3}) f.xRot += Mth.cos(ageInTicks * 0.3F) * 0.2F;
+        }
 """
-    return Model("longhand", "LonghandModel", E + "LonghandEntity", (64, 64), parts, anim)
+    return Model("longhand", "LonghandModel", E + "LonghandEntity", (64, 64), parts, anim,
+                 blends=squeeze_blends(LONGHAND_CRAWL, LONGHAND_STOOP))
 
 
 # ================================================================ the Copyist
@@ -822,7 +955,8 @@ def copyist():
             if k.startswith("hide_leg") and not isinstance(v, list):
                 variants[name][k] = [v, v]
     anim = """        float w = limbSwing * 0.55F;
-        float a = Math.min(1.0F, limbSwingAmount);
+        // Crawling, it claws itself along rather than striding.
+        float a = Math.min(1.0F, limbSwingAmount) * (1.0F - 0.45F * crawl);
         head.yRot += netHeadYaw * Mth.DEG_TO_RAD * 0.6F;
         neck.yRot += netHeadYaw * Mth.DEG_TO_RAD * 0.35F;
         head.xRot += headPitch * Mth.DEG_TO_RAD * 0.5F;
@@ -861,7 +995,8 @@ def copyist():
             head.xRot -= 0.4F * s;
         }
 """
-    return Model("copyist", "CopyistModel", E + "CopyistEntity", (128, 64), parts, anim, variants=variants)
+    return Model("copyist", "CopyistModel", E + "CopyistEntity", (128, 64), parts, anim, variants=variants,
+                 blends=squeeze_blends(COPYIST_CRAWL, COPYIST_STOOP))
 
 
 # ================================================================ the Erratum

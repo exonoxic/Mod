@@ -106,7 +106,9 @@ Every push to GitHub is built and tested by [`.github/workflows/build.yml`](.git
 - **Creatures.** Seventeen of them, each with its own behaviour. Some are ordinary animals of
   the older world, some prey on people, and some are rules more than monsters: they only
   follow you, or only come when called, or only exist while you aren't looking. Most are
-  harmless once you understand them. A few are not.
+  harmless once you understand them. A few are not. The tall ones are not stopped by low
+  ceilings or small holes either: they bend double under anything two blocks high and crawl
+  flat through a gap one block high.
 - **The Undertext.** A dimension with six biomes, its own sky, fog, light, ambience and music.
   It isn't a darker Nether: it's the earlier draft of the world, and it's built on the same
   kinds of places you already know.

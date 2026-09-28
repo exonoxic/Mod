@@ -5,6 +5,9 @@ import com.exonoxic.palimpsest.bleed.BleedData;
 import com.exonoxic.palimpsest.bleed.BleedStage;
 import com.exonoxic.palimpsest.bleed.Ending;
 import com.exonoxic.palimpsest.block.BlankBlock;
+import com.exonoxic.palimpsest.entity.CopyistEntity;
+import com.exonoxic.palimpsest.entity.KnockerEntity;
+import com.exonoxic.palimpsest.entity.ai.Squeeze;
 import com.exonoxic.palimpsest.registry.ModBlocks;
 import com.exonoxic.palimpsest.registry.ModEntities;
 import com.exonoxic.palimpsest.registry.ModRecipes;
@@ -27,6 +30,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -224,5 +228,74 @@ public final class PalimpsestGameTests {
         check(!forInk.isEmpty() && forInk.max(Direction.Axis.Y) > 1.0, "inkborn can step over rubric chalk");
         check(forCow.isEmpty(), "rubric chalk blocks ordinary animals");
         helper.succeed();
+    }
+
+    // ------------------------------------------------------------------ squeezing through gaps
+
+    /**
+     * A sealed tube one block wide: open, then two blocks high, then one block high, then open.
+     * A Copyist in its true form (2.2 blocks tall) must get to the far end, stooping and then
+     * crawling on the way, without hurting itself.
+     */
+    @GameTest(template = EMPTY, timeoutTicks = 400)
+    public static void copyistSqueezesThroughGaps(GameTestHelper helper) {
+        for (int x = 0; x <= 8; x++) {
+            for (int y = 0; y <= 4; y++) {
+                for (int z = 3; z <= 5; z++) {
+                    boolean inside = z == 4 && y >= 1 && y <= 3 && x >= 1 && x <= 7;
+                    helper.setBlock(new BlockPos(x, y, z), inside ? Blocks.AIR : Blocks.STONE);
+                }
+            }
+        }
+        helper.setBlock(new BlockPos(3, 3, 4), Blocks.STONE);
+        helper.setBlock(new BlockPos(5, 2, 4), Blocks.STONE);
+        helper.setBlock(new BlockPos(5, 3, 4), Blocks.STONE);
+        CopyistEntity copyist = helper.spawn(ModEntities.COPYIST.get(), new BlockPos(1, 1, 4));
+        check(copyist.isRevealed(), "a Copyist spawned without a disguise should be in its true form");
+        BlockPos goal = helper.absolutePos(new BlockPos(7, 1, 4));
+        float health = copyist.getHealth();
+        Set<Pose> seen = new HashSet<>();
+        helper.succeedWhen(() -> {
+            seen.add(copyist.getPose());
+            if (copyist.getNavigation().isDone()) {
+                copyist.getNavigation().moveTo(goal.getX() + 0.5D, goal.getY(), goal.getZ() + 0.5D, 1.0D);
+            }
+            check(copyist.getHealth() >= health, "the Copyist hurt itself squeezing through");
+            check(copyist.getX() > goal.getX(), "the Copyist has not got through yet (at x " + (copyist.getX() - helper.absolutePos(BlockPos.ZERO).getX())
+                    + ", poses seen " + seen + ")");
+            check(seen.contains(Squeeze.STOOP), "the Copyist never stooped under the two-high section");
+            check(seen.contains(Squeeze.CRAWL), "the Copyist never crawled through the one-high section");
+        });
+    }
+
+    /** Knockers (2.7 blocks tall) put into sealed spaces one and two blocks high fold to fit instead of suffocating. */
+    @GameTest(template = EMPTY, timeoutTicks = 100)
+    public static void knockerFoldsToFit(GameTestHelper helper) {
+        BlockPos lowCell = new BlockPos(2, 1, 4);
+        BlockPos midCell = new BlockPos(6, 1, 4);
+        sealedCell(helper, lowCell, 1);
+        sealedCell(helper, midCell, 2);
+        KnockerEntity low = helper.spawn(ModEntities.KNOCKER.get(), lowCell);
+        KnockerEntity mid = helper.spawn(ModEntities.KNOCKER.get(), midCell);
+        helper.runAfterDelay(10, () -> {
+            check(low.getPose() == Squeeze.CRAWL && low.getBbHeight() < 1.0F,
+                    "a Knocker in a one-high space should crawl (pose " + low.getPose() + ", height " + low.getBbHeight() + ")");
+            check(mid.getPose() == Squeeze.STOOP && mid.getBbHeight() < 2.0F,
+                    "a Knocker in a two-high space should stoop (pose " + mid.getPose() + ", height " + mid.getBbHeight() + ")");
+            check(low.getHealth() >= low.getMaxHealth() && mid.getHealth() >= mid.getMaxHealth(), "a folded Knocker should not suffocate");
+            helper.succeed();
+        });
+    }
+
+    /** Stone all round a one-block-wide space of the given height, whose floor-level block is {@code inside}. */
+    private static void sealedCell(GameTestHelper helper, BlockPos inside, int height) {
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                for (int dy = -1; dy <= height; dy++) {
+                    boolean air = dx == 0 && dz == 0 && dy >= 0 && dy < height;
+                    helper.setBlock(inside.offset(dx, dy, dz), air ? Blocks.AIR : Blocks.STONE);
+                }
+            }
+        }
     }
 }

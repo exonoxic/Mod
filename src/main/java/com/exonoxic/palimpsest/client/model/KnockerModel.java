@@ -150,8 +150,11 @@ public class KnockerModel<T extends KnockerEntity> extends HierarchicalModel<T> 
     @Override
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         root().getAllParts().forEach(ModelPart::resetPose);
+        float crawl = entity.squeeze.crawl(ageInTicks - entity.tickCount);
+        float stoop = entity.squeeze.stoop(ageInTicks - entity.tickCount);
         float breath = Mth.sin(ageInTicks * 0.07F);
-        float a = Math.min(1.0F, limbSwingAmount);
+        // Crawling, it claws itself along rather than striding.
+        float a = Math.min(1.0F, limbSwingAmount) * (1.0F - 0.45F * crawl);
         float w = limbSwing * 0.42F;
         chest.xRot += breath * 0.03F;
         neck.xRot += breath * 0.025F;
@@ -187,48 +190,50 @@ public class KnockerModel<T extends KnockerEntity> extends HierarchicalModel<T> 
         rightFinger2.xRot -= Mth.sin(ageInTicks * 0.09F + 1.2F) * 0.1F;
 
         int state = entity.getState();
+        // Bent double or crawling, its body keeps that shape; only the jaw and hands still act.
+        float upright = 1.0F - Math.max(crawl, stoop);
         int knock = entity.getKnockAnim();
         if (knock > 0) {
             // One knock: the arm is up at the door, the forearm swings in and the head presses close.
             float k = knock / 10.0F;
             float strike = Mth.sin(k * Mth.PI);
-            rightUpperArm.xRot += -1.45F;
-            rightUpperArm.zRot += 0.2F;
-            rightForearm.xRot += -0.45F - strike * 0.65F;
-            rightHand.xRot += 0.5F;
-            head.zRot += 0.38F;
-            neck.xRot += 0.18F;
-            chest.xRot += 0.08F + strike * 0.05F;
+            rightUpperArm.xRot += (-1.45F) * upright;
+            rightUpperArm.zRot += (0.2F) * upright;
+            rightForearm.xRot += (-0.45F - strike * 0.65F) * upright;
+            rightHand.xRot += (0.5F) * upright;
+            head.zRot += (0.38F) * upright;
+            neck.xRot += (0.18F) * upright;
+            chest.xRot += (0.08F + strike * 0.05F) * upright;
         } else if (state == com.exonoxic.palimpsest.entity.KnockerEntity.KNOCKING) {
             // Between knocks the hand rests on the door and it listens.
-            rightUpperArm.xRot += -1.4F;
-            rightUpperArm.zRot += 0.2F;
-            rightForearm.xRot += -0.75F;
-            head.zRot += 0.42F;
-            neck.xRot += 0.22F;
+            rightUpperArm.xRot += (-1.4F) * upright;
+            rightUpperArm.zRot += (0.2F) * upright;
+            rightForearm.xRot += (-0.75F) * upright;
+            head.zRot += (0.42F) * upright;
+            neck.xRot += (0.22F) * upright;
             jaw.xRot += 0.08F;
         }
         if (state == com.exonoxic.palimpsest.entity.KnockerEntity.LUNGE) {
             float shake = Mth.sin(ageInTicks * 1.7F) * 0.05F;
             jaw.xRot += 0.95F + shake;
             ring.xRot += 0.6F;
-            chest.xRot += 0.18F;
-            neck.xRot -= 0.25F;
-            head.xRot -= 0.25F;
-            leftUpperArm.xRot += -1.35F + shake;
-            rightUpperArm.xRot += -1.35F - shake;
-            leftUpperArm.zRot -= 0.18F;
-            rightUpperArm.zRot += 0.18F;
-            leftForearm.xRot += 0.15F;
-            rightForearm.xRot += 0.15F;
+            chest.xRot += (0.18F) * upright;
+            neck.xRot -= (0.25F) * upright;
+            head.xRot -= (0.25F) * upright;
+            leftUpperArm.xRot += (-1.35F + shake) * upright;
+            rightUpperArm.xRot += (-1.35F - shake) * upright;
+            leftUpperArm.zRot -= (0.18F) * upright;
+            rightUpperArm.zRot += (0.18F) * upright;
+            leftForearm.xRot += (0.15F) * upright;
+            rightForearm.xRot += (0.15F) * upright;
             leftFinger0.zRot += 0.35F;
             leftFinger2.zRot -= 0.35F;
             rightFinger0.zRot -= 0.35F;
             rightFinger2.zRot += 0.35F;
         } else if (state == com.exonoxic.palimpsest.entity.KnockerEntity.LEAVING) {
-            neck.xRot += 0.4F;
-            head.xRot += 0.25F;
-            chest.xRot += 0.1F;
+            neck.xRot += (0.4F) * upright;
+            head.xRot += (0.25F) * upright;
+            chest.xRot += (0.1F) * upright;
         } else {
             jaw.xRot += 0.05F + Math.max(0.0F, Mth.sin(ageInTicks * 0.031F)) * 0.12F;
         }
@@ -237,6 +242,58 @@ public class KnockerModel<T extends KnockerEntity> extends HierarchicalModel<T> 
             rightUpperArm.xRot -= 1.1F * s;
             rightForearm.xRot -= 0.6F * s;
             jaw.xRot += 0.4F * s;
+        }
+        if (crawl > 0.0F) {
+            hips.xRot += crawl * 1.17F;
+            hips.y += crawl * 18.5F;
+            hips.z += crawl * 12.0F;
+            leftThigh.xRot += crawl * 0.36F;
+            leftThigh.zRot += crawl * -0.25F;
+            rightThigh.xRot += crawl * 0.36F;
+            rightThigh.zRot += crawl * 0.25F;
+            leftShin.xRot += crawl * 0.6F;
+            rightShin.xRot += crawl * 0.6F;
+            leftFoot.xRot += crawl * -0.9F;
+            rightFoot.xRot += crawl * -0.9F;
+            neck.xRot += crawl * -1.03F;
+            head.xRot += crawl * -0.12F;
+            leftUpperArm.xRot += crawl * -2.45F;
+            leftUpperArm.zRot += crawl * -0.12F;
+            rightUpperArm.xRot += crawl * -2.68F;
+            rightUpperArm.zRot += crawl * 0.2F;
+            leftForearm.xRot += crawl * -0.35F;
+            rightForearm.xRot += crawl * 0.06F;
+            leftHand.xRot += crawl * 0.2F;
+            rightHand.xRot += crawl * -0.1F;
+            shroudBackLower.xRot += crawl * 0.39F;
+            shroudFlap.xRot += crawl * 0.34F;
+            shroudStrip.xRot += crawl * 0.3F;
+        }
+        if (stoop > 0.0F) {
+            hips.xRot += stoop * 0.8F;
+            hips.y += stoop * 7.0F;
+            hips.z += stoop * 9.0F;
+            leftThigh.xRot += stoop * -1.62F;
+            leftThigh.zRot += stoop * -0.08F;
+            rightThigh.xRot += stoop * -1.62F;
+            rightThigh.zRot += stoop * 0.08F;
+            leftShin.xRot += stoop * 1.3F;
+            rightShin.xRot += stoop * 1.3F;
+            leftFoot.xRot += stoop * -0.62F;
+            rightFoot.xRot += stoop * -0.62F;
+            neck.xRot += stoop * -0.4F;
+            head.xRot += stoop * -0.25F;
+            leftUpperArm.xRot += stoop * -1.5F;
+            leftUpperArm.zRot += stoop * -0.1F;
+            rightUpperArm.xRot += stoop * -1.5F;
+            rightUpperArm.zRot += stoop * 0.1F;
+            leftForearm.xRot += stoop * 1.45F;
+            rightForearm.xRot += stoop * 1.45F;
+            leftHand.xRot += stoop * 1.1F;
+            rightHand.xRot += stoop * 1.1F;
+            shroudBackLower.xRot += stoop * -0.51F;
+            shroudFlap.xRot += stoop * -0.35F;
+            shroudStrip.xRot += stoop * -0.6F;
         }
     }
 }

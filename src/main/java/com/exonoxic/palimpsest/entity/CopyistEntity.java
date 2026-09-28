@@ -1,6 +1,8 @@
 package com.exonoxic.palimpsest.entity;
 
 import com.exonoxic.palimpsest.bleed.BleedManager;
+import com.exonoxic.palimpsest.entity.ai.Squeeze;
+import com.exonoxic.palimpsest.entity.ai.SqueezeNavigation;
 import com.exonoxic.palimpsest.registry.ModEntities;
 import com.exonoxic.palimpsest.registry.ModParticles;
 import com.exonoxic.palimpsest.registry.ModSounds;
@@ -29,6 +31,7 @@ import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.animal.*;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
@@ -36,6 +39,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -61,9 +65,22 @@ public class CopyistEntity extends Monster {
     private static final float REVEAL_TICKS = 16.0F;
     private int revealedAt = Integer.MIN_VALUE;
 
+    /** Once it stops pretending, nothing it can fit its head through is closed to it. */
+    public final Squeeze squeeze = Squeeze.of(this, 0.9F, 2.2F);
+
     public CopyistEntity(EntityType<? extends Monster> type, Level level) {
         super(type, level);
         xpReward = 10;
+    }
+
+    @Override
+    protected PathNavigation createNavigation(Level level) {
+        return new SqueezeNavigation(this, level);
+    }
+
+    @Override
+    public AABB getBoundingBoxForCulling() {
+        return squeeze == null ? super.getBoundingBoxForCulling() : squeeze.cullingBox(super.getBoundingBoxForCulling());
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -148,7 +165,7 @@ public class CopyistEntity extends Monster {
             case PIG -> EntityDimensions.scalable(0.9F, 0.9F);
             case SHEEP -> EntityDimensions.scalable(0.9F, 1.3F);
             case CHICKEN -> EntityDimensions.scalable(0.4F, 0.7F);
-            default -> EntityDimensions.scalable(0.9F, 2.2F);
+            default -> squeeze == null ? EntityDimensions.scalable(0.9F, 2.2F) : squeeze.dimensions(pose);
         };
     }
 
@@ -184,6 +201,8 @@ public class CopyistEntity extends Monster {
 
     @Override
     public void tick() {
+        // An animal does not crawl: only the true form squeezes.
+        squeeze.tick(isRevealed());
         super.tick();
         if (level().isClientSide) return;
         if (!isRevealed()) {
