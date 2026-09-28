@@ -105,7 +105,7 @@ H_GUM_D = (58, 10, 14)
 H_TOOTH = (200, 192, 170)
 H_TOOTH_D = (140, 130, 112)
 H_CLAW = (150, 144, 128)
-H_EAR = (70, 22, 30)
+H_EAR = (50, 16, 22)
 
 
 def _h_ink(extra=None, density=6, seed=0):
@@ -156,7 +156,7 @@ def inkhound():
 
     def ear_part(side, sx):
         return P(f"{side}_ear", (1.4 * sx, -2.2, -1.2), rot=(-0.25, -0.25 * sx, 0.3 * sx),
-                 boxes=[B(-0.5, -7, -1.5, 1, 7, 3, mirror=sx < 0)], paint=ear)
+                 boxes=[B(-0.5, -5, -1, 1, 5, 2, mirror=sx < 0)], paint=ear)
 
     def front_leg(side, sx):
         m = sx < 0
@@ -240,8 +240,8 @@ def inkhound():
             jaw.xRot += 0.75F + Mth.sin(ageInTicks * 1.3F) * 0.05F;
             head.xRot -= 0.2F;
             neck.xRot += 0.25F;
-            leftEar.xRot += 0.9F;
-            rightEar.xRot += 0.9F;
+            leftEar.xRot += 0.55F;
+            rightEar.xRot += 0.55F;
             tail.xRot += 0.4F;
         }
         if (attackTime > 0.0F) {
@@ -1025,7 +1025,6 @@ def blotling():
     front = dict(base=B_INK, noise=2, features={
         "all": [("draw", wet(B_INK, B_SHEEN, B_HI, 2))],
         "front": [("ascii", ["", "", "tTtTtTt.", "MMMMMMMM", ".tTtTtTt"], {"t": B_TOOTH, "T": (150, 142, 124), "M": (60, 10, 14)}, (0, 0))]})
-    film = dict(base=(40, 42, 70), noise=4, alpha=90, shade=False)
 
     def eye(name, pivot, size):
         n = size
@@ -1049,7 +1048,6 @@ def blotling():
             P("maw", (0, -2.3, -4), boxes=[B(-3.5, 0, -0.2, 7, 1.5, 1)], paint=dict(base=(60, 10, 14), noise=2, features={
                 "top": [("draw", teeth_row(B_TOOTH, (60, 10, 14)))], "front": [("draw", wet(B_INK, B_SHEEN, B_HI, 4))]})),
         ]),
-        P("shell", (0, 24, 0), boxes=[B(-5.5, -7, -5.5, 11, 7, 11)], paint=film),
     ]
     anim = """        core.y += Mth.sin(ageInTicks * 0.2F) * 0.3F;
         // Each eye wanders on its own; now and then one blinks.
@@ -1063,7 +1061,6 @@ def blotling():
         eye3Lid.y += Mth.sin(ageInTicks * 0.15F + 1.0F) > 0.93F ? 1.0F : 0.0F;
         // The mouth works, slowly, all the time.
         maw.y += Math.max(0.0F, Mth.sin(ageInTicks * 0.08F)) * 1.2F;
-        shell.y += Mth.sin(ageInTicks * 0.2F + 0.5F) * 0.3F;
 """
     return Model("blotling", "BlotlingModel", E + "BlotlingEntity", (128, 64), parts, anim, translucent=True)
 

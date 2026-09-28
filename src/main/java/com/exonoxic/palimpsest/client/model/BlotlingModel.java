@@ -30,7 +30,6 @@ public class BlotlingModel<T extends BlotlingEntity> extends HierarchicalModel<T
     protected final ModelPart eye3;
     protected final ModelPart eye3Lid;
     protected final ModelPart maw;
-    protected final ModelPart shell;
 
     public BlotlingModel(ModelPart root) {
         super(RenderType::entityTranslucent);
@@ -46,24 +45,22 @@ public class BlotlingModel<T extends BlotlingEntity> extends HierarchicalModel<T
         this.eye3 = this.core.getChild("eye_3");
         this.eye3Lid = this.eye3.getChild("eye_3_lid");
         this.maw = this.core.getChild("maw");
-        this.shell = root.getChild("shell");
     }
 
     public static LayerDefinition createBodyLayer() {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
-        PartDefinition puddleDef = root.addOrReplaceChild("puddle", CubeListBuilder.create().texOffs(44, 0).addBox(-7.0F, -0.05F, -7.0F, 14.0F, 0.0F, 14.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 24.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition coreDef = root.addOrReplaceChild("core", CubeListBuilder.create().texOffs(32, 18).addBox(-5.0F, -2.0F, -5.0F, 10.0F, 2.0F, 10.0F, new CubeDeformation(0.0F)).texOffs(0, 18).addBox(-4.0F, -6.5F, -4.0F, 8.0F, 5.0F, 8.0F, new CubeDeformation(0.0F)).texOffs(72, 18).addBox(-3.5F, -9.0F, -2.5F, 5.0F, 3.0F, 5.0F, new CubeDeformation(0.0F)).texOffs(104, 18).addBox(0.5F, -10.0F, -0.5F, 3.0F, 2.0F, 3.0F, new CubeDeformation(0.0F)).texOffs(92, 18).addBox(3.5F, -4.0F, -2.0F, 2.0F, 3.0F, 4.0F, new CubeDeformation(0.0F)).texOffs(116, 18).addBox(-5.5F, -3.5F, 0.0F, 2.0F, 2.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 24.0F, 0.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition eye0Def = coreDef.addOrReplaceChild("eye_0", CubeListBuilder.create().texOffs(8, 31).addBox(-1.0F, -1.0F, -0.5F, 2.0F, 2.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-2.0F, -4.2F, -4.3F, 0.0F, 0.0F, 0.0F));
-        PartDefinition eye0LidDef = eye0Def.addOrReplaceChild("eye_0_lid", CubeListBuilder.create().texOffs(36, 31).addBox(-1.0F, 0.0F, 0.0F, 2.0F, 2.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -3.0F, -0.55F, 0.0F, 0.0F, 0.0F));
-        PartDefinition eye1Def = coreDef.addOrReplaceChild("eye_1", CubeListBuilder.create().texOffs(40, 31).addBox(-0.5F, -0.5F, -0.5F, 1.0F, 1.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(1.6F, -5.0F, -4.2F, 0.0F, 0.0F, 0.0F));
-        PartDefinition eye1LidDef = eye1Def.addOrReplaceChild("eye_1_lid", CubeListBuilder.create().texOffs(48, 31).addBox(-0.5F, 0.0F, 0.0F, 1.0F, 1.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -1.5F, -0.55F, 0.0F, 0.0F, 0.0F));
-        PartDefinition eye2Def = coreDef.addOrReplaceChild("eye_2", CubeListBuilder.create().texOffs(0, 31).addBox(-1.5F, -1.5F, -0.5F, 3.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-0.5F, -7.5F, -3.3F, 0.0F, 0.0F, 0.0F));
-        PartDefinition eye2LidDef = eye2Def.addOrReplaceChild("eye_2_lid", CubeListBuilder.create().texOffs(14, 31).addBox(-1.5F, 0.0F, 0.0F, 3.0F, 3.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -4.5F, -0.55F, 0.0F, 0.0F, 0.0F));
-        PartDefinition eye3Def = coreDef.addOrReplaceChild("eye_3", CubeListBuilder.create().texOffs(44, 31).addBox(-0.5F, -0.5F, -0.5F, 1.0F, 1.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(3.8F, -2.6F, -2.2F, 0.0F, 0.0F, 0.0F));
-        PartDefinition eye3LidDef = eye3Def.addOrReplaceChild("eye_3_lid", CubeListBuilder.create().texOffs(50, 31).addBox(-0.5F, 0.0F, 0.0F, 1.0F, 1.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -1.5F, -0.55F, 0.0F, 0.0F, 0.0F));
-        PartDefinition mawDef = coreDef.addOrReplaceChild("maw", CubeListBuilder.create().texOffs(20, 31).addBox(-3.5F, 0.0F, -0.2F, 7.0F, 1.5F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -2.3F, -4.0F, 0.0F, 0.0F, 0.0F));
-        PartDefinition shellDef = root.addOrReplaceChild("shell", CubeListBuilder.create().texOffs(0, 0).addBox(-5.5F, -7.0F, -5.5F, 11.0F, 7.0F, 11.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 24.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition puddleDef = root.addOrReplaceChild("puddle", CubeListBuilder.create().texOffs(0, 0).addBox(-7.0F, -0.05F, -7.0F, 14.0F, 0.0F, 14.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 24.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition coreDef = root.addOrReplaceChild("core", CubeListBuilder.create().texOffs(88, 0).addBox(-5.0F, -2.0F, -5.0F, 10.0F, 2.0F, 10.0F, new CubeDeformation(0.0F)).texOffs(56, 0).addBox(-4.0F, -6.5F, -4.0F, 8.0F, 5.0F, 8.0F, new CubeDeformation(0.0F)).texOffs(0, 14).addBox(-3.5F, -9.0F, -2.5F, 5.0F, 3.0F, 5.0F, new CubeDeformation(0.0F)).texOffs(32, 14).addBox(0.5F, -10.0F, -0.5F, 3.0F, 2.0F, 3.0F, new CubeDeformation(0.0F)).texOffs(20, 14).addBox(3.5F, -4.0F, -2.0F, 2.0F, 3.0F, 4.0F, new CubeDeformation(0.0F)).texOffs(44, 14).addBox(-5.5F, -3.5F, 0.0F, 2.0F, 2.0F, 3.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 24.0F, 0.0F, 0.0F, 0.0F, 0.0F));
+        PartDefinition eye0Def = coreDef.addOrReplaceChild("eye_0", CubeListBuilder.create().texOffs(62, 14).addBox(-1.0F, -1.0F, -0.5F, 2.0F, 2.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-2.0F, -4.2F, -4.3F, 0.0F, 0.0F, 0.0F));
+        PartDefinition eye0LidDef = eye0Def.addOrReplaceChild("eye_0_lid", CubeListBuilder.create().texOffs(90, 14).addBox(-1.0F, 0.0F, 0.0F, 2.0F, 2.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -3.0F, -0.55F, 0.0F, 0.0F, 0.0F));
+        PartDefinition eye1Def = coreDef.addOrReplaceChild("eye_1", CubeListBuilder.create().texOffs(94, 14).addBox(-0.5F, -0.5F, -0.5F, 1.0F, 1.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(1.6F, -5.0F, -4.2F, 0.0F, 0.0F, 0.0F));
+        PartDefinition eye1LidDef = eye1Def.addOrReplaceChild("eye_1_lid", CubeListBuilder.create().texOffs(102, 14).addBox(-0.5F, 0.0F, 0.0F, 1.0F, 1.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -1.5F, -0.55F, 0.0F, 0.0F, 0.0F));
+        PartDefinition eye2Def = coreDef.addOrReplaceChild("eye_2", CubeListBuilder.create().texOffs(54, 14).addBox(-1.5F, -1.5F, -0.5F, 3.0F, 3.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-0.5F, -7.5F, -3.3F, 0.0F, 0.0F, 0.0F));
+        PartDefinition eye2LidDef = eye2Def.addOrReplaceChild("eye_2_lid", CubeListBuilder.create().texOffs(68, 14).addBox(-1.5F, 0.0F, 0.0F, 3.0F, 3.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -4.5F, -0.55F, 0.0F, 0.0F, 0.0F));
+        PartDefinition eye3Def = coreDef.addOrReplaceChild("eye_3", CubeListBuilder.create().texOffs(98, 14).addBox(-0.5F, -0.5F, -0.5F, 1.0F, 1.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(3.8F, -2.6F, -2.2F, 0.0F, 0.0F, 0.0F));
+        PartDefinition eye3LidDef = eye3Def.addOrReplaceChild("eye_3_lid", CubeListBuilder.create().texOffs(104, 14).addBox(-0.5F, 0.0F, 0.0F, 1.0F, 1.0F, 0.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -1.5F, -0.55F, 0.0F, 0.0F, 0.0F));
+        PartDefinition mawDef = coreDef.addOrReplaceChild("maw", CubeListBuilder.create().texOffs(74, 14).addBox(-3.5F, 0.0F, -0.2F, 7.0F, 1.5F, 1.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, -2.3F, -4.0F, 0.0F, 0.0F, 0.0F));
         return LayerDefinition.create(mesh, 128, 64);
     }
 
@@ -87,6 +84,5 @@ public class BlotlingModel<T extends BlotlingEntity> extends HierarchicalModel<T
         eye3Lid.y += Mth.sin(ageInTicks * 0.15F + 1.0F) > 0.93F ? 1.0F : 0.0F;
         // The mouth works, slowly, all the time.
         maw.y += Math.max(0.0F, Mth.sin(ageInTicks * 0.08F)) * 1.2F;
-        shell.y += Mth.sin(ageInTicks * 0.2F + 0.5F) * 0.3F;
     }
 }

@@ -206,8 +206,8 @@ POSES = {
                  "left_upper_arm": (-0.4, 0, 0), "right_upper_arm": (0.4, 0, 0), "shroud_back": (-0.2, 0, 0)},
     },
     "inkhound": {
-        "hunting": {"jaw": (0.8, 0, 0), "head": (-0.2, 0, 0), "neck": (0.25, 0, 0), "left_ear": (0.9, 0, 0),
-                    "right_ear": (0.9, 0, 0), "tail": (0.4, 0, 0)},
+        "hunting": {"jaw": (0.8, 0, 0), "head": (-0.2, 0, 0), "neck": (0.25, 0, 0), "left_ear": (0.55, 0, 0),
+                    "right_ear": (0.55, 0, 0), "tail": (0.4, 0, 0)},
     },
     "redacted": {
         "revealed": {"bar_eyes": (0, 0, 0, 4.5, 0, 0), "right_arm": (-0.9, 0, 0), "right_forearm": (-0.4, 0, 0)},
