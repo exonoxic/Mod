@@ -13,6 +13,7 @@ import com.exonoxic.palimpsest.registry.ModEntities;
 import com.exonoxic.palimpsest.registry.ModParticles;
 import com.exonoxic.palimpsest.registry.ModSounds;
 import com.exonoxic.palimpsest.util.Advancements;
+import com.exonoxic.palimpsest.util.Sounds;
 import com.exonoxic.palimpsest.world.WardHelper;
 import com.exonoxic.palimpsest.world.dimension.ModDimensions;
 import net.minecraft.core.BlockPos;
@@ -26,6 +27,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -71,6 +73,7 @@ public class LonghandEntity extends Monster implements Apparition, Squeezer {
 
     private final ApparitionState apparition = new ApparitionState();
     private int stared;
+    private int heartbeatIn;
 
     /** Folds in half under anything two blocks high, and lies flat to get through a one-block hole. */
     public final Squeeze squeeze = Squeeze.of(this, 0.8F, 3.6F);
@@ -242,6 +245,13 @@ public class LonghandEntity extends Monster implements Apparition, Squeezer {
             Player p = apparition.target(level());
             if (p == null) p = level().getNearestPlayer(this, 32);
             if (p != null && !p.isCreative() && !p.isSpectator()) setTarget(p);
+        }
+        // Close and unwatched, the one it hunts hears their own heart, faster the nearer it is: turn round.
+        if (!observed && target instanceof ServerPlayer sp && distanceToSqr(sp) < 16 * 16 && --heartbeatIn <= 0) {
+            float near = (float) Mth.clamp(1.0D - Math.sqrt(distanceToSqr(sp)) / 16.0D, 0.0D, 1.0D);
+            float pitch = 0.9F + 0.45F * near;
+            Sounds.playTo(sp, ModSounds.EVENT_HEARTBEAT.get(), SoundSource.AMBIENT, sp.getEyePosition(), 0.3F + 0.5F * near, pitch);
+            heartbeatIn = (int) (76 / pitch);
         }
         // While nobody watches, it sometimes simply isn't where it was.
         if (!observed && target != null && distanceToSqr(target) < 24 * 24 && distanceToSqr(target) > 16 && random.nextInt(30) == 0) {
