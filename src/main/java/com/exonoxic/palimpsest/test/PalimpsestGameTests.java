@@ -258,7 +258,8 @@ public final class PalimpsestGameTests {
         helper.succeedWhen(() -> {
             seen.add(copyist.getPose());
             if (copyist.getNavigation().isDone()) {
-                copyist.getNavigation().moveTo(goal.getX() + 0.5D, goal.getY(), goal.getZ() + 0.5D, 1.0D);
+                // Accuracy 0: all the way to the last block (moveTo(x, y, z) stops within a block of it).
+                copyist.getNavigation().moveTo(copyist.getNavigation().createPath(goal, 0), 1.0D);
             }
             check(copyist.getHealth() >= health, "the Copyist hurt itself squeezing through");
             check(copyist.getX() > goal.getX(), "the Copyist has not got through yet (at x " + (copyist.getX() - helper.absolutePos(BlockPos.ZERO).getX())
