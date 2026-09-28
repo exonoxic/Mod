@@ -53,13 +53,14 @@ public class SqueezeNavigation extends GroundPathNavigation {
         if (!level.getBlockState(goal).isPathfindable(level, goal, PathComputationType.LAND)) goal = goal.above();
         // And at the ground under the target, as GroundPathNavigation does.
         for (int i = 0; i < 4 && level.getBlockState(goal.below()).isAir(); i++) goal = goal.below();
-        float range = (float) mob.getAttributeValue(Attributes.FOLLOW_RANGE);
-        int r = (int) range + 8;
+        // The path finder charges each node with the length of whichever route last looked at it,
+        // not the shortest, so the walk all the way round a house to its one gap is counted as far
+        // longer than it is: allow twice the usual distance, and four times the usual budget of nodes.
+        float reach = 2.0F * (float) mob.getAttributeValue(Attributes.FOLLOW_RANGE);
+        int r = (int) reach + 8;
         BlockPos from = mob.blockPosition();
         PathNavigationRegion region = new PathNavigationRegion(level, from.offset(-r, -r, -r), from.offset(r, r, r));
-        // Going all the way round a house to the one gap takes a far wider search than walking
-        // up to something in the open: four times the usual budget of nodes.
-        return finder.findPath(region, mob, Set.of(goal), range, accuracy, 4.0F);
+        return finder.findPath(region, mob, Set.of(goal), reach, accuracy, 4.0F);
     }
 
     private static class SqueezeNodeEvaluator extends WalkNodeEvaluator {
