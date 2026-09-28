@@ -642,9 +642,11 @@ def last_folio():
 
 
 def gametest_platform():
-    """An empty 9x8x9 volume for the mod's game tests; each test builds what it needs."""
+    """Empty volumes (9x8x9, and a 17x8x17 yard) for the mod's game tests; each test builds what it needs."""
     s = S(9, 8, 9)
     s.save("gametest/empty")
+    # Room to walk all the way round a small house.
+    S(17, 8, 17).save("gametest/yard")
 
 
 def main():

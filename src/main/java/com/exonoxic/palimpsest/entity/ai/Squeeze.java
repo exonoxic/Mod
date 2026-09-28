@@ -150,6 +150,11 @@ public final class Squeeze {
 
     private Pose tallestFitting() {
         List<Vec3> spots = lookahead();
+        // Where not even its crawling body fits is a wall it is brushing past, not a gap to fold
+        // itself into (unless it is where it already is).
+        for (int i = spots.size() - 1; i > 0; i--) {
+            if (!fits(crawl, spots.get(i))) spots.remove(i);
+        }
         if (fitsAll(stand, spots)) return Pose.STANDING;
         if (fitsAll(stoop, spots)) return STOOP;
         return CRAWL;
@@ -176,9 +181,13 @@ public final class Squeeze {
 
     private boolean fitsAll(EntityDimensions dims, List<Vec3> spots) {
         for (Vec3 spot : spots) {
-            if (!mob.level().noCollision(mob, dims.makeBoundingBox(spot).deflate(1.0E-7D))) return false;
+            if (!fits(dims, spot)) return false;
         }
         return true;
+    }
+
+    private boolean fits(EntityDimensions dims, Vec3 spot) {
+        return mob.level().noCollision(mob, dims.makeBoundingBox(spot).deflate(1.0E-7D));
     }
 
     /** Standing 0, stooping 1, crawling 2; any other pose -1. */

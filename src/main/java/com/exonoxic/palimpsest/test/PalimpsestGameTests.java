@@ -33,7 +33,9 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.structure.Structure;
@@ -58,6 +60,7 @@ import java.util.Set;
 @PrefixGameTestTemplate(false)
 public final class PalimpsestGameTests {
     private static final String EMPTY = "gametest/empty";
+    private static final String YARD = "gametest/yard";
     private static final String[] TEMPLATES = {
             "wray_cabin/wray_cabin_0", "wray_cabin/wray_cabin_1", "wray_cabin/wray_cabin_2",
             "scraped_obelisk/scraped_obelisk_0", "scrap_shrine/scrap_shrine_0", "faded_village/faded_village_0",
@@ -361,6 +364,49 @@ public final class PalimpsestGameTests {
             check(raised != null && raised.canReach(), "the Knocker found no way in through a one-block gap a step up the wall");
             helper.succeed();
         });
+    }
+
+    /**
+     * The smoke test's hut: a Knocker at the (shut) door has to walk all the way round to a gap in
+     * the far wall. Its route has to go round the house, not just through the nearest wall.
+     */
+    @GameTest(template = YARD, timeoutTicks = 100)
+    public static void knockerGoesRoundTheHouse(GameTestHelper helper) {
+        for (int x = 0; x <= 16; x++) {
+            for (int z = 0; z <= 16; z++) helper.setBlock(new BlockPos(x, 0, z), Blocks.STONE);
+        }
+        // Walls x 5..11, z 5..11, three high and roofed; the inside is x 6..10, z 6..10.
+        for (int x = 5; x <= 11; x++) {
+            for (int z = 5; z <= 11; z++) {
+                for (int y = 1; y <= 4; y++) {
+                    boolean inside = x >= 6 && x <= 10 && z >= 6 && z <= 10 && y <= 3;
+                    helper.setBlock(new BlockPos(x, y, z), inside ? Blocks.AIR : Blocks.STONE_BRICKS);
+                }
+            }
+        }
+        BlockState door = Blocks.OAK_DOOR.defaultBlockState().setValue(DoorBlock.FACING, Direction.NORTH);
+        helper.setBlock(new BlockPos(8, 1, 11), door);
+        helper.setBlock(new BlockPos(8, 2, 11), door.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER));
+        helper.setBlock(new BlockPos(9, 1, 9), Blocks.TORCH);
+        KnockerEntity knocker = helper.spawn(ModEntities.KNOCKER.get(), new BlockPos(8, 1, 12));
+        BlockPos inside = helper.absolutePos(new BlockPos(8, 1, 9));
+        helper.runAfterDelay(10, () -> {
+            check(knocker.isAlive(), "the Knocker vanished before it could be tested");
+            Path sealed = knocker.wayIn(inside);
+            check(sealed == null || !sealed.canReach(), "the Knocker found a way into a sealed hut: " + describe(helper, sealed));
+            helper.setBlock(new BlockPos(8, 1, 5), Blocks.AIR);
+            Path round = knocker.wayIn(inside);
+            check(round != null && round.canReach(), "the Knocker found no way round to the gap in the far wall (on ground "
+                    + knocker.onGround() + "): " + describe(helper, round));
+            helper.succeed();
+        });
+    }
+
+    private static String describe(GameTestHelper helper, Path path) {
+        if (path == null) return "no path at all";
+        StringBuilder out = new StringBuilder(path.getNodeCount() + " nodes, reaches " + path.canReach() + ":");
+        for (int i = 0; i < path.getNodeCount(); i++) out.append(' ').append(helper.relativePos(path.getNodePos(i)).toShortString());
+        return out.toString();
     }
 
     /** Stone all round a one-block-wide space of the given height, whose floor-level block is {@code inside}. */

@@ -199,6 +199,11 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
         if (k != null) k.lunge(player);
     }
 
+    /** Whether it has found a way in and is coming through it. */
+    public boolean isCreeping() {
+        return creeping;
+    }
+
     public int getState() {
         return entityData.get(STATE);
     }

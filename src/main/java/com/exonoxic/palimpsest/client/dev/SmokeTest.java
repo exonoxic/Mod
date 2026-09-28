@@ -71,6 +71,7 @@ import net.minecraft.world.level.levelgen.presets.WorldPresets;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
+import net.minecraft.world.level.pathfinder.Path;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -271,13 +272,18 @@ public final class SmokeTest {
                 }
             });
         });
-        // Up to 20 ticks to finish the round, up to 120 of silence, then about 130 to walk round.
+        // Up to 20 ticks to finish the round, up to 120 of silence, then about 130 to walk round
+        // (and the server gets through two or three ticks for each of the client's here).
         for (int i = 0; i < 16; i++) {
             int n = i;
             step(20, () -> server((srv, p) -> {
                 for (KnockerEntity k : p.serverLevel().getEntitiesOfClass(KnockerEntity.class, p.getBoundingBox().inflate(32))) {
-                    LOG.info("[smoke] knocker hunt {}: state {} pose {} at {} {} {}", n, k.getState(), k.getPose(),
-                            String.format("%.1f", k.getX()), String.format("%.1f", k.getY() - Y), String.format("%.1f", k.getZ()));
+                    // And whether, from where it stands, it could get in to the player right now.
+                    Path way = k.wayIn(p.blockPosition());
+                    String route = way == null ? "none" : way.getNodeCount() + " nodes, reaches " + way.canReach() + ", ends "
+                            + (way.getNodeCount() > 0 ? way.getEndNode().asBlockPos().offset(0, -Y, 0).toShortString() : "-");
+                    LOG.info("[smoke] knocker hunt {}: state {} pose {} creeping {} at {} {} {}; way in: {}", n, k.getState(), k.getPose(),
+                            k.isCreeping(), String.format("%.1f", k.getX()), String.format("%.1f", k.getY() - Y), String.format("%.1f", k.getZ()), route);
                 }
             }));
             shot("knocker_hunt_" + n);
