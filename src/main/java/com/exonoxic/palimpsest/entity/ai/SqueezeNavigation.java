@@ -10,6 +10,7 @@ import net.minecraft.world.level.PathNavigationRegion;
 import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.level.pathfinder.PathFinder;
 import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
 import net.minecraft.world.phys.AABB;
@@ -46,8 +47,11 @@ public class SqueezeNavigation extends GroundPathNavigation {
     @Nullable
     public Path freshPath(BlockPos target, int accuracy) {
         if (!canUpdatePath()) return null;
-        // Aim at the ground under the target, as GroundPathNavigation does.
         BlockPos goal = target;
+        // Someone standing on a slab, on soul sand, or a hair below the top of a block is "in" the
+        // floor block: aim at the space above it, which is where a route can end.
+        if (!level.getBlockState(goal).isPathfindable(level, goal, PathComputationType.LAND)) goal = goal.above();
+        // And at the ground under the target, as GroundPathNavigation does.
         for (int i = 0; i < 4 && level.getBlockState(goal.below()).isAir(); i++) goal = goal.below();
         float range = (float) mob.getAttributeValue(Attributes.FOLLOW_RANGE);
         int r = (int) range + 8;

@@ -368,7 +368,9 @@ public final class PalimpsestGameTests {
 
     /**
      * The smoke test's hut: a Knocker at the (shut) door has to walk all the way round to a gap in
-     * the far wall. Its route has to go round the house, not just through the nearest wall.
+     * the far wall. Its route has to go round the house, not just through the nearest wall, and has
+     * to count as getting there when the one it is after is standing on a slab or (as far as
+     * {@code blockPosition()} is concerned) in the floor.
      */
     @GameTest(template = YARD, timeoutTicks = 100)
     public static void knockerGoesRoundTheHouse(GameTestHelper helper) {
@@ -398,6 +400,12 @@ public final class PalimpsestGameTests {
             Path round = knocker.wayIn(inside);
             check(round != null && round.canReach(), "the Knocker found no way round to the gap in the far wall (on ground "
                     + knocker.onGround() + "): " + describe(helper, round));
+            // Whoever it is after may count as standing "in" the floor block: a hair below its top, or on a slab.
+            Path floor = knocker.wayIn(inside.below());
+            check(floor != null && floor.canReach(), "the Knocker could not get to someone standing on the floor block: " + describe(helper, floor));
+            helper.setBlock(new BlockPos(8, 1, 9), Blocks.SMOOTH_STONE_SLAB);
+            Path slab = knocker.wayIn(inside);
+            check(slab != null && slab.canReach(), "the Knocker could not get to someone standing on a slab: " + describe(helper, slab));
             helper.succeed();
         });
     }
