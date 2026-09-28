@@ -42,6 +42,7 @@ import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.gametest.GameTestHolder;
@@ -394,6 +395,11 @@ public final class PalimpsestGameTests {
         BlockPos inside = helper.absolutePos(new BlockPos(8, 1, 9));
         helper.runAfterDelay(10, () -> {
             check(knocker.isAlive(), "the Knocker vanished before it could be tested");
+            // With no door of its own it will have started to wander off: back to the doorstep, which
+            // is where the longest search starts from.
+            Vec3 doorstep = helper.absoluteVec(new Vec3(8.5D, 1.0D, 12.5D));
+            knocker.getNavigation().stop();
+            knocker.moveTo(doorstep.x, doorstep.y, doorstep.z);
             Path sealed = knocker.wayIn(inside);
             check(sealed == null || !sealed.canReach(), "the Knocker found a way into a sealed hut: " + describe(helper, sealed));
             helper.setBlock(new BlockPos(8, 1, 5), Blocks.AIR);

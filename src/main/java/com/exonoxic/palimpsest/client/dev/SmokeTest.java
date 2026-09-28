@@ -261,6 +261,11 @@ public final class SmokeTest {
                 level.setBlock(new BlockPos(0, Y, -3), Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
                 level.setBlock(new BlockPos(1, Y, 1), Blocks.TORCH.defaultBlockState(), Block.UPDATE_ALL);
                 view(p, 0.5, Y + 1.62, 1.2, 0.5, Y + 0.4, -3.0);
+                // It will not go for someone in creative, so for this the player is in survival (but
+                // cannot be hurt).
+                p.setGameMode(GameType.SURVIVAL);
+                p.getAbilities().invulnerable = true;
+                p.onUpdateAbilities();
                 if (!KnockerEntity.spawnAtDoor(level, new BlockPos(0, Y, 3), p)) {
                     LOG.error("[smoke] SMOKE_FAIL the Knocker would not come to the hut door");
                     return;
@@ -293,6 +298,7 @@ public final class SmokeTest {
         step(10, () -> server((srv, p) -> {
             killMobs(p.serverLevel());
             command(srv, p, "time set 6000");
+            p.setGameMode(GameType.CREATIVE);
             p.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 1_000_000, 0, false, false));
         }));
 

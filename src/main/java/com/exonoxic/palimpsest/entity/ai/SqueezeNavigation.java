@@ -57,7 +57,9 @@ public class SqueezeNavigation extends GroundPathNavigation {
         int r = (int) range + 8;
         BlockPos from = mob.blockPosition();
         PathNavigationRegion region = new PathNavigationRegion(level, from.offset(-r, -r, -r), from.offset(r, r, r));
-        return finder.findPath(region, mob, Set.of(goal), range, accuracy, 1.0F);
+        // Going all the way round a house to the one gap takes a far wider search than walking
+        // up to something in the open: four times the usual budget of nodes.
+        return finder.findPath(region, mob, Set.of(goal), range, accuracy, 4.0F);
     }
 
     private static class SqueezeNodeEvaluator extends WalkNodeEvaluator {
