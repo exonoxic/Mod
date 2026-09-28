@@ -412,9 +412,10 @@ public final class SmokeTest {
                 BlockState lower = Blocks.SPRUCE_DOOR.defaultBlockState().setValue(DoorBlock.FACING, Direction.NORTH);
                 level.setBlock(new BlockPos(0, Y, 3), lower, Block.UPDATE_ALL);
                 level.setBlock(new BlockPos(0, Y + 1, 3), lower.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER), Block.UPDATE_ALL);
-                view(p, 3.3, Y + 2.1, 0.2, 0.5, Y + 1.6, 1.9);
+                view(p, -2.4, Y + 2.1, 0.4, 0.5, Y + 1.6, 2.4);
             });
-            mannequin(ModEntities.KNOCKER.get(), 0.5, Y, 2.0, 0F, k -> {
+            // Where a real one stands: the block in front of the door, knocking with its right hand.
+            mannequin(ModEntities.KNOCKER.get(), 0.5, Y, 2.5, 0F, k -> {
                 data(k, "STATE", KnockerEntity.KNOCKING);
                 data(k, "KNOCK_ANIM", 5);
             });
@@ -422,7 +423,7 @@ public final class SmokeTest {
         shot("featured_knocker_knocking");
         step(10, () -> {
             MANNEQUINS.forEach(k -> data(k, "KNOCK_ANIM", 0));
-            server((srv, p) -> view(p, -1.4, Y + 2.3, -2.2, 0.5, Y + 1.5, 1.6));
+            server((srv, p) -> view(p, 2.2, Y + 2.3, -1.6, 0.5, Y + 1.5, 2.2));
         });
         shot("featured_knocker_listening_behind");
         step(20, () -> {

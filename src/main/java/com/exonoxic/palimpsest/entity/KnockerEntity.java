@@ -77,7 +77,10 @@ public class KnockerEntity extends Monster implements Apparition {
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.5D);
     }
 
-    /** Stands it outside the door, on whichever side is open to the sky. */
+    /**
+     * Stands it outside the door, on whichever side is open to the sky: right up against the door
+     * if there is room (close enough to knock on it), otherwise a step back.
+     */
     public static boolean spawnAtDoor(ServerLevel level, BlockPos door, ServerPlayer player) {
         BlockState ds = level.getBlockState(door);
         if (!(ds.getBlock() instanceof DoorBlock)) return false;
@@ -85,10 +88,10 @@ public class KnockerEntity extends Monster implements Apparition {
         BlockPos best = null;
         double bestScore = -1;
         for (Direction d : new Direction[]{facing, facing.getOpposite()}) {
-            for (int dist = 2; dist >= 1; dist--) {
+            for (int dist = 1; dist <= 2; dist++) {
                 BlockPos p = door.relative(d, dist);
                 if (!Spots.standable(level, p, 3)) continue;
-                double score = (level.canSeeSky(p.above(2)) ? 100 : 0) + p.distSqr(player.blockPosition());
+                double score = (level.canSeeSky(p.above(2)) ? 1000 : 0) + (dist == 1 ? 500 : 0) + p.distSqr(player.blockPosition());
                 if (score > bestScore) {
                     bestScore = score;
                     best = p;
