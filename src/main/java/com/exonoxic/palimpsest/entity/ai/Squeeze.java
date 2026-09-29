@@ -6,12 +6,16 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Lets a tall creature fold itself down to get through gaps it has no business fitting through:
@@ -36,6 +40,10 @@ public final class Squeeze {
     private static final int ROOMY_TICKS = 10;
     /** Model ease per tick between postures. */
     private static final float EASE = 0.16F;
+    /** Folded down it goes faster, not slower: bent double it lopes, flat out it scuttles. */
+    private static final double STOOP_SPEED = 0.35D;
+    private static final double CRAWL_SPEED = 0.8D;
+    private static final UUID SCUTTLE = UUID.fromString("5c0e7f1a-3a8e-4d51-9f0b-7a1e2c9d4b63");
 
     private final Mob mob;
     private final EntityDimensions stand;
@@ -105,6 +113,16 @@ public final class Squeeze {
             roomy = 0;
         }
         sounds();
+    }
+
+    private void scuttle(Pose pose) {
+        AttributeInstance speed = mob.getAttribute(Attributes.MOVEMENT_SPEED);
+        if (speed == null) return;
+        double want = pose == CRAWL ? CRAWL_SPEED : pose == STOOP ? STOOP_SPEED : 0.0D;
+        AttributeModifier had = speed.getModifier(SCUTTLE);
+        if (had != null && had.getAmount() == want) return;
+        if (had != null) speed.removeModifier(SCUTTLE);
+        if (want > 0.0D) speed.addTransientModifier(new AttributeModifier(SCUTTLE, "Squeezed scuttle", want, AttributeModifier.Operation.MULTIPLY_TOTAL));
     }
 
     private void sounds() {

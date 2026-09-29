@@ -162,8 +162,7 @@ public class LonghandEntity extends Monster implements Apparition, Squeezer {
     @Override
     protected void registerGoals() {
         goalSelector.addGoal(0, new HoldStillGoal());
-        goalSelector.addGoal(1, new Pursuit.Surface(this, () -> getMode() == HUNTER && !isFrozen()));
-        goalSelector.addGoal(1, new Pursuit.Chase(this, () -> getMode() == HUNTER && !isFrozen()));
+        Pursuit.install(this, goalSelector, 1, () -> getMode() == HUNTER && !isFrozen(), 40, 100);
         goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.0D, true) {
             @Override
             public boolean canUse() {

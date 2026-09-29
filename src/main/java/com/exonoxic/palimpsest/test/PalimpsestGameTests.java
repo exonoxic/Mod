@@ -326,6 +326,23 @@ public final class PalimpsestGameTests {
         });
     }
 
+    /** On first sight a Redacted stands and stares for a couple of seconds, then comes for its target. */
+    @GameTest(template = EMPTY, timeoutTicks = 300)
+    public static void huntersStareBeforeTheyCome(GameTestHelper helper) {
+        for (int x = 0; x <= 8; x++) {
+            for (int z = 0; z <= 8; z++) helper.setBlock(new BlockPos(x, 0, z), Blocks.STONE);
+        }
+        Pig pig = helper.spawn(EntityType.PIG, new BlockPos(8, 1, 4));
+        pig.setNoAi(true);
+        RedactedEntity hunter = helper.spawn(ModEntities.REDACTED.get(), new BlockPos(0, 1, 4));
+        Vec3 start = hunter.position();
+        helper.onEachTick(() -> hunter.setTarget(pig));
+        helper.runAtTickTime(40, () -> check(hunter.position().distanceTo(start) < 0.5D,
+                "the Redacted went straight for its target without stopping to stare (moved " + hunter.position().distanceTo(start) + ")"));
+        helper.runAtTickTime(41, () -> helper.succeedWhen(() -> check(pig.getHealth() < pig.getMaxHealth() || hunter.distanceTo(pig) < 2.5D,
+                "the Redacted never came for its target after staring (" + hunter.distanceTo(pig) + " away)")));
+    }
+
     /** A still target on a two-block ledge five blocks up. A Redacted after it has to climb the wall. */
     @GameTest(template = EMPTY, timeoutTicks = 400)
     public static void huntersClimbToTheirTarget(GameTestHelper helper) {

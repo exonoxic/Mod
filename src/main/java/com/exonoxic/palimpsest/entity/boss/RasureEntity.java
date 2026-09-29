@@ -144,8 +144,7 @@ public class RasureEntity extends Monster implements PalimpsestBoss {
 
     @Override
     protected void registerGoals() {
-        goalSelector.addGoal(0, new Pursuit.Surface(this, () -> !isShielded()));
-        goalSelector.addGoal(0, new Pursuit.Chase(this, () -> !isShielded()));
+        Pursuit.install(this, goalSelector, 0, () -> !isShielded(), 0, 0);
         goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.0D, true) {
             @Override
             public boolean canUse() {

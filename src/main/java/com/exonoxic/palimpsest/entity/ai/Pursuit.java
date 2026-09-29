@@ -1,12 +1,16 @@
 package com.exonoxic.palimpsest.entity.ai;
 
+import java.util.EnumSet;
+import java.util.UUID;
 import java.util.function.BooleanSupplier;
 
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.goal.GoalSelector;
 import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.ForgeMod;
@@ -18,9 +22,13 @@ import net.minecraftforge.common.ForgeMod;
  * goes under. On land they take a full block in their stride, and when the one they are after is
  * above them they drag themselves up whatever wall is in the way, the way a spider does.
  * <p>
- * Hunters get {@link #attributes} for their stride and stroke, a {@link Surface} goal in place of
- * {@link FloatGoal}, and a {@link Chase} goal, which takes flags from nobody and only acts while
- * the creature is actually hunting.
+ * And they are in no hurry. When one first sets eyes on you it stops dead and {@link Stare}s for a
+ * few seconds, turned full towards you, before it comes. Hurting it or walking up to it cuts
+ * that short.
+ * <p>
+ * Hunters get {@link #attributes} for their stride and stroke and {@link #install} for their
+ * goals: {@link Surface} in place of {@link FloatGoal}, {@link Chase} (which takes flags from
+ * nobody and only acts while the creature is actually hunting) and, for all but the bosses, Stare.
  */
 public final class Pursuit {
     /** Water-stroke multiplier (1 is a zombie flailing; drowned swim at about 2). */
@@ -33,6 +41,22 @@ public final class Pursuit {
     private static final double DIRECT_RANGE = 20.0D;
     /** Within this (horizontally) of a target above it, it stops pathing and climbs. */
     private static final double CLOSE_RANGE = 3.0D;
+
+    /** Closer than this and it stops staring and comes. */
+    private static final double STARE_BREAK_RANGE = 3.5D;
+    /** Lose sight of it for this long and the next sighting gets a fresh stare. */
+    private static final int FORGET_TICKS = 400;
+
+    /**
+     * Adds the hunting goals. Surface and Chase go in at {@code priority} (where FloatGoal was);
+     * Stare, when {@code stareMax > 0}, at 1, ahead of the melee goals so it holds them off.
+     */
+    public static void install(PathfinderMob mob, GoalSelector goals, int priority, BooleanSupplier hunting, int stareMin, int stareMax) {
+        Stare stare = stareMax > 0 ? new Stare(mob, hunting, stareMin, stareMax) : null;
+        goals.addGoal(priority, new Surface(mob, hunting));
+        goals.addGoal(priority, new Chase(mob, stare == null ? hunting : () -> hunting.getAsBoolean() && !stare.isStaring()));
+        if (stare != null) goals.addGoal(1, stare);
+    }
 
     public static AttributeSupplier.Builder attributes(AttributeSupplier.Builder builder) {
         return builder.add(ForgeMod.SWIM_SPEED.get(), SWIM_SPEED).add(ForgeMod.STEP_HEIGHT_ADDITION.get(), STEP_UP);
@@ -129,6 +153,83 @@ public final class Pursuit {
         @Override
         public void stop() {
             climbing = 0;
+        }
+    }
+
+    /**
+     * The first sighting: it stops, turns to face you and watches, for a few seconds, before it
+     * comes. Holds the movement and look flags, so the attack goals below it wait.
+     */
+    public static class Stare extends Goal {
+        private final PathfinderMob mob;
+        private final BooleanSupplier hunting;
+        private final int min;
+        private final int max;
+        private UUID staredAt;
+        private int unseen;
+        private int left;
+        private float healthAtStart;
+
+        public Stare(PathfinderMob mob, BooleanSupplier hunting, int min, int max) {
+            this.mob = mob;
+            this.hunting = hunting;
+            this.min = min;
+            this.max = max;
+            setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
+        }
+
+        public boolean isStaring() {
+            return left > 0;
+        }
+
+        @Override
+        public boolean canUse() {
+            LivingEntity quarry = quarry(mob, hunting);
+            if (quarry == null || !mob.hasLineOfSight(quarry)) {
+                if (staredAt != null && ++unseen > FORGET_TICKS) staredAt = null;
+                return false;
+            }
+            unseen = 0;
+            if (quarry.getUUID().equals(staredAt)) return false;
+            staredAt = quarry.getUUID();
+            // Already hurt by it, or it walked right up: no time for looking.
+            return mob.getLastHurtByMob() != quarry && mob.distanceToSqr(quarry) > STARE_BREAK_RANGE * STARE_BREAK_RANGE;
+        }
+
+        @Override
+        public void start() {
+            left = min + mob.getRandom().nextInt(Math.max(1, max - min + 1));
+            healthAtStart = mob.getHealth();
+            mob.getNavigation().stop();
+        }
+
+        @Override
+        public boolean canContinueToUse() {
+            LivingEntity quarry = quarry(mob, hunting);
+            return left > 0 && quarry != null && mob.getHealth() >= healthAtStart
+                    && mob.distanceToSqr(quarry) > STARE_BREAK_RANGE * STARE_BREAK_RANGE;
+        }
+
+        @Override
+        public boolean requiresUpdateEveryTick() {
+            return true;
+        }
+
+        @Override
+        public void tick() {
+            left--;
+            LivingEntity quarry = mob.getTarget();
+            mob.getNavigation().stop();
+            if (quarry != null) {
+                mob.getLookControl().setLookAt(quarry, 10.0F, mob.getMaxHeadXRot());
+                // Turn the whole body to face it, slowly.
+                mob.setYBodyRot(mob.yHeadRot);
+            }
+        }
+
+        @Override
+        public void stop() {
+            left = 0;
         }
     }
 

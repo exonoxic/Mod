@@ -182,8 +182,7 @@ public class CopyistEntity extends Monster implements Squeezer {
 
     @Override
     protected void registerGoals() {
-        goalSelector.addGoal(0, new Pursuit.Surface(this, this::isRevealed));
-        goalSelector.addGoal(0, new Pursuit.Chase(this, this::isRevealed));
+        Pursuit.install(this, goalSelector, 0, this::isRevealed, 40, 90);
         goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.45D, true) {
             @Override
             public boolean canUse() {

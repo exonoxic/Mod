@@ -53,8 +53,7 @@ public class RedactedEntity extends Monster {
 
     @Override
     protected void registerGoals() {
-        goalSelector.addGoal(0, new Pursuit.Surface(this, () -> true));
-        goalSelector.addGoal(0, new Pursuit.Chase(this, () -> true));
+        Pursuit.install(this, goalSelector, 0, () -> true, 50, 110);
         goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.1D, false));
         goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 0.7D));
         goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 12.0F));

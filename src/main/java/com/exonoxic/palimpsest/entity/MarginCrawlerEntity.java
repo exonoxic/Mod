@@ -50,8 +50,7 @@ public class MarginCrawlerEntity extends Monster {
 
     @Override
     protected void registerGoals() {
-        goalSelector.addGoal(1, new Pursuit.Surface(this, () -> true));
-        goalSelector.addGoal(1, new Pursuit.Chase(this, () -> true));
+        Pursuit.install(this, goalSelector, 1, () -> true, 30, 70);
         goalSelector.addGoal(3, new LeapAtTargetGoal(this, 0.4F));
         goalSelector.addGoal(4, new MeleeAttackGoal(this, 1.1D, true));
         goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 0.8D));

@@ -95,8 +95,7 @@ public class BookbinderEntity extends Monster implements PalimpsestBoss {
 
     @Override
     protected void registerGoals() {
-        goalSelector.addGoal(0, new Pursuit.Surface(this, () -> !isRebinding() && !isStunned()));
-        goalSelector.addGoal(0, new Pursuit.Chase(this, () -> !isRebinding() && !isStunned()));
+        Pursuit.install(this, goalSelector, 0, () -> !isRebinding() && !isStunned(), 0, 0);
         goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.1D, true) {
             @Override
             public boolean canUse() {

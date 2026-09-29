@@ -54,8 +54,7 @@ public class InkhoundEntity extends Monster {
 
     @Override
     protected void registerGoals() {
-        goalSelector.addGoal(0, new Pursuit.Surface(this, () -> true));
-        goalSelector.addGoal(0, new Pursuit.Chase(this, () -> true));
+        Pursuit.install(this, goalSelector, 0, () -> true, 20, 45);
         goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.3D, false));
         goalSelector.addGoal(4, new ListenGoal());
         goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.7D));
