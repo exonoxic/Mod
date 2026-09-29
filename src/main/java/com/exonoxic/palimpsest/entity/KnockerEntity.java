@@ -2,6 +2,7 @@ package com.exonoxic.palimpsest.entity;
 
 import com.exonoxic.palimpsest.bleed.BleedManager;
 import com.exonoxic.palimpsest.config.CommonConfig;
+import com.exonoxic.palimpsest.entity.ai.Pursuit;
 import com.exonoxic.palimpsest.entity.ai.Squeeze;
 import com.exonoxic.palimpsest.entity.ai.SqueezeNavigation;
 import com.exonoxic.palimpsest.entity.ai.Squeezer;
@@ -34,7 +35,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.monster.Monster;
@@ -233,7 +233,8 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
 
     @Override
     protected void registerGoals() {
-        goalSelector.addGoal(0, new FloatGoal(this));
+        goalSelector.addGoal(0, new Pursuit.Surface(this, () -> getState() == LUNGE));
+        goalSelector.addGoal(0, new Pursuit.Chase(this, () -> getState() == LUNGE));
         goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.35D, true) {
             @Override
             public boolean canUse() {

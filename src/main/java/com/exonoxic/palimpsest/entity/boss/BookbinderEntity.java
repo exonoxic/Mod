@@ -2,6 +2,7 @@ package com.exonoxic.palimpsest.entity.boss;
 
 import com.exonoxic.palimpsest.bleed.BleedManager;
 import com.exonoxic.palimpsest.entity.MarginCrawlerEntity;
+import com.exonoxic.palimpsest.entity.ai.Pursuit;
 import com.exonoxic.palimpsest.entity.projectile.BindingNeedleEntity;
 import com.exonoxic.palimpsest.horror.Spots;
 import com.exonoxic.palimpsest.registry.ModBlocks;
@@ -31,7 +32,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
@@ -95,7 +95,8 @@ public class BookbinderEntity extends Monster implements PalimpsestBoss {
 
     @Override
     protected void registerGoals() {
-        goalSelector.addGoal(0, new FloatGoal(this));
+        goalSelector.addGoal(0, new Pursuit.Surface(this, () -> !isRebinding() && !isStunned()));
+        goalSelector.addGoal(0, new Pursuit.Chase(this, () -> !isRebinding() && !isStunned()));
         goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.1D, true) {
             @Override
             public boolean canUse() {

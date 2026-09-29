@@ -1,6 +1,7 @@
 package com.exonoxic.palimpsest.entity;
 
 import com.exonoxic.palimpsest.bleed.BleedManager;
+import com.exonoxic.palimpsest.entity.ai.Pursuit;
 import com.exonoxic.palimpsest.entity.ai.Squeeze;
 import com.exonoxic.palimpsest.entity.ai.SqueezeNavigation;
 import com.exonoxic.palimpsest.entity.ai.Squeezer;
@@ -27,7 +28,6 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
@@ -182,7 +182,8 @@ public class CopyistEntity extends Monster implements Squeezer {
 
     @Override
     protected void registerGoals() {
-        goalSelector.addGoal(0, new FloatGoal(this));
+        goalSelector.addGoal(0, new Pursuit.Surface(this, this::isRevealed));
+        goalSelector.addGoal(0, new Pursuit.Chase(this, this::isRevealed));
         goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.45D, true) {
             @Override
             public boolean canUse() {

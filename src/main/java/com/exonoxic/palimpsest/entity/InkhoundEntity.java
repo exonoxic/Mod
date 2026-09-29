@@ -1,6 +1,7 @@
 package com.exonoxic.palimpsest.entity;
 
 import com.exonoxic.palimpsest.entity.ai.NoiseMap;
+import com.exonoxic.palimpsest.entity.ai.Pursuit;
 import com.exonoxic.palimpsest.registry.ModSounds;
 import com.exonoxic.palimpsest.world.SpawnRules;
 import net.minecraft.core.BlockPos;
@@ -13,7 +14,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
@@ -54,7 +54,8 @@ public class InkhoundEntity extends Monster {
 
     @Override
     protected void registerGoals() {
-        goalSelector.addGoal(0, new FloatGoal(this));
+        goalSelector.addGoal(0, new Pursuit.Surface(this, () -> true));
+        goalSelector.addGoal(0, new Pursuit.Chase(this, () -> true));
         goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.3D, false));
         goalSelector.addGoal(4, new ListenGoal());
         goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.7D));

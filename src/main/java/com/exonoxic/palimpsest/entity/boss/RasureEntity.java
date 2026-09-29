@@ -5,6 +5,7 @@ import com.exonoxic.palimpsest.block.BlankBlock;
 import com.exonoxic.palimpsest.block.FolioStandBlock;
 import com.exonoxic.palimpsest.block.RubricPillarBlock;
 import com.exonoxic.palimpsest.entity.RedactedEntity;
+import com.exonoxic.palimpsest.entity.ai.Pursuit;
 import com.exonoxic.palimpsest.horror.HorrorEvents;
 import com.exonoxic.palimpsest.horror.Spots;
 import com.exonoxic.palimpsest.network.PacketHandler;
@@ -43,7 +44,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
@@ -144,7 +144,8 @@ public class RasureEntity extends Monster implements PalimpsestBoss {
 
     @Override
     protected void registerGoals() {
-        goalSelector.addGoal(0, new FloatGoal(this));
+        goalSelector.addGoal(0, new Pursuit.Surface(this, () -> !isShielded()));
+        goalSelector.addGoal(0, new Pursuit.Chase(this, () -> !isShielded()));
         goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.0D, true) {
             @Override
             public boolean canUse() {

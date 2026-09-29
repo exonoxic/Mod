@@ -6,7 +6,9 @@ import com.exonoxic.palimpsest.bleed.BleedStage;
 import com.exonoxic.palimpsest.bleed.Ending;
 import com.exonoxic.palimpsest.block.BlankBlock;
 import com.exonoxic.palimpsest.entity.CopyistEntity;
+import com.exonoxic.palimpsest.entity.InkhoundEntity;
 import com.exonoxic.palimpsest.entity.KnockerEntity;
+import com.exonoxic.palimpsest.entity.RedactedEntity;
 import com.exonoxic.palimpsest.entity.ai.Squeeze;
 import com.exonoxic.palimpsest.registry.ModBlocks;
 import com.exonoxic.palimpsest.registry.ModEntities;
@@ -31,6 +33,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DoorBlock;
@@ -320,6 +323,50 @@ public final class PalimpsestGameTests {
             check(copyist.getX() > goal.getX(), "the Copyist has not climbed through yet (at x " + (copyist.getX() - helper.absolutePos(BlockPos.ZERO).getX())
                     + ", poses seen " + seen + ")");
             check(seen.contains(Squeeze.CRAWL), "the Copyist never crawled into the hole");
+        });
+    }
+
+    /** A still target on a two-block ledge five blocks up. A Redacted after it has to climb the wall. */
+    @GameTest(template = EMPTY, timeoutTicks = 400)
+    public static void huntersClimbToTheirTarget(GameTestHelper helper) {
+        for (int x = 0; x <= 8; x++) {
+            for (int z = 3; z <= 5; z++) {
+                helper.setBlock(new BlockPos(x, 0, z), Blocks.STONE);
+                for (int y = 1; y <= 5; y++) helper.setBlock(new BlockPos(x, y, z), x >= 6 && y <= 4 ? Blocks.STONE : Blocks.AIR);
+            }
+        }
+        Pig pig = helper.spawn(EntityType.PIG, new BlockPos(7, 5, 4));
+        pig.setNoAi(true);
+        RedactedEntity hunter = helper.spawn(ModEntities.REDACTED.get(), new BlockPos(1, 1, 4));
+        double top = helper.absolutePos(new BlockPos(0, 5, 0)).getY();
+        helper.succeedWhen(() -> {
+            hunter.setTarget(pig);
+            check(hunter.getY() >= top - 0.01D || pig.getHealth() < pig.getMaxHealth(),
+                    "the Redacted has not climbed up to its target (y " + (hunter.getY() - top + 5) + ")");
+        });
+    }
+
+    /** A still target across a three-deep pool. An Inkhound after it swims over and climbs out. */
+    @GameTest(template = EMPTY, timeoutTicks = 500)
+    public static void huntersSwimAfterTheirTarget(GameTestHelper helper) {
+        for (int x = 0; x <= 12; x++) {
+            for (int z = 2; z <= 6; z++) {
+                boolean lane = z >= 3 && z <= 5;
+                boolean pool = lane && x >= 3 && x <= 9;
+                helper.setBlock(new BlockPos(x, 0, z), Blocks.STONE);
+                for (int y = 1; y <= 3; y++) helper.setBlock(new BlockPos(x, y, z), !lane ? Blocks.GLASS : pool ? Blocks.WATER : Blocks.STONE);
+                for (int y = 4; y <= 6; y++) helper.setBlock(new BlockPos(x, y, z), lane ? Blocks.AIR : Blocks.GLASS);
+            }
+        }
+        Pig pig = helper.spawn(EntityType.PIG, new BlockPos(11, 4, 4));
+        pig.setNoAi(true);
+        InkhoundEntity hunter = helper.spawn(ModEntities.INKHOUND.get(), new BlockPos(1, 4, 4));
+        double far = helper.absolutePos(new BlockPos(10, 0, 0)).getX();
+        helper.succeedWhen(() -> {
+            hunter.setTarget(pig);
+            check(hunter.getHealth() >= hunter.getMaxHealth() - 0.01F, "the Inkhound hurt itself in the water");
+            check(hunter.getX() >= far || pig.getHealth() < pig.getMaxHealth(),
+                    "the Inkhound has not swum across (x " + (hunter.getX() - far + 10) + ", in water " + hunter.isInWater() + ")");
         });
     }
 

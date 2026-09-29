@@ -1,6 +1,7 @@
 package com.exonoxic.palimpsest.entity;
 
 import com.exonoxic.palimpsest.config.CommonConfig;
+import com.exonoxic.palimpsest.entity.ai.Pursuit;
 import com.exonoxic.palimpsest.registry.ModEffects;
 import com.exonoxic.palimpsest.registry.ModParticles;
 import com.exonoxic.palimpsest.registry.ModSounds;
@@ -52,7 +53,8 @@ public class RedactedEntity extends Monster {
 
     @Override
     protected void registerGoals() {
-        goalSelector.addGoal(0, new FloatGoal(this));
+        goalSelector.addGoal(0, new Pursuit.Surface(this, () -> true));
+        goalSelector.addGoal(0, new Pursuit.Chase(this, () -> true));
         goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.1D, false));
         goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 0.7D));
         goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 12.0F));

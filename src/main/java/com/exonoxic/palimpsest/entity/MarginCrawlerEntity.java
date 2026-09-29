@@ -1,5 +1,6 @@
 package com.exonoxic.palimpsest.entity;
 
+import com.exonoxic.palimpsest.entity.ai.Pursuit;
 import com.exonoxic.palimpsest.registry.ModSounds;
 import com.exonoxic.palimpsest.world.SpawnRules;
 import net.minecraft.core.BlockPos;
@@ -49,7 +50,8 @@ public class MarginCrawlerEntity extends Monster {
 
     @Override
     protected void registerGoals() {
-        goalSelector.addGoal(1, new FloatGoal(this));
+        goalSelector.addGoal(1, new Pursuit.Surface(this, () -> true));
+        goalSelector.addGoal(1, new Pursuit.Chase(this, () -> true));
         goalSelector.addGoal(3, new LeapAtTargetGoal(this, 0.4F));
         goalSelector.addGoal(4, new MeleeAttackGoal(this, 1.1D, true));
         goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 0.8D));
