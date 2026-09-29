@@ -1,8 +1,9 @@
 """
 Synthesises every Palimpsest sound from scratch and writes sounds.json.
 
-No samples, no recordings: everything below is oscillators, filtered noise and convolution
-reverb, so the audio is original and freely licensable with the mod. Positional sounds are
+Almost no samples: everything below is oscillators, filtered noise and convolution
+reverb, so the audio is original and freely licensable with the mod. The exceptions are the
+Knocker's door and window sounds (RECORDED), built from CC0 recordings by gen_recorded.py. Positional sounds are
 mono (Minecraft only attenuates mono sources); the two score pieces are stereo.
 """
 import json
@@ -12,6 +13,7 @@ import numpy as np
 import soundfile as sf
 
 from synth import *
+from gen_recorded import RECORDED  # real recordings; see gen_recorded.py
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SND = os.path.join(ROOT, "src/main/resources/assets/palimpsest/sounds")
@@ -1025,7 +1027,7 @@ def main(only=()):
         for i, fn in enumerate(fns):
             base = event.replace(".", "_")
             name = f"{folder}/{base}_{i}" if len(fns) > 1 else f"{folder}/{base}"
-            if not only or event in only:
+            if (not only or event in only) and event not in RECORDED:
                 save(os.path.join(SND, name + ".ogg"), fn(i), stereo=stereo)
                 total += 1
             entry = {"name": f"palimpsest:{name}"}
