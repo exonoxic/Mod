@@ -45,6 +45,7 @@ jobs:
           grep -E "ERROR|WARN.*palimpsest|Exception|failed|passed|GameTest|tests" gametest.log | grep -v "^\s*at " | head -300 || true
 
       - name: Client smoke test (virtual display, software OpenGL)
+        timeout-minutes: 32
         env:
           PALIMPSEST_SMOKE: "true"
           LIBGL_ALWAYS_SOFTWARE: "1"
@@ -52,7 +53,11 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq xvfb libgl1-mesa-dri > /dev/null
           set -o pipefail
-          timeout 1800 xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClient --console=plain 2>&1 | tee client.log
+          # Forge's early loading window can time out on a slow software-GL display and then
+          # wait forever on a y/n prompt; the game opens its own window fine without it.
+          mkdir -p run/config
+          echo "earlyWindowControl = false" > run/config/fml.toml
+          timeout -k 30 1800 xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClient --console=plain < /dev/null 2>&1 | tee client.log
           grep -q "PALIMPSEST SMOKE TEST COMPLETE" client.log
           if grep -q "SMOKE_FAIL" client.log; then echo "Smoke test reported failures"; exit 1; fi
 
