@@ -760,6 +760,31 @@
     ],
     "subtitle": "subtitles.palimpsest.entity.knocker.tap"
   },
+  "entity.knocker.glass_tap": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_knocker_glass_tap_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_knocker_glass_tap_1"
+      },
+      {
+        "name": "palimpsest:entity/entity_knocker_glass_tap_2"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.knocker.glass_tap"
+  },
+  "entity.knocker.glass_scratch": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_knocker_glass_scratch_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_knocker_glass_scratch_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.knocker.glass_scratch"
+  },
   "entity.inkhound.hiss": {
     "sounds": [
       {

@@ -45,6 +45,7 @@ import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.AbstractGlassBlock;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.IronBarsBlock;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.AABB;
@@ -515,8 +516,8 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
                     getNavigation().moveTo(back.getX() + 0.5D, back.getY(), back.getZ() + 0.5D, 0.35D);
                 }
             }
-        } else if (watching % 50 == 0 && random.nextInt(3) == 0) {
-            // One tap on the glass.
+        } else if (watching % 50 == 0 && random.nextInt(2) == 0) {
+            // A few taps on the glass.
             testWall(p);
         }
     }
@@ -613,14 +614,20 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
         return true;
     }
 
-    /** Knuckles on the wall between it and the player (or, now and then, its nails along it). */
+    /**
+     * Knuckles on the wall between it and the player (or, now and then, its nails along it). On a
+     * window it is a fingernail on the glass instead.
+     */
     private void testWall(Player p) {
         BlockHitResult hit = level().clip(new ClipContext(getEyePosition().subtract(0.0D, 0.6D, 0.0D), p.getEyePosition(),
                 ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
         BlockPos at = hit.getType() == HitResult.Type.BLOCK ? hit.getBlockPos() : blockPosition().above();
+        boolean glass = level().getBlockState(at).getSoundType() == SoundType.GLASS;
         boolean scratch = random.nextInt(4) == 0;
-        level().playSound(null, at, scratch ? ModSounds.KNOCKER_SCRATCH.get() : ModSounds.KNOCKER_TAP.get(), SoundSource.HOSTILE,
-                1.0F, 0.9F + random.nextFloat() * 0.2F);
+        SoundEvent sound = glass
+                ? (scratch ? ModSounds.KNOCKER_GLASS_SCRATCH.get() : ModSounds.KNOCKER_GLASS_TAP.get())
+                : (scratch ? ModSounds.KNOCKER_SCRATCH.get() : ModSounds.KNOCKER_TAP.get());
+        level().playSound(null, at, sound, SoundSource.HOSTILE, 1.0F, 0.9F + random.nextFloat() * 0.2F);
         if (!scratch) entityData.set(KNOCK_ANIM, 6);
     }
 

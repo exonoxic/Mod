@@ -130,6 +130,7 @@ SUBTITLES = {
     "entity.longhand.move": "Something moved", "entity.longhand.hurt": "Longhand splinters", "entity.longhand.death": "Longhand falls",
     "entity.squeeze.crack": "Bones crack", "entity.squeeze.drag": "Something drags itself",
     "entity.knocker.tap": "Knuckles test the wall", "entity.knocker.scratch": "Nails drag along the wall",
+    "entity.knocker.glass_tap": "Something taps on the glass", "entity.knocker.glass_scratch": "A nail squeals down the glass",
     "entity.inkhound.hiss": "Inkhound's jaw drops open", "entity.redacted.static": "Marker squeals; static",
     "entity.margin_crawler.patter": "Little hands patter", "entity.pale_stag.rustle": "Paper rustles",
     "entity.redacted.ambient": "Static hisses", "entity.redacted.attack": "Redacted slashes", "entity.redacted.hurt": "Redacted hurts",

@@ -37,6 +37,46 @@ def knock(rng, strength=1.0):
     return norm(lowpass(body + thump, 2500)) * strength
 
 
+def damped(freq, dur, decay, sr=SR):
+    ts = np.arange(int(dur * sr)) / sr
+    return np.sin(2 * np.pi * freq * ts) * np.exp(-ts / decay)
+
+
+def door_knock(rng):
+    """One heavy knuckle on a wooden door, heard from the room behind it: the click of the
+    knuckle, the boom of the panel, the latch rattling in its keep afterwards."""
+    dur = 1.0
+    n = int(dur * SR)
+    body = np.zeros(n)
+    for f, decay, gain in ((88, 0.2, 1.0), (170, 0.13, 0.6), (305, 0.08, 0.45), (540, 0.05, 0.3), (880, 0.03, 0.18)):
+        body += damped(f * rng.uniform(0.93, 1.07), dur, decay * rng.uniform(0.85, 1.15)) * gain
+    body *= np.minimum(1.0, np.arange(n) / (0.0015 * SR))
+    body += damped(52, dur, 0.07) * 0.6
+    click = highpass(noise(0.004, rng), 1500) * 0.35
+    parts = [(0.0, body), (0.0, click)]
+    t = rng.uniform(0.02, 0.04)
+    for k in range(int(rng.integers(2, 4))):
+        tick = bandpass(noise(0.006, rng), 2500, 7000) * env_exp(int(0.006 * SR), 0.0015)
+        parts.append((t, tick * (0.28 / (k + 1))))
+        t += rng.uniform(0.018, 0.04)
+    return norm(reverb(place(dur, parts), rng, 0.9, 0.28, damp=2200))
+
+
+def glass_tap(rng, strength=1.0):
+    """A nail (or a knuckle-bone) on a window pane: a sharp tick, the glass ringing high and
+    short, the pane buzzing in its frame."""
+    dur = 0.5
+    n = int(dur * SR)
+    f0 = rng.uniform(1200, 1700)
+    ring = np.zeros(n)
+    for r, decay, gain in ((1.0, 0.12, 1.0), (1.93, 0.07, 0.6), (2.87, 0.05, 0.45), (4.12, 0.03, 0.3), (5.46, 0.02, 0.2)):
+        ring += damped(f0 * r * rng.uniform(0.98, 1.02), dur, decay) * gain
+    ring *= np.minimum(1.0, np.arange(n) / (0.0005 * SR))
+    tick = highpass(noise(0.0015, rng), 3000) * 0.6
+    rattle = am(bandpass(noise(0.06, rng), 180, 420), 38, 0.8) * env_exp(int(0.06 * SR), 0.02) * 0.35
+    return norm(place(dur, [(0.0, ring * 0.7), (0.0, tick), (0.002, rattle)])) * strength
+
+
 def footstep(rng, surface="grass"):
     dur = 0.18
     n = int(dur * SR)
@@ -167,7 +207,7 @@ def save(path, x, sr=SR, stereo=False):
 
 # ============================================================ recipes (name -> list of clips)
 def r_knock(i):
-    return knock(R("knock", i))
+    return door_knock(R("doorknock", i))
 
 
 def r_footsteps(i):
@@ -605,6 +645,36 @@ def r_stag_rustle(i):
     return norm(x + scrape(rng, dur, 200, 700) * env_exp(n, 0.05) * 0.4) * 0.55
 
 
+def r_knocker_glass_tap(i):
+    """At the window: slow, patient taps on the glass, the last one softer, as if it knows you are
+    there and is in no hurry."""
+    rng = R("glasstap", i)
+    parts, t0 = [], 0.0
+    count = int(rng.integers(2, 5))
+    for k in range(count):
+        parts.append((t0, glass_tap(rng, 0.55 if k == count - 1 else 1.0)))
+        t0 += rng.uniform(0.45, 0.95)
+    return norm(lowpass(reverb(place(t0 + 0.5, parts), rng, 0.6, 0.2), 7000)) * 0.9
+
+
+def r_knocker_glass_scratch(i):
+    """A fingernail drawn slowly down a window pane: a thin stick-slip squeal that wavers in pitch."""
+    rng = R("glassscratch", i)
+    dur = rng.uniform(1.6, 2.2)
+    n = int(dur * SR)
+    ts = np.arange(n) / SR
+    f = rng.uniform(1700, 2000) + rng.uniform(400, 700) * ts / dur + 60 * np.sin(2 * np.pi * rng.uniform(1.5, 3.0) * ts)
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    tone = np.sin(ph) + 0.4 * np.sin(2 * ph) + 0.2 * np.sin(3 * ph)
+    slip = am(np.ones(n), rng.uniform(40, 65), 0.75) * (0.7 + 0.3 * rng.random(n) ** 3)
+    swell = np.zeros(n)
+    for _ in range(3):
+        c, w = rng.uniform(0.2, 0.8) * dur, rng.uniform(0.25, 0.5) * dur
+        swell += np.exp(-((ts - c) / w) ** 2)
+    x = tone * slip * swell * env_adsr(n, 0.08, 0.2, 0.9, 0.3) * 0.5 + scrape(rng, dur, 3000, 8000) * swell * 0.15
+    return norm(reverb(x, rng, 0.5, 0.18)) * 0.75
+
+
 def r_knocker_tap(i):
     """Knuckles testing a wall, lightly, somewhere else each time."""
     rng = R("knockertap", i)
@@ -917,6 +987,8 @@ CATALOGUE = {
     "entity.squeeze.crack": ("entity", [r_squeeze_crack] * 3, {}),
     "entity.squeeze.drag": ("entity", [r_squeeze_drag] * 3, {}),
     "entity.knocker.tap": ("entity", [r_knocker_tap] * 3, {}),
+    "entity.knocker.glass_tap": ("entity", [r_knocker_glass_tap] * 3, {}),
+    "entity.knocker.glass_scratch": ("entity", [r_knocker_glass_scratch] * 2, {}),
     "entity.inkhound.hiss": ("entity", [r_inkhound_hiss] * 3, {}),
     "entity.redacted.static": ("entity", [r_redacted_static] * 3, {}),
     "entity.margin_crawler.patter": ("entity", [r_crawler_patter] * 3, {}),

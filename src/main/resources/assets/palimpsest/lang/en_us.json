@@ -657,6 +657,8 @@
   "subtitles.palimpsest.entity.inkhound.hurt": "Inkhound yelps",
   "subtitles.palimpsest.entity.knocker.ambient": "Heavy breathing",
   "subtitles.palimpsest.entity.knocker.death": "Knocker dies",
+  "subtitles.palimpsest.entity.knocker.glass_scratch": "A nail squeals down the glass",
+  "subtitles.palimpsest.entity.knocker.glass_tap": "Something taps on the glass",
   "subtitles.palimpsest.entity.knocker.hurt": "Knocker hurts",
   "subtitles.palimpsest.entity.knocker.lunge": "Knocker screams",
   "subtitles.palimpsest.entity.knocker.scratch": "Nails drag along the wall",
