@@ -104,6 +104,8 @@ import java.util.function.Consumer;
 public final class SmokeTest {
     private static final Logger LOG = LogUtils.getLogger();
     private static final boolean ENABLED = Boolean.getBoolean("palimpsest.smokeTest");
+    /** For working on one thing at a time: only the real Knocker at a door, then quit (PALIMPSEST_SMOKE_QUICK=true). */
+    private static final boolean QUICK = Boolean.getBoolean("palimpsest.smokeQuick");
     private static final String WORLD = "palimpsest_smoke";
     private static final int Y = 200;
     private static final int SETTLE = 260;
@@ -184,6 +186,13 @@ public final class SmokeTest {
             command(srv, p, "time set 6000");
             p.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 1_000_000, 0, false, false));
         }));
+
+        if (QUICK) {
+            realDoor("a", 1.5, 4.6, 4.93);
+            realDoor("b", 5.5, 2.4, 2.63);
+            step(20, () -> Minecraft.getInstance().stop());
+            return;
+        }
 
         // Every block, spaced out on a platform in the sky.
         step(SETTLE, () -> server((srv, p) -> {
@@ -333,6 +342,9 @@ public final class SmokeTest {
             p.setGameMode(GameType.CREATIVE);
             p.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 1_000_000, 0, false, false));
         }));
+
+        realDoor("a", 1.5, 4.6, 4.93);
+        realDoor("b", 5.5, 2.4, 2.63);
 
         // Apparitions only exist for one player and keep their distance: a Longhand watcher vanishes
         // inside 24 blocks and a Fair Copy walks away inside 12, so these are taken zoomed in.
@@ -490,6 +502,39 @@ public final class SmokeTest {
         step(20, () -> Minecraft.getInstance().stop());
     }
 
+    /**
+     * A real Knocker put at a real door by {@code spawnAtDoor}, photographed every few ticks as it
+     * knocks, in profile from the west. It stands on whichever side of the door is farther from the
+     * player, so the two calls (the player at {@code playerZ} when it is placed, then the camera
+     * moved to {@code camZ}, looking at {@code lookZ}) cover both the side the door panel is on and
+     * the one it is not.
+     */
+    private static void realDoor(String tag, double playerZ, double camZ, double lookZ) {
+        step(40, () -> {
+            clearMannequins();
+            server((srv, p) -> {
+                ServerLevel level = p.serverLevel();
+                killMobs(level);
+                // It leaves at dawn, and by day.
+                command(srv, p, "time set 18000");
+                clear(level, -12, Y - 1, -12, 12, Y + 12, 24, Blocks.SMOOTH_STONE.defaultBlockState());
+                fill(level, -4, Y, 3, 4, Y + 3, 3, Blocks.SPRUCE_PLANKS.defaultBlockState());
+                BlockState lower = Blocks.SPRUCE_DOOR.defaultBlockState().setValue(DoorBlock.FACING, Direction.NORTH);
+                level.setBlock(new BlockPos(0, Y, 3), lower, Block.UPDATE_ALL);
+                level.setBlock(new BlockPos(0, Y + 1, 3), lower.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER), Block.UPDATE_ALL);
+                moveTo(p, level, 0.5, Y, playerZ, 0F, 0F);
+                if (!KnockerEntity.spawnAtDoor(level, new BlockPos(0, Y, 3), p)) LOG.error("[smoke] SMOKE_FAIL no Knocker at the door ({})", tag);
+                else for (KnockerEntity k : level.getEntitiesOfClass(KnockerEntity.class, p.getBoundingBox().inflate(16)))
+                    LOG.info("[smoke] real door {}: Knocker at {} {} facing {}", tag, String.format("%.2f", k.getX()), String.format("%.2f", k.getZ()), k.getDirection());
+                view(p, -3.0, Y + 1.9, camZ, 0.5, Y + 1.6, lookZ);
+            });
+        });
+        for (int i = 0; i < 18; i++) {
+            int n = i;
+            step(4, () -> grabNow("realdoor_" + tag + "_" + (n < 10 ? "0" : "") + n));
+        }
+    }
+
     // ------------------------------------------------------------------ featured creatures
 
     /**
@@ -557,8 +602,8 @@ public final class SmokeTest {
                 level.setBlock(new BlockPos(0, Y + 1, 3), lower.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER), Block.UPDATE_ALL);
                 view(p, -3.2, Y + 1.9, 2.2, 0.5, Y + 1.7, 2.8);
             });
-            // Where a real one stands: the block in front of the door, knocking with its right hand.
-            mannequin(ModEntities.KNOCKER.get(), 0.5, Y, 2.5, 0F, k -> data(k, "STATE", KnockerEntity.KNOCKING));
+            // Where a real one stands: REACH from the door panel (which sits on the south edge of its block).
+            mannequin(ModEntities.KNOCKER.get(), 0.5, Y, 3.8125 - (KnockerEntity.REACH + 0.03), 0F, k -> data(k, "STATE", KnockerEntity.KNOCKING));
         });
         // Photographed just after the first blow lands.
         step(3, () -> knockerGesture(KnockerEntity.GESTURE_KNOCK));
@@ -732,7 +777,7 @@ public final class SmokeTest {
                 fill(level, 0, Y + 1, 3, 1, Y + 2, 3, Blocks.GLASS.defaultBlockState());
                 view(p, 1.0, Y + 1.62, 0.4, 1.0, Y + 1.6, 3.0);
             });
-            mannequin(ModEntities.KNOCKER.get(), 1.0, Y, 4.8, 180F, k -> {
+            mannequin(ModEntities.KNOCKER.get(), 1.0, Y, 4.0 + KnockerEntity.REACH_STOOPED + 0.03, 180F, k -> {
                 data(k, "STATE", KnockerEntity.SEARCHING);
                 k.setPose(Squeeze.STOOP);
             });

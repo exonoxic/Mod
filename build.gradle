@@ -39,6 +39,7 @@ minecraft {
             property 'forge.enabledGameTestNamespaces', mod_id
             // CI sets PALIMPSEST_SMOKE=true to run the scripted visual smoke test (client/dev/SmokeTest).
             property 'palimpsest.smokeTest', System.getenv('PALIMPSEST_SMOKE') ?: 'false'
+            property 'palimpsest.smokeQuick', System.getenv('PALIMPSEST_SMOKE_QUICK') ?: 'false'
             // The Trailer workflow sets PALIMPSEST_TRAILER=true to film the trailer (client/dev/Trailer).
             property 'palimpsest.filmTrailer', System.getenv('PALIMPSEST_TRAILER') ?: 'false'
             if (System.getenv('PALIMPSEST_TRAILER') == 'true') args '--width', '1280', '--height', '720'

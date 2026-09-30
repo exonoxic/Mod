@@ -89,6 +89,14 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
     public static final int GESTURE_GLASS_TAP = 5;
     /** Ticks a gesture starts before its sound: the arm draws back first, and the blow lands on the sound. */
     public static final int GESTURE_LEAD = 4;
+    /**
+     * How far from a wall it stands to knock or scratch on it, in blocks: its hunched head hangs
+     * about a block out in front of its feet, so standing in the next block over would put the head
+     * through the door. The model's gesture poses are solved for these distances.
+     */
+    public static final double REACH = 0.9D;
+    /** The same when bent down at a window (its head hangs a little further forward then). */
+    public static final double REACH_STOOPED = 1.1D;
     /** Pitch of the pounding (a lower pitch plays the knocks further apart). */
     public static final float POUND_PITCH = 0.76F;
     /** Rounds of three knocks before it goes quiet and looks for another way in. */
@@ -122,6 +130,9 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
     @Nullable
     private BlockPos patrol;
     private boolean patrolIsWindow;
+    /** The glass (or bars) of the window it is going to. */
+    @Nullable
+    private BlockPos windowGlass;
     private boolean returning;
     private int pause;
     private int taps;
@@ -208,13 +219,7 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
             e.setPersistenceRequired();
         });
         if (k == null) return false;
-        // Hunched, its head is well ahead of its feet: stand it back from the door so its face is
-        // against the wood rather than through it.
-        Vec3 back = new Vec3(k.getX() - (door.getX() + 0.5D), 0.0D, k.getZ() - (door.getZ() + 0.5D));
-        if (back.lengthSqr() > 1.0E-4D) {
-            Vec3 step = back.normalize().scale(0.35D);
-            if (level.noCollision(k, k.getBoundingBox().move(step))) k.setPos(k.position().add(step));
-        }
+        k.standOff(k.towards(door), REACH);
         Vec3 to = Vec3.atCenterOf(door).subtract(k.position());
         float yaw = (float) (Math.toDegrees(Math.atan2(to.z, to.x)) - 90.0D);
         k.setYRot(yaw);
@@ -513,9 +518,11 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
                 knocksLeft = 0;
                 knockCooldown = 10;
                 entityData.set(STATE, KNOCKING);
+                if (door != null) standOff(towards(door), REACH);
             } else if (patrolIsWindow && arrived) {
                 watching = 140 + random.nextInt(100);
                 lookedAt = 0;
+                if (windowGlass != null) standOff(towards(windowGlass), REACH_STOOPED);
             } else {
                 pause = 50 + random.nextInt(60);
                 taps = 1 + random.nextInt(3);
@@ -640,6 +647,7 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
     private BlockPos windowSpot(ServerLevel level, Player p) {
         BlockPos center = p.blockPosition();
         BlockPos best = null;
+        BlockPos bestGlass = null;
         double bestDist = Double.MAX_VALUE;
         for (BlockPos pos : BlockPos.betweenClosed(center.offset(-8, -1, -8), center.offset(8, 3, 8))) {
             BlockState state = level.getBlockState(pos);
@@ -653,12 +661,15 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
                 if (dist < bestDist) {
                     bestDist = dist;
                     best = feet.immutable();
+                    bestGlass = pos.immutable();
                 }
             }
         }
         if (best == null) return null;
         Path path = wayIn(best);
-        return path != null && path.canReach() ? best : null;
+        if (path == null || !path.canReach()) return null;
+        windowGlass = bestGlass;
+        return best;
     }
 
     /** Is the player looking straight at it, with nothing but glass (or bars, or leaves) between? */
@@ -675,6 +686,39 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
         return true;
     }
 
+    /** The way (north, east...) from where it stands to the middle of a block, or null if it is right on it. */
+    @Nullable
+    private Direction towards(BlockPos target) {
+        double dx = target.getX() + 0.5D - getX();
+        double dz = target.getZ() + 0.5D - getZ();
+        return dx * dx + dz * dz < 1.0E-4D ? null : Direction.getNearest(dx, 0.0D, dz);
+    }
+
+    /**
+     * Stands it {@code reach} blocks from whatever wall (a door panel, glass, bars) is in front of it
+     * in direction {@code toward}: a ray at head height finds the wall wherever it is (a door's panel
+     * is on one edge of its block, glass on another), and it steps forward or back to the distance
+     * its face and fist need, as far as there is room for.
+     */
+    private void standOff(@Nullable Direction toward, double reach) {
+        if (toward == null || level().isClientSide) return;
+        double sx = toward.getStepX();
+        double sz = toward.getStepZ();
+        Vec3 from = new Vec3(getX() - sx * 0.5D, getY() + 1.5D, getZ() - sz * 0.5D);
+        BlockHitResult hit = level().clip(new ClipContext(from, from.add(sx * 3.0D, 0.0D, sz * 3.0D),
+                ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
+        if (hit.getType() != HitResult.Type.BLOCK) return;
+        // How far ahead of its feet the wall is, and how far it has to go to be `reach` from it.
+        double move = Mth.clamp(from.distanceTo(hit.getLocation()) - 0.5D - (reach + 0.03D), -0.6D, 0.8D);
+        for (int i = 0; i <= 6; i++) {
+            double m = move * (1.0D - i / 6.0D);
+            if (level().noCollision(this, getBoundingBox().move(sx * m, 0.0D, sz * m))) {
+                setPos(getX() + sx * m, getY(), getZ() + sz * m);
+                return;
+            }
+        }
+    }
+
     /**
      * Knuckles on the wall between it and the player (or, now and then, its nails along it). On a
      * window it is a fingernail on the glass instead.
@@ -688,7 +732,14 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
         SoundEvent sound = glass
                 ? (scratch ? ModSounds.KNOCKER_GLASS_SCRATCH.get() : ModSounds.KNOCKER_GLASS_TAP.get())
                 : (scratch ? ModSounds.KNOCKER_SCRATCH.get() : ModSounds.KNOCKER_TAP.get());
-        gesture(scratch ? GESTURE_SCRATCH : glass ? GESTURE_GLASS_TAP : GESTURE_TAP, sound, at, 1.0F, 0.95F + random.nextFloat() * 0.1F);
+        float pitch = 0.95F + random.nextFloat() * 0.1F;
+        // Right up at the wall it raps or drags on it; from across the yard it only makes the sound.
+        if (hit.getType() == HitResult.Type.BLOCK && getEyePosition().distanceTo(hit.getLocation()) < 2.4D) {
+            standOff(towards(at), isCrouching() ? REACH_STOOPED : REACH);
+            gesture(scratch ? GESTURE_SCRATCH : glass ? GESTURE_GLASS_TAP : GESTURE_TAP, sound, at, 1.0F, pitch);
+        } else {
+            level().playSound(null, at, sound, SoundSource.HOSTILE, 1.0F, pitch);
+        }
     }
 
     /** Puts out torches within reach (when the world may be altered). */

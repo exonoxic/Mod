@@ -423,14 +423,14 @@ def knocker():
 
         // ---- gestures: each starts a few ticks before its sound (KnockerEntity.GESTURE_LEAD), so the
         // arm is drawn back in time for the blows to land on the hits in the recording
-        final float[] COCK = {0.264F, -0.106F, 0.242F, -2.120F, -2.469F};
-        final float[] HIT = {0.084F, -0.182F, 0.301F, -1.578F, -1.242F};
-        final float[] SCRATCH_TOP = {-0.736F, 1.014F, 0.637F, -0.830F, -2.270F};
-        final float[] SCRATCH_END = {-0.032F, -0.204F, 0.766F, -0.452F, -2.464F};
-        final float[] S_COCK = {0.126F, 0.705F, -0.306F, -3.751F, -0.609F};
-        final float[] S_HIT = {0.207F, 0.689F, 0.164F, -3.154F, -0.686F};
-        final float[] S_SCRATCH_TOP = {-0.370F, 0.719F, -0.230F, -3.584F, 0.002F};
-        final float[] S_SCRATCH_END = {0.516F, 0.475F, 0.494F, -3.699F, 0.623F};
+        final float[] COCK = {0.301F, 0.112F, 0.241F, -2.246F, -2.253F};
+        final float[] HIT = {0.048F, -0.084F, 0.276F, -1.612F, -1.864F};
+        final float[] SCRATCH_TOP = {-0.115F, -0.069F, 0.514F, -0.517F, -2.314F};
+        final float[] SCRATCH_END = {-0.172F, -0.447F, 0.522F, 0.577F, -2.307F};
+        final float[] S_COCK = {0.015F, 0.697F, -0.459F, -3.886F, -0.271F};
+        final float[] S_HIT = {0.175F, 0.699F, 0.045F, -3.403F, 0.036F};
+        final float[] S_SCRATCH_TOP = {-0.443F, 0.732F, -0.390F, -4.028F, 0.638F};
+        final float[] S_SCRATCH_END = {0.315F, 0.616F, 0.265F, -4.196F, 1.067F};
         int kind = entity.gestureKind();
         float gt = entity.gestureTime(pt);
         float reach = 0.0F;   // how far the right arm is taken over by a gesture (0..1)
@@ -509,10 +509,13 @@ def knocker():
             rightFinger1.xRot += reach * curl;
             rightFinger2.xRot += reach * curl;
             rightThumb.xRot += reach * (scratching ? 0.2F : 0.6F);
-            // Its head goes close to the door, an ear to the wood; each blow runs through its body.
+            // It leans in with its face against the door, an ear to the wood: the body straightens a
+            // little (so the face is not a full block out in front of its feet; KnockerEntity.REACH is
+            // how far from the wall it stands for this), and each blow runs through it.
             float jolt = scratching ? 0.0F : Math.max(0.0F, hit - 0.6F) * (kind == $K.GESTURE_POUND ? 0.5F : 0.25F);
-            head.zRot += reach * 0.38F * upright;
-            neck.xRot += reach * (0.18F + jolt * 0.3F) * upright;
+            head.zRot += reach * 0.38F;
+            chest.xRot -= reach * 0.15F * upright;
+            neck.xRot += reach * (0.03F + jolt * 0.3F) * upright;
             chest.xRot += reach * jolt * 0.3F;
             head.xRot -= reach * jolt * 0.2F;
             jaw.xRot += reach * (scratching ? 0.25F + hit * 0.15F : 0.06F);
