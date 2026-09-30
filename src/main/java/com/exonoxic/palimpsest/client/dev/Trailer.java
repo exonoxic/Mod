@@ -397,7 +397,7 @@ public final class Trailer {
         lunge.until = () -> {
             KnockerEntity k = knocker();
             LocalPlayer me = Minecraft.getInstance().player;
-            return k != null && me != null && k.distanceTo(me) < 1.4F;
+            return k != null && me != null && k.distanceTo(me) < 2.6F;
         };
 
         Shot notAlone = card("not_alone", 60, 60, 2, false, "It is not the only one.").then(() -> server((srv, p) -> {

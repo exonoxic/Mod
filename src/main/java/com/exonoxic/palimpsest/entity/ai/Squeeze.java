@@ -40,9 +40,9 @@ public final class Squeeze {
     private static final int ROOMY_TICKS = 10;
     /** Model ease per tick between postures. */
     private static final float EASE = 0.16F;
-    /** Folded down it goes faster, not slower: bent double it lopes, flat out it scuttles. */
-    private static final double STOOP_SPEED = 0.35D;
-    private static final double CRAWL_SPEED = 0.8D;
+    /** Folded down it goes a little faster, not slower. */
+    private static final double STOOP_SPEED = 0.1D;
+    private static final double CRAWL_SPEED = 0.2D;
     private static final UUID SCUTTLE = UUID.fromString("5c0e7f1a-3a8e-4d51-9f0b-7a1e2c9d4b63");
 
     private final Mob mob;

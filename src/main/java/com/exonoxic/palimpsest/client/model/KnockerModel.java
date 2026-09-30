@@ -210,7 +210,7 @@ public class KnockerModel<T extends KnockerEntity> extends HierarchicalModel<T> 
         float armFree = 1.0F - reach;
 
         // ---- walking, crawling
-        float a = Math.min(1.0F, limbSwingAmount) * (1.0F - crawl);
+        float a = Math.min(1.0F, limbSwingAmount) * (1.0F - 0.45F * crawl);
         float w = limbSwing * 0.42F;
         chest.xRot += breath * 0.03F;
         neck.xRot += breath * 0.025F;
@@ -233,45 +233,6 @@ public class KnockerModel<T extends KnockerEntity> extends HierarchicalModel<T> 
         rightUpperArm.xRot += Mth.cos(w) * 0.45F * a * armFree;
         leftForearm.xRot -= Math.max(0.0F, Mth.cos(w)) * 0.35F * a;
         rightForearm.xRot -= Math.max(0.0F, -Mth.cos(w)) * 0.35F * a * armFree;
-        if (crawl > 0.0F) {
-            // Flat on its belly it hauls itself along hand over hand: reach, plant, drag the body up
-            // to the hand with the elbow high, lift, reach again; the legs shove on the other beat.
-            float p = limbSwing * 0.11F;
-            float q = p + 0.5F;
-            rightUpperArm.xRot += crawl * Anim.loop(p, 0.0F, -0.121F, 0.2F, -0.540F, 0.4F, -0.847F, 0.6F, -0.993F, 0.8F, -0.997F, 1.0F, -0.121F);
-            rightUpperArm.yRot += crawl * Anim.loop(p, 0.0F, -0.980F, 0.2F, -0.771F, 0.4F, -0.537F, 0.6F, -0.445F, 0.8F, -0.773F, 1.0F, -0.980F);
-            rightUpperArm.zRot += crawl * Anim.loop(p, 0.0F, -0.707F, 0.2F, -0.726F, 0.4F, -0.836F, 0.6F, -1.222F, 0.8F, -0.406F, 1.0F, -0.707F);
-            rightForearm.xRot += crawl * Anim.loop(p, 0.0F, 1.174F, 0.2F, 1.878F, 0.4F, 2.439F, 0.6F, 2.833F, 0.8F, 2.026F, 1.0F, 1.174F);
-            rightHand.xRot += crawl * Anim.loop(p, 0.0F, -1.322F, 0.2F, -1.174F, 0.4F, -0.935F, 0.6F, -0.750F, 0.8F, -1.870F, 1.0F, -1.322F);
-            leftUpperArm.xRot += crawl * Anim.loop(q, 0.0F, -0.121F, 0.2F, -0.540F, 0.4F, -0.847F, 0.6F, -0.993F, 0.8F, -0.997F, 1.0F, -0.121F);
-            leftUpperArm.yRot += crawl * Anim.loop(q, 0.0F, 0.980F, 0.2F, 0.771F, 0.4F, 0.537F, 0.6F, 0.445F, 0.8F, 0.773F, 1.0F, 0.980F);
-            leftUpperArm.zRot += crawl * Anim.loop(q, 0.0F, 0.707F, 0.2F, 0.726F, 0.4F, 0.836F, 0.6F, 1.222F, 0.8F, 0.406F, 1.0F, 0.707F);
-            leftForearm.xRot += crawl * Anim.loop(q, 0.0F, 1.174F, 0.2F, 1.878F, 0.4F, 2.439F, 0.6F, 2.833F, 0.8F, 2.026F, 1.0F, 1.174F);
-            leftHand.xRot += crawl * Anim.loop(q, 0.0F, -1.322F, 0.2F, -1.174F, 0.4F, -0.935F, 0.6F, -0.750F, 0.8F, -1.870F, 1.0F, -1.322F);
-            float pr = Mth.sin(p * (Mth.PI * 2.0F));
-            float kickR = 0.5F + 0.5F * Mth.cos(q * (Mth.PI * 2.0F));
-            float kickL = 0.5F + 0.5F * Mth.cos(p * (Mth.PI * 2.0F));
-            rightThigh.zRot -= crawl * 0.45F * kickR;
-            rightThigh.xRot -= crawl * 0.35F * kickR;
-            rightShin.xRot += crawl * 0.8F * kickR;
-            leftThigh.zRot += crawl * 0.45F * kickL;
-            leftThigh.xRot -= crawl * 0.35F * kickL;
-            leftShin.xRot += crawl * 0.8F * kickL;
-            hips.zRot += crawl * pr * 0.12F;
-            chest.yRot += crawl * pr * 0.1F;
-            neck.yRot -= crawl * pr * 0.12F;
-            head.zRot -= crawl * pr * 0.1F;
-            hips.y += crawl * Mth.abs(Mth.cos(p * (Mth.PI * 2.0F))) * 0.6F;
-            // Fingers dig in while the hand is planted and trail while it reaches.
-            float digR = Anim.loop(p, 0.0F, 0.9F, 0.6F, 0.9F, 0.75F, -0.2F, 0.95F, -0.2F, 1.0F, 0.9F);
-            float digL = Anim.loop(q, 0.0F, 0.9F, 0.6F, 0.9F, 0.75F, -0.2F, 0.95F, -0.2F, 1.0F, 0.9F);
-            rightFinger0.xRot += crawl * digR;
-            rightFinger1.xRot += crawl * digR;
-            rightFinger2.xRot += crawl * digR;
-            leftFinger0.xRot += crawl * digL;
-            leftFinger1.xRot += crawl * digL;
-            leftFinger2.xRot += crawl * digL;
-        }
 
         // ---- the right arm, given over to a gesture
         if (reach > 0.0F) {

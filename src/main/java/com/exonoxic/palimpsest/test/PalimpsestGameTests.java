@@ -293,11 +293,11 @@ public final class PalimpsestGameTests {
             check(mid.getPose() == Squeeze.STOOP && mid.getBbHeight() < 2.0F,
                     "a Knocker in a two-high space should stoop (pose " + mid.getPose() + ", height " + mid.getBbHeight() + ")");
             check(low.getHealth() >= low.getMaxHealth() && mid.getHealth() >= mid.getMaxHealth(), "a folded Knocker should not suffocate");
-            // Folded down it goes faster, not slower.
+            // Folded down it goes a little faster, not slower.
             double base = low.getAttributeBaseValue(Attributes.MOVEMENT_SPEED);
-            check(low.getAttributeValue(Attributes.MOVEMENT_SPEED) > base * 1.7D,
+            check(low.getAttributeValue(Attributes.MOVEMENT_SPEED) > base * 1.15D,
                     "a crawling Knocker should scuttle (speed " + low.getAttributeValue(Attributes.MOVEMENT_SPEED) + ", base " + base + ")");
-            check(mid.getAttributeValue(Attributes.MOVEMENT_SPEED) > base * 1.3D,
+            check(mid.getAttributeValue(Attributes.MOVEMENT_SPEED) > base * 1.05D,
                     "a stooping Knocker should lope (speed " + mid.getAttributeValue(Attributes.MOVEMENT_SPEED) + ", base " + base + ")");
             helper.succeed();
         });

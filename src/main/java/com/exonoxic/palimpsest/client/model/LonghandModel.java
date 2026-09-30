@@ -188,7 +188,7 @@ public class LonghandModel<T extends LonghandEntity> extends HierarchicalModel<T
         } else {
         head.yRot += netHeadYaw * Mth.DEG_TO_RAD;
         head.xRot += headPitch * Mth.DEG_TO_RAD;
-        limbSwingAmount *= 1.0F - crawl;
+        limbSwingAmount *= 1.0F - 0.45F * crawl;
         // Unwatched, it moves in fast, broken strokes.
         float jerk = Mth.sin(ageInTicks * 2.3F) * 0.06F;
         float w = limbSwing * 0.5F;
@@ -207,31 +207,6 @@ public class LonghandModel<T extends LonghandEntity> extends HierarchicalModel<T
         tail2.xRot += Mth.sin(ageInTicks * 0.2F) * 0.08F;
         for (ModelPart f : new ModelPart[]{leftFinger0, leftFinger1, leftFinger2, leftFinger3}) f.xRot += Mth.sin(ageInTicks * 0.3F) * 0.2F;
         for (ModelPart f : new ModelPart[]{rightFinger0, rightFinger1, rightFinger2, rightFinger3}) f.xRot += Mth.cos(ageInTicks * 0.3F) * 0.2F;
-        }
-        if (crawl > 0.0F) {
-            // Flat out it walks on its hands like something with too many joints: a hand planted far
-            // ahead, the elbow rising high over it as the body is dragged up, then the other.
-            float p = limbSwing * 0.09F;
-            float q = p + 0.5F;
-            rightUpperArm.xRot += crawl * Anim.loop(p, 0.0F, -0.156F, 0.2F, -0.384F, 0.4F, -0.539F, 0.6F, -0.562F, 0.8F, -0.840F, 1.0F, -0.156F);
-            rightUpperArm.yRot += crawl * Anim.loop(p, 0.0F, -0.573F, 0.2F, -0.538F, 0.4F, -0.515F, 0.6F, -0.262F, 0.8F, -0.625F, 1.0F, -0.573F);
-            rightUpperArm.zRot += crawl * Anim.loop(p, 0.0F, -0.559F, 0.2F, -0.651F, 0.4F, -0.845F, 0.6F, -1.410F, 0.8F, -0.344F, 1.0F, -0.559F);
-            rightForearm.xRot += crawl * Anim.loop(p, 0.0F, -1.643F, 0.2F, -1.126F, 0.4F, -0.696F, 0.6F, -0.334F, 0.8F, -1.071F, 1.0F, -1.643F);
-            rightHand.xRot += crawl * Anim.loop(p, 0.0F, -1.107F, 0.2F, -1.386F, 0.4F, -1.654F, 0.6F, -1.839F, 0.8F, -0.739F, 1.0F, -1.107F);
-            leftUpperArm.xRot += crawl * Anim.loop(q, 0.0F, -0.156F, 0.2F, -0.384F, 0.4F, -0.539F, 0.6F, -0.562F, 0.8F, -0.840F, 1.0F, -0.156F);
-            leftUpperArm.yRot += crawl * Anim.loop(q, 0.0F, 0.573F, 0.2F, 0.538F, 0.4F, 0.515F, 0.6F, 0.262F, 0.8F, 0.625F, 1.0F, 0.573F);
-            leftUpperArm.zRot += crawl * Anim.loop(q, 0.0F, 0.559F, 0.2F, 0.651F, 0.4F, 0.845F, 0.6F, 1.410F, 0.8F, 0.344F, 1.0F, 0.559F);
-            leftForearm.xRot += crawl * Anim.loop(q, 0.0F, -1.643F, 0.2F, -1.126F, 0.4F, -0.696F, 0.6F, -0.334F, 0.8F, -1.071F, 1.0F, -1.643F);
-            leftHand.xRot += crawl * Anim.loop(q, 0.0F, -1.107F, 0.2F, -1.386F, 0.4F, -1.654F, 0.6F, -1.839F, 0.8F, -0.739F, 1.0F, -1.107F);
-            float roll = Mth.sin(p * (Mth.PI * 2.0F));
-            float kickR = 0.5F + 0.5F * Mth.cos(q * (Mth.PI * 2.0F));
-            float kickL = 0.5F + 0.5F * Mth.cos(p * (Mth.PI * 2.0F));
-            rightThigh.zRot -= crawl * 0.35F * kickR;
-            rightShin.xRot += crawl * 0.5F * kickR;
-            leftThigh.zRot += crawl * 0.35F * kickL;
-            leftShin.xRot += crawl * 0.5F * kickL;
-            pelvis.zRot += crawl * roll * 0.1F;
-            neck.yRot -= crawl * roll * 0.12F;
         }
         if (crawl > 0.0F) {
             pelvis.xRot += crawl * 1.47F;
