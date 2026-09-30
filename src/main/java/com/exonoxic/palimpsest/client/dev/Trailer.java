@@ -261,7 +261,7 @@ public final class Trailer {
         mc.options.fov().set(70);
         mc.options.fovEffectScale().set(0.0D);
         mc.options.bobView().set(false);
-        mc.options.gamma().set(0.6D);
+        mc.options.gamma().set(1.0D);
         mc.getTutorial().setStep(TutorialSteps.NONE);
         try {
             FileUtils.deleteDirectory(mc.getLevelSource().getBaseDir().resolve(WORLD).toFile());
@@ -413,6 +413,12 @@ public final class Trailer {
         Shot longhand = shot("longhand_look_away", 200);
         longhand.setup = () -> {
             clearMannequins();
+            server((srv, p) -> {
+                ServerLevel level = p.serverLevel();
+                level.setBlock(at(-1, 0, -9), Blocks.TORCH.defaultBlockState(), Block.UPDATE_ALL);
+                level.setBlock(at(2, 0, -2), Blocks.TORCH.defaultBlockState(), Block.UPDATE_ALL);
+                level.setBlock(at(2, 0, 4), Blocks.TORCH.defaultBlockState(), Block.UPDATE_ALL);
+            });
             MannequinAnim.subject = mannequin(ModEntities.LONGHAND.get(), x(0.5), y(0), z(-10.0), 0F, l -> {
                 data(l, "FROZEN", true);
                 data(l, "POSE_INDEX", 0);
@@ -495,17 +501,20 @@ public final class Trailer {
         };
 
         // The real thing again: a Redacted sees you, stops dead and stares, then comes.
-        Shot redacted = shot("redacted_stare", 200);
+        Shot redacted = shot("redacted_stare", 170);
         redacted.preroll = 12;
         redacted.setup = () -> {
             clearMannequins();
             TrailerRecorder.cue("music music_rasure 0.42");
-            hunter(ModEntities.REDACTED.get(), -11.5, false);
+            hunter(ModEntities.REDACTED.get(), -4.5, false);
         };
         redacted.camera = (t, u) -> {
             RedactedEntity r = nearest(RedactedEntity.class);
             return new Vec3[]{null, r == null ? v(0.5, 1.5, -11.0) : r.getEyePosition(), null};
         };
+        redacted.each = t -> server((srv, p) -> {
+            for (RedactedEntity r : p.serverLevel().getEntitiesOfClass(RedactedEntity.class, p.getBoundingBox().inflate(32))) r.setTarget(p);
+        });
         redacted.until = () -> closeTo(nearest(RedactedEntity.class), 1.8F);
 
         // An Inkhound across the water: it swims.
@@ -603,6 +612,7 @@ public final class Trailer {
             level.setBlock(at(-3, 0, 3), Blocks.TORCH.defaultBlockState(), Block.UPDATE_ALL);
             level.setBlock(at(3, 0, -2), Blocks.TORCH.defaultBlockState(), Block.UPDATE_ALL);
             level.setBlock(at(-2, 0, -7), Blocks.TORCH.defaultBlockState(), Block.UPDATE_ALL);
+            level.setBlock(BlockPos.containing(x(1.5), y(0), z(z + 1.5)), Blocks.TORCH.defaultBlockState(), Block.UPDATE_ALL);
             p.setGameMode(GameType.SURVIVAL);
             p.getAbilities().invulnerable = true;
             p.getAbilities().flying = false;
@@ -651,8 +661,8 @@ public final class Trailer {
             Vec3 c = Vec3.atBottomCenterOf(b);
             float e = ease(u);
             double yaw = Math.toRadians(heading + 35 * e);
-            Vec3 eye = c.add(0, 2.2 + 1.2 * e, 0).add(-Math.sin(Math.toRadians(heading)) * 3 * e, 0, Math.cos(Math.toRadians(heading)) * 3 * e);
-            return new Vec3[]{eye, eye.add(-Math.sin(yaw) * 20, -2.5, Math.cos(yaw) * 20)};
+            Vec3 eye = c.add(0, 7.0 + 1.5 * e, 0).add(-Math.sin(Math.toRadians(heading)) * 3 * e, 0, Math.cos(Math.toRadians(heading)) * 3 * e);
+            return new Vec3[]{eye, eye.add(-Math.sin(yaw) * 20, -6.0, Math.cos(yaw) * 20)};
         };
     }
 
