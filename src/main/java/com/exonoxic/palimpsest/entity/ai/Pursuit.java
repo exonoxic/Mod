@@ -4,6 +4,7 @@ import java.util.EnumSet;
 import java.util.UUID;
 import java.util.function.BooleanSupplier;
 
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
@@ -221,9 +222,10 @@ public final class Pursuit {
             LivingEntity quarry = mob.getTarget();
             mob.getNavigation().stop();
             if (quarry != null) {
-                mob.getLookControl().setLookAt(quarry, 10.0F, mob.getMaxHeadXRot());
-                // Turn the whole body to face it, slowly.
-                mob.setYBodyRot(mob.yHeadRot);
+                mob.getLookControl().setLookAt(quarry, 8.0F, mob.getMaxHeadXRot());
+                // The head leads and the body follows a few degrees a tick, rather than the whole
+                // creature snapping round to face it.
+                mob.setYBodyRot(Mth.approachDegrees(mob.yBodyRot, mob.yHeadRot, 4.0F));
             }
         }
 

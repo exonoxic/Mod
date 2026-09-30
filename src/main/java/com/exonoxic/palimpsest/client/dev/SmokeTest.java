@@ -188,8 +188,8 @@ public final class SmokeTest {
         }));
 
         if (QUICK) {
-            realDoor("a", 1.5, 4.6, 4.93);
-            realDoor("b", 5.5, 2.4, 2.63);
+            realDoor("a", 1.5, 4.6, 4.93, false, 4.0);
+            realDoor("b", 5.5, 2.4, 2.63, true, 3.8125);
             step(20, () -> Minecraft.getInstance().stop());
             return;
         }
@@ -343,8 +343,8 @@ public final class SmokeTest {
             p.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 1_000_000, 0, false, false));
         }));
 
-        realDoor("a", 1.5, 4.6, 4.93);
-        realDoor("b", 5.5, 2.4, 2.63);
+        realDoor("a", 1.5, 4.6, 4.93, false, 4.0);
+        realDoor("b", 5.5, 2.4, 2.63, true, 3.8125);
 
         // Apparitions only exist for one player and keep their distance: a Longhand watcher vanishes
         // inside 24 blocks and a Fair Copy walks away inside 12, so these are taken zoomed in.
@@ -507,9 +507,10 @@ public final class SmokeTest {
      * knocks, in profile from the west. It stands on whichever side of the door is farther from the
      * player, so the two calls (the player at {@code playerZ} when it is placed, then the camera
      * moved to {@code camZ}, looking at {@code lookZ}) cover both the side the door panel is on and
-     * the one it is not.
+     * the one it is not. Fails if its face ends up past the panel's face at {@code panelZ} (its head
+     * reaches about 0.85 blocks ahead of its feet when it leans in to knock).
      */
-    private static void realDoor(String tag, double playerZ, double camZ, double lookZ) {
+    private static void realDoor(String tag, double playerZ, double camZ, double lookZ, boolean facesSouth, double panelZ) {
         step(40, () -> {
             clearMannequins();
             server((srv, p) -> {
@@ -524,8 +525,12 @@ public final class SmokeTest {
                 level.setBlock(new BlockPos(0, Y + 1, 3), lower.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER), Block.UPDATE_ALL);
                 moveTo(p, level, 0.5, Y, playerZ, 0F, 0F);
                 if (!KnockerEntity.spawnAtDoor(level, new BlockPos(0, Y, 3), p)) LOG.error("[smoke] SMOKE_FAIL no Knocker at the door ({})", tag);
-                else for (KnockerEntity k : level.getEntitiesOfClass(KnockerEntity.class, p.getBoundingBox().inflate(16)))
+                else for (KnockerEntity k : level.getEntitiesOfClass(KnockerEntity.class, p.getBoundingBox().inflate(16))) {
                     LOG.info("[smoke] real door {}: Knocker at {} {} facing {}", tag, String.format("%.2f", k.getX()), String.format("%.2f", k.getZ()), k.getDirection());
+                    double face = k.getZ() + (facesSouth ? 0.85D : -0.85D);
+                    if (facesSouth ? face > panelZ + 0.02D : face < panelZ - 0.02D)
+                        LOG.error("[smoke] SMOKE_FAIL the Knocker's face is through the door ({}): face at {}, panel at {}", tag, face, panelZ);
+                }
                 view(p, -3.0, Y + 1.9, camZ, 0.5, Y + 1.6, lookZ);
             });
         });
