@@ -137,9 +137,9 @@ def main(src, out):
 
     video = os.path.join(out, "palimpsest_trailer.mp4")
     grade = ("crop=iw:iw/2.35:0:(ih-iw/2.35)/2,pad=iw:iw*9/16:0:(oh-ih)/2:black,"
-             "eq=saturation=0.82:contrast=1.06:gamma=0.97,vignette=PI/5,noise=alls=5:allf=t,format=yuv420p")
+             "eq=saturation=0.82:contrast=1.06:gamma=0.97,vignette=PI/5,noise=alls=3:allf=t,format=yuv420p")
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", os.path.join(src, "frames.mp4"), "-i", wav, "-vf", grade,
-                    "-r", "30", "-c:v", "libx264", "-preset", "slow", "-crf", "21", "-c:a", "aac", "-b:a", "192k",
+                    "-r", "30", "-c:v", "libx264", "-preset", "slow", "-crf", "25", "-c:a", "aac", "-b:a", "192k",
                     "-movflags", "+faststart", "-shortest", video], check=True)
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", video, "-vf", "fps=1,scale=320:-2,tile=6x16:padding=2",
                     "-frames:v", "1", "-q:v", "4", os.path.join(out, "contact_sheet.jpg")], check=True)
