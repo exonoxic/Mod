@@ -755,12 +755,12 @@ public final class SmokeTest {
         step(10, SmokeTest::clearMannequins);
     }
 
-    /** Adds a creature to this client's world only, facing {@code yaw}, and lets {@code pose} set it up. */
-    private static <T extends Entity> void mannequin(EntityType<T> type, double x, double y, double z, float yaw, Consumer<T> pose) {
+    /** Adds a creature to this client's world only, facing {@code yaw}, and lets {@code pose} set it up. Returns it (null if there is no world). */
+    static <T extends Entity> T mannequin(EntityType<T> type, double x, double y, double z, float yaw, Consumer<T> pose) {
         ClientLevel level = Minecraft.getInstance().level;
-        if (level == null) return;
+        if (level == null) return null;
         T e = type.create(level);
-        if (e == null) return;
+        if (e == null) return null;
         e.setId(nextMannequinId++);
         e.moveTo(x, y, z, yaw, 0F);
         turn(e, yaw);
@@ -768,9 +768,14 @@ public final class SmokeTest {
         pose.accept(e);
         level.putNonPlayerEntity(e.getId(), e);
         MANNEQUINS.add(e);
+        return e;
     }
 
-    private static void turn(Entity e, float yaw) {
+    static void mannequinsDo(Consumer<Entity> action) {
+        MANNEQUINS.forEach(action);
+    }
+
+    static void turn(Entity e, float yaw) {
         e.setYRot(yaw);
         e.yRotO = yaw;
         if (e instanceof LivingEntity living) {
@@ -779,7 +784,7 @@ public final class SmokeTest {
         }
     }
 
-    private static void clearMannequins() {
+    static void clearMannequins() {
         ClientLevel level = Minecraft.getInstance().level;
         if (level != null) MANNEQUINS.forEach(e -> level.removeEntity(e.getId(), Entity.RemovalReason.DISCARDED));
         MANNEQUINS.clear();
@@ -787,7 +792,7 @@ public final class SmokeTest {
 
     /** Sets one of a creature's synced values by the name of its (private) accessor field. */
     @SuppressWarnings("unchecked")
-    private static <V> void data(Entity e, String field, V value) {
+    static <V> void data(Entity e, String field, V value) {
         try {
             Field f = e.getClass().getDeclaredField(field);
             f.setAccessible(true);
@@ -874,11 +879,11 @@ public final class SmokeTest {
         });
     }
 
-    private interface ServerAction {
+    interface ServerAction {
         void run(MinecraftServer server, ServerPlayer player);
     }
 
-    private static void server(ServerAction action) {
+    static void server(ServerAction action) {
         Minecraft mc = Minecraft.getInstance();
         MinecraftServer srv = mc.getSingleplayerServer();
         if (srv == null || mc.player == null) return;
@@ -893,18 +898,18 @@ public final class SmokeTest {
         });
     }
 
-    private static void command(MinecraftServer srv, ServerPlayer p, String command) {
+    static void command(MinecraftServer srv, ServerPlayer p, String command) {
         srv.getCommands().performPrefixedCommand(p.createCommandSourceStack().withPermission(4).withSuppressedOutput(), command);
     }
 
     /** Teleports and keeps the player flying (vanilla cancels creative flight on touching ground). */
-    private static void moveTo(ServerPlayer p, ServerLevel level, double x, double y, double z, float yaw, float pitch) {
+    static void moveTo(ServerPlayer p, ServerLevel level, double x, double y, double z, float yaw, float pitch) {
         p.teleportTo(level, x, y, z, yaw, pitch);
         p.getAbilities().flying = true;
         p.onUpdateAbilities();
     }
 
-    private static BlockPos findBiome(ServerLevel level, TagKey<Biome> tag, BlockPos from) {
+    static BlockPos findBiome(ServerLevel level, TagKey<Biome> tag, BlockPos from) {
         Pair<BlockPos, Holder<Biome>> found = level.findClosestBiome3d(h -> h.is(tag), from, 4000, 32, 64);
         return found != null ? found.getFirst() : from;
     }
@@ -950,7 +955,7 @@ public final class SmokeTest {
         }
     }
 
-    private static void killMobs(ServerLevel level) {
+    static void killMobs(ServerLevel level) {
         List<Entity> doomed = new ArrayList<>();
         for (Entity e : level.getAllEntities()) {
             if (e instanceof Mob || e instanceof ItemFrame) doomed.add(e);
@@ -958,12 +963,12 @@ public final class SmokeTest {
         doomed.forEach(Entity::discard);
     }
 
-    private static void clear(ServerLevel level, int x0, int y0, int z0, int x1, int y1, int z1, BlockState floor) {
+    static void clear(ServerLevel level, int x0, int y0, int z0, int x1, int y1, int z1, BlockState floor) {
         fill(level, x0, y0 + 1, z0, x1, y1, z1, Blocks.AIR.defaultBlockState());
         fill(level, x0, y0, z0, x1, y0, z1, floor);
     }
 
-    private static void fill(ServerLevel level, int x0, int y0, int z0, int x1, int y1, int z1, BlockState state) {
+    static void fill(ServerLevel level, int x0, int y0, int z0, int x1, int y1, int z1, BlockState state) {
         for (BlockPos pos : BlockPos.betweenClosed(x0, y0, z0, x1, y1, z1)) {
             level.setBlock(pos, state, Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
         }
