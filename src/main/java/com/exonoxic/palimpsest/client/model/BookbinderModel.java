@@ -171,7 +171,7 @@ public class BookbinderModel<T extends BookbinderEntity> extends HierarchicalMod
         head.yRot += netHeadYaw * Mth.DEG_TO_RAD;
         head.xRot += headPitch * Mth.DEG_TO_RAD;
         // Now and then his head jerks to one side, against the stitches.
-        head.zRot += Mth.sin(ageInTicks * 0.05F) > 0.9F ? 0.25F : 0.0F;
+        head.zRot += Anim.pulse(Mth.sin(ageInTicks * 0.05F), 0.9F) * 0.25F;
         float step = limbSwing * 0.8F;
         leftLeg0.zRot += Mth.sin(step) * 0.22F * limbSwingAmount;
         leftLeg0.yRot += Mth.cos(step) * 0.18F * limbSwingAmount;
@@ -201,18 +201,18 @@ public class BookbinderModel<T extends BookbinderEntity> extends HierarchicalMod
         leftPaperForearm.xRot += Mth.sin(ageInTicks * 0.09F + 0.8F) * 0.25F;
         rightPaperForearm.xRot += Mth.sin(ageInTicks * 0.09F + Mth.PI + 0.8F) * 0.25F;
         heldThread.zRot += Mth.sin(ageInTicks * 0.12F) * 0.2F;
-        if (entity.isRebinding()) {
-            torso.xRot += 0.5F;
-            leftArm.xRot -= 1.6F + Mth.sin(ageInTicks * 0.4F) * 0.2F;
-            rightArm.xRot -= 1.6F + Mth.cos(ageInTicks * 0.4F) * 0.2F;
-            leftPaperArm.xRot -= 0.8F;
-            rightPaperArm.xRot -= 0.8F;
-        } else if (entity.isStunned()) {
-            torso.xRot += 0.9F;
-            head.xRot += 0.6F;
-            heap.y += 1.0F;
-        } else if (attackTime > 0) {
-            float s = Mth.sin(Mth.sqrt(attackTime) * Mth.PI);
+        float rebinding = Anim.ease(entity, 0, entity.isRebinding(), ageInTicks, 0.15F);
+        float stunned = Anim.ease(entity, 1, entity.isStunned() && !entity.isRebinding(), ageInTicks, 0.2F);
+        torso.xRot += 0.5F * rebinding;
+        leftArm.xRot -= (1.6F + Mth.sin(ageInTicks * 0.4F) * 0.2F) * rebinding;
+        rightArm.xRot -= (1.6F + Mth.cos(ageInTicks * 0.4F) * 0.2F) * rebinding;
+        leftPaperArm.xRot -= 0.8F * rebinding;
+        rightPaperArm.xRot -= 0.8F * rebinding;
+        torso.xRot += 0.9F * stunned;
+        head.xRot += 0.6F * stunned;
+        heap.y += 1.0F * stunned;
+        if (attackTime > 0) {
+            float s = Mth.sin(Mth.sqrt(attackTime) * Mth.PI) * (1.0F - Math.max(rebinding, stunned));
             rightArm.xRot -= 1.8F * s;
             torso.xRot -= 0.3F * s;
             leftPaperArm.xRot -= 1.0F * s;

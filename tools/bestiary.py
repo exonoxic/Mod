@@ -205,7 +205,7 @@ def inkhound():
     ]
     anim = """        float a = Math.min(1.0F, limbSwingAmount);
         float w = limbSwing * 0.62F;
-        boolean hunting = entity.isAggressive();
+        float hunting = Anim.ease(entity, 0, entity.isAggressive(), ageInTicks, 0.2F);
         // Always listening: each ear turns on its own, the head sweeps and tilts.
         neck.yRot += netHeadYaw * Mth.DEG_TO_RAD * 0.4F;
         head.yRot += netHeadYaw * Mth.DEG_TO_RAD * 0.6F + Mth.sin(ageInTicks * 0.05F) * 0.18F * (1.0F - a);
@@ -213,8 +213,8 @@ def inkhound():
         head.zRot += Mth.sin(ageInTicks * 0.033F) * 0.2F * (1.0F - a);
         leftEar.yRot += Mth.sin(ageInTicks * 0.11F) * 0.35F;
         rightEar.yRot += Mth.sin(ageInTicks * 0.09F + 2.1F) * 0.35F;
-        leftEar.xRot += Mth.sin(ageInTicks * 0.23F) > 0.9F ? -0.3F : 0.0F;
-        rightEar.xRot += Mth.sin(ageInTicks * 0.19F + 1.0F) > 0.9F ? -0.3F : 0.0F;
+        leftEar.xRot -= Anim.pulse(Mth.sin(ageInTicks * 0.23F), 0.9F) * 0.3F;
+        rightEar.xRot -= Anim.pulse(Mth.sin(ageInTicks * 0.19F + 1.0F), 0.9F) * 0.3F;
         // The jaw never quite closes; it trembles.
         jaw.xRot += 0.08F + Mth.sin(ageInTicks * 0.6F) * 0.025F;
         // A long, low lope: the spine flexes, the chest dips.
@@ -235,15 +235,13 @@ def inkhound():
         tail.xRot -= a * 0.35F;
         jawDrip.zRot += Mth.sin(ageInTicks * 0.1F) * 0.2F;
         chestDrip.zRot += Mth.sin(ageInTicks * 0.08F + 1.0F) * 0.15F;
-        if (hunting) {
-            // It has heard you: head low, ears flat, the mouth wide on its little pale teeth.
-            jaw.xRot += 0.75F + Mth.sin(ageInTicks * 1.3F) * 0.05F;
-            head.xRot -= 0.2F;
-            neck.xRot += 0.25F;
-            leftEar.xRot += 0.55F;
-            rightEar.xRot += 0.55F;
-            tail.xRot += 0.4F;
-        }
+        // It has heard you: head low, ears flat, the mouth wide on its little pale teeth.
+        jaw.xRot += (0.75F + Mth.sin(ageInTicks * 1.3F) * 0.05F) * hunting;
+        head.xRot -= 0.2F * hunting;
+        neck.xRot += 0.25F * hunting;
+        leftEar.xRot += 0.55F * hunting;
+        rightEar.xRot += 0.55F * hunting;
+        tail.xRot += 0.4F * hunting;
         if (attackTime > 0.0F) {
             float s = Mth.sin(Mth.sqrt(attackTime) * Mth.PI);
             jaw.xRot += 0.6F * s;
@@ -524,7 +522,7 @@ def smudge():
     ]
     anim = HEAD_LOOK.format(head="head") + """        float a = Math.min(1.0F, limbSwingAmount);
         float w = limbSwing * 0.6662F;
-        boolean fixated = entity.isFixated();
+        float fixated = Anim.ease(entity, 0, entity.isFixated(), ageInTicks, 0.15F);
         leftLeg.xRot += Mth.cos(w) * 1.1F * a;
         rightLeg.xRot += Mth.cos(w + Mth.PI) * 1.1F * a;
         leftShin.xRot += Math.max(0.0F, Mth.sin(w)) * 0.8F * a;
@@ -533,12 +531,14 @@ def smudge():
         rightArm.xRot += Mth.cos(w) * 0.5F * a;
         // It droops, the head too heavy on one side.
         body.xRot += 0.06F;
-        head.zRot += fixated ? 0.0F : 0.28F + Mth.sin(ageInTicks * 0.03F) * 0.06F;
-        head.xRot += fixated ? 0.0F : 0.15F;
+        head.zRot += (0.28F + Mth.sin(ageInTicks * 0.03F) * 0.06F) * (1.0F - fixated);
+        head.xRot += 0.15F * (1.0F - fixated);
         leftForearm.zRot += Mth.sin(ageInTicks * 0.05F) * 0.05F;
-        // Murmuring: the mouth never stops.
-        float talk = fixated ? 1.1F : 0.55F;
-        lowerLip.y += Mth.abs(Mth.sin(ageInTicks * talk)) * 1.1F + Mth.abs(Mth.sin(ageInTicks * talk * 2.7F)) * 0.4F;
+        // Murmuring: the mouth never stops, and goes faster while it follows you (two rhythms
+        // blended, so it never jumps from one to the other).
+        float murmur = Mth.abs(Mth.sin(ageInTicks * 0.55F)) * 1.1F + Mth.abs(Mth.sin(ageInTicks * 0.55F * 2.7F)) * 0.4F;
+        float gabble = Mth.abs(Mth.sin(ageInTicks * 1.1F)) * 1.1F + Mth.abs(Mth.sin(ageInTicks * 1.1F * 2.7F)) * 0.4F;
+        lowerLip.y += Mth.lerp(fixated, murmur, gabble);
         // Every so often the drawing is redrawn a hair out of place.
         float redraw = Mth.sin(ageInTicks * 0.7F) > 0.93F ? 0.35F : 0.0F;
         body.x += redraw;
@@ -546,12 +546,10 @@ def smudge():
         headGuide.x += redraw * 2.0F;
         centreLine.x -= redraw;
         headGuide.zRot += Mth.sin(ageInTicks * 0.02F) * 0.05F;
-        if (fixated) {
-            // Following you: arms lifting a little towards you, as if to ask something.
-            leftArm.xRot -= 0.5F + Mth.sin(ageInTicks * 0.05F) * 0.1F;
-            rightArm.xRot -= 0.35F;
-            leftForearm.xRot -= 0.3F;
-        }
+        // Following you: arms lifting a little towards you, as if to ask something.
+        leftArm.xRot -= (0.5F + Mth.sin(ageInTicks * 0.05F) * 0.1F) * fixated;
+        rightArm.xRot -= 0.35F * fixated;
+        leftForearm.xRot -= 0.3F * fixated;
 """
     return Model("smudge", "SmudgeModel", E + "SmudgeEntity", (64, 64), parts, anim, translucent=True, alpha=0.7)
 
@@ -658,7 +656,7 @@ def redacted():
     ]
     anim = HEAD_LOOK.format(head="head") + """        float a = Math.min(1.0F, limbSwingAmount);
         float w = limbSwing * 0.6662F;
-        boolean hunting = entity.isAggressive();
+        float hunting = Anim.ease(entity, 0, entity.isAggressive(), ageInTicks, 0.2F);
         leftLeg.xRot += Mth.cos(w) * 1.0F * a;
         rightLeg.xRot += Mth.cos(w + Mth.PI) * 1.0F * a;
         leftShin.xRot += Math.max(0.0F, Mth.sin(w)) * 0.7F * a;
@@ -666,7 +664,8 @@ def redacted():
         leftArm.xRot += Mth.cos(w + Mth.PI) * 0.4F * a;
         rightArm.xRot += Mth.cos(w) * 0.4F * a;
         // It moves in jerks, like a page being turned.
-        float jerk = (float) Math.floor(ageInTicks * 0.25F);
+        float jerkT = ageInTicks * 0.25F;
+        float jerk = Mth.floor(jerkT) + Anim.smooth((jerkT - Mth.floor(jerkT) - 0.75F) * 4.0F);
         head.zRot += Mth.sin(jerk * 1.7F) * 0.12F;
         // The bars will not keep still: they twitch, and the one over the eyes slides off them
         // for a moment every so often (for longer when it is coming for you).
@@ -675,14 +674,12 @@ def redacted():
         barMouth.x += Mth.sin(jerk * 2.3F) * 0.3F;
         kneeBar.x += Mth.sin(ageInTicks * 0.6F) * 0.2F;
         float reveal = Mth.sin(ageInTicks * 0.045F);
-        float slide = reveal > (hunting ? 0.3F : 0.85F) ? (reveal - (hunting ? 0.3F : 0.85F)) * (hunting ? 9.0F : 30.0F) : 0.0F;
+        float slide = Math.max(0.0F, reveal - Mth.lerp(hunting, 0.85F, 0.3F)) * Mth.lerp(hunting, 30.0F, 9.0F);
         barEyes.x += Math.min(4.5F, slide) + Mth.sin(ageInTicks * 1.1F) * 0.15F;
         looseSheet.zRot += Mth.sin(ageInTicks * 0.08F) * 0.04F + Mth.sin(w) * 0.05F * a;
-        if (hunting) {
-            rightArm.xRot -= 0.9F;
-            rightForearm.xRot -= 0.4F;
-            head.xRot -= 0.15F;
-        }
+        rightArm.xRot -= 0.9F * hunting;
+        rightForearm.xRot -= 0.4F * hunting;
+        head.xRot -= 0.15F * hunting;
         if (attackTime > 0.0F) {
             float s = Mth.sin(Mth.sqrt(attackTime) * Mth.PI);
             rightArm.xRot -= 1.4F * s;
@@ -897,29 +894,30 @@ def quillcrow():
             P("right_talons", (0, 2.5, 0), boxes=[B(-1, 0, -1.5, 2, 0.5, 2)], paint=leg)]),
     ]
     anim = """        // A crow's head: it holds still, then snaps to a new angle, always coming back to you.
-        float snap = (float) Math.floor(ageInTicks / 9.0F);
+        float snapT = ageInTicks / 9.0F;
+        float snap = Mth.floor(snapT) + Anim.smooth((snapT - Mth.floor(snapT) - 0.85F) / 0.15F);
         head.yRot += netHeadYaw * Mth.DEG_TO_RAD + Mth.sin(snap * 2.7F) * 0.35F;
         head.xRot += headPitch * Mth.DEG_TO_RAD;
-        head.zRot += Mth.sin(snap * 1.3F) > 0.6F ? 0.7F : 0.0F;
+        head.zRot += Anim.pulse(Mth.sin(snap * 1.3F), 0.6F) * 0.7F;
         beakDrip.zRot += Mth.sin(ageInTicks * 0.2F) * 0.2F;
-        if (entity.isFlying()) {
-            float flap = Mth.cos(ageInTicks * 1.6F) * 1.1F;
-            leftWing.zRot -= 0.3F + flap;
-            rightWing.zRot += 0.3F + flap;
-            leftQuill2.xRot -= flap * 0.2F;
-            rightQuill2.xRot -= flap * 0.2F;
-            leftLeg.xRot += 1.2F;
-            rightLeg.xRot += 1.2F;
-            tail.xRot += 0.2F;
-        } else {
-            leftLeg.xRot += Mth.cos(limbSwing * 0.6662F) * 1.2F * limbSwingAmount;
-            rightLeg.xRot += Mth.cos(limbSwing * 0.6662F + Mth.PI) * 1.2F * limbSwingAmount;
-            // Now and then it rouses its feathers.
-            float rouse = Mth.sin(ageInTicks * 0.05F) > 0.97F ? Mth.sin(ageInTicks * 2.0F) * 0.15F : 0.0F;
-            leftWing.zRot -= rouse;
-            rightWing.zRot += rouse;
-            ruff.y -= Math.abs(rouse) * 2.0F;
-        }
+        // Taking off and landing blend over a few ticks: wings open out, legs tuck up.
+        float fly = Anim.ease(entity, 0, entity.isFlying(), ageInTicks, 0.3F);
+        float flap = Mth.cos(ageInTicks * 1.6F) * 1.1F * fly;
+        leftWing.zRot -= 0.3F * fly + flap;
+        rightWing.zRot += 0.3F * fly + flap;
+        leftQuill2.xRot -= flap * 0.2F;
+        rightQuill2.xRot -= flap * 0.2F;
+        leftLeg.xRot += 1.2F * fly;
+        rightLeg.xRot += 1.2F * fly;
+        tail.xRot += 0.2F * fly;
+        float ground = 1.0F - fly;
+        leftLeg.xRot += Mth.cos(limbSwing * 0.6662F) * 1.2F * limbSwingAmount * ground;
+        rightLeg.xRot += Mth.cos(limbSwing * 0.6662F + Mth.PI) * 1.2F * limbSwingAmount * ground;
+        // Now and then it rouses its feathers.
+        float rouse = Anim.pulse(Mth.sin(ageInTicks * 0.05F), 0.97F) * Mth.sin(ageInTicks * 2.0F) * 0.15F * ground;
+        leftWing.zRot -= rouse;
+        rightWing.zRot += rouse;
+        ruff.y -= Math.abs(rouse) * 2.0F;
 """
     return Model("quillcrow", "QuillcrowModel", E + "QuillcrowEntity", (64, 32), parts, anim)
 
@@ -1178,9 +1176,9 @@ def margin_crawler():
         leftStalk.xRot += Mth.sin(ageInTicks * 0.07F) * 0.1F;
         pennant.yRot += Mth.sin(ageInTicks * 0.3F) * 0.3F;
         // The visor lifts when it means to fight, and the face grins out.
-        boolean fighting = entity.isAggressive();
-        visor.xRot -= fighting ? 1.3F : Math.max(0.0F, Mth.sin(ageInTicks * 0.03F) - 0.8F) * 5.0F;
-        lance.xRot += Mth.cos(w) * 0.12F * a + (fighting ? 0.1F : 0.0F);
+        float fighting = Anim.ease(entity, 0, entity.isAggressive(), ageInTicks, 0.2F);
+        visor.xRot -= Mth.lerp(fighting, Math.max(0.0F, Mth.sin(ageInTicks * 0.03F) - 0.8F) * 5.0F, 1.3F);
+        lance.xRot += Mth.cos(w) * 0.12F * a + 0.1F * fighting;
         if (attackTime > 0.0F) lance.z -= Mth.sin(Mth.sqrt(attackTime) * Mth.PI) * 3.0F;
 """
     return Model("margin_crawler", "MarginCrawlerModel", E + "MarginCrawlerEntity", (64, 64), parts, anim)
@@ -1392,7 +1390,7 @@ def bookbinder():
     anim = """        head.yRot += netHeadYaw * Mth.DEG_TO_RAD;
         head.xRot += headPitch * Mth.DEG_TO_RAD;
         // Now and then his head jerks to one side, against the stitches.
-        head.zRot += Mth.sin(ageInTicks * 0.05F) > 0.9F ? 0.25F : 0.0F;
+        head.zRot += Anim.pulse(Mth.sin(ageInTicks * 0.05F), 0.9F) * 0.25F;
         float step = limbSwing * 0.8F;
 """
     for side in ("left", "right"):
@@ -1412,18 +1410,18 @@ def bookbinder():
         leftPaperForearm.xRot += Mth.sin(ageInTicks * 0.09F + 0.8F) * 0.25F;
         rightPaperForearm.xRot += Mth.sin(ageInTicks * 0.09F + Mth.PI + 0.8F) * 0.25F;
         heldThread.zRot += Mth.sin(ageInTicks * 0.12F) * 0.2F;
-        if (entity.isRebinding()) {
-            torso.xRot += 0.5F;
-            leftArm.xRot -= 1.6F + Mth.sin(ageInTicks * 0.4F) * 0.2F;
-            rightArm.xRot -= 1.6F + Mth.cos(ageInTicks * 0.4F) * 0.2F;
-            leftPaperArm.xRot -= 0.8F;
-            rightPaperArm.xRot -= 0.8F;
-        } else if (entity.isStunned()) {
-            torso.xRot += 0.9F;
-            head.xRot += 0.6F;
-            heap.y += 1.0F;
-        } else if (attackTime > 0) {
-            float s = Mth.sin(Mth.sqrt(attackTime) * Mth.PI);
+        float rebinding = Anim.ease(entity, 0, entity.isRebinding(), ageInTicks, 0.15F);
+        float stunned = Anim.ease(entity, 1, entity.isStunned() && !entity.isRebinding(), ageInTicks, 0.2F);
+        torso.xRot += 0.5F * rebinding;
+        leftArm.xRot -= (1.6F + Mth.sin(ageInTicks * 0.4F) * 0.2F) * rebinding;
+        rightArm.xRot -= (1.6F + Mth.cos(ageInTicks * 0.4F) * 0.2F) * rebinding;
+        leftPaperArm.xRot -= 0.8F * rebinding;
+        rightPaperArm.xRot -= 0.8F * rebinding;
+        torso.xRot += 0.9F * stunned;
+        head.xRot += 0.6F * stunned;
+        heap.y += 1.0F * stunned;
+        if (attackTime > 0) {
+            float s = Mth.sin(Mth.sqrt(attackTime) * Mth.PI) * (1.0F - Math.max(rebinding, stunned));
             rightArm.xRot -= 1.8F * s;
             torso.xRot -= 0.3F * s;
             leftPaperArm.xRot -= 1.0F * s;
@@ -1554,28 +1552,25 @@ def rasure():
         // The cut down its face: a crack of red that widens when it strikes.
         float open = 0.25F + Math.max(0.0F, Mth.sin(ageInTicks * 0.04F) - 0.7F) * 3.0F;
         int phase = entity.getPhase();
-        if (entity.isShielded()) {
-            bladeArm.xRot -= 2.6F;
-            leftArm.xRot -= 2.6F;
-            head.xRot -= 0.5F;
-        } else if (attackTime > 0) {
-            float s = Mth.sin(Mth.sqrt(attackTime) * Mth.PI);
-            bladeArm.xRot -= 2.2F * s;
-            bladeArm.yRot += 0.8F * s;
-            body.yRot -= 0.4F * s;
-            open += 1.5F * s;
-        } else {
-            bladeArm.xRot += -0.25F + Mth.sin(ageInTicks * 0.06F) * 0.08F;
-            leftArm.xRot += -0.15F + Mth.cos(ageInTicks * 0.06F) * 0.08F;
-            finger0.xRot += Mth.sin(ageInTicks * 0.2F) * 0.2F;
-            finger1.xRot += Mth.sin(ageInTicks * 0.2F + 0.7F) * 0.2F;
-            finger2.xRot += Mth.sin(ageInTicks * 0.2F + 1.4F) * 0.2F;
-            finger3.xRot += Mth.sin(ageInTicks * 0.2F + 2.1F) * 0.2F;
-        }
-        if (phase == com.exonoxic.palimpsest.entity.boss.RasureEntity.BLANK_PAGE) {
-            head.zRot += 0.4F;
-            open += 1.0F;
-        }
+        float shielded = Anim.ease(entity, 0, entity.isShielded(), ageInTicks, 0.2F);
+        float blank = Anim.ease(entity, 1, phase == com.exonoxic.palimpsest.entity.boss.RasureEntity.BLANK_PAGE, ageInTicks, 0.08F);
+        bladeArm.xRot -= 2.6F * shielded;
+        leftArm.xRot -= 2.6F * shielded;
+        head.xRot -= 0.5F * shielded;
+        float s = attackTime > 0 ? Mth.sin(Mth.sqrt(attackTime) * Mth.PI) * (1.0F - shielded) : 0.0F;
+        bladeArm.xRot -= 2.2F * s;
+        bladeArm.yRot += 0.8F * s;
+        body.yRot -= 0.4F * s;
+        open += 1.5F * s;
+        float rest = (1.0F - shielded) * (1.0F - s);
+        bladeArm.xRot += (-0.25F + Mth.sin(ageInTicks * 0.06F) * 0.08F) * rest;
+        leftArm.xRot += (-0.15F + Mth.cos(ageInTicks * 0.06F) * 0.08F) * rest;
+        finger0.xRot += Mth.sin(ageInTicks * 0.2F) * 0.2F * rest;
+        finger1.xRot += Mth.sin(ageInTicks * 0.2F + 0.7F) * 0.2F * rest;
+        finger2.xRot += Mth.sin(ageInTicks * 0.2F + 1.4F) * 0.2F * rest;
+        finger3.xRot += Mth.sin(ageInTicks * 0.2F + 2.1F) * 0.2F * rest;
+        head.zRot += 0.4F * blank;
+        open += 1.0F * blank;
         faceLeft.x += open;
         faceRight.x -= open;
 """

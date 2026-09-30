@@ -106,7 +106,7 @@ public class RedactedModel<T extends RedactedEntity> extends HierarchicalModel<T
         head.xRot += headPitch * Mth.DEG_TO_RAD;
         float a = Math.min(1.0F, limbSwingAmount);
         float w = limbSwing * 0.6662F;
-        boolean hunting = entity.isAggressive();
+        float hunting = Anim.ease(entity, 0, entity.isAggressive(), ageInTicks, 0.2F);
         leftLeg.xRot += Mth.cos(w) * 1.0F * a;
         rightLeg.xRot += Mth.cos(w + Mth.PI) * 1.0F * a;
         leftShin.xRot += Math.max(0.0F, Mth.sin(w)) * 0.7F * a;
@@ -114,7 +114,8 @@ public class RedactedModel<T extends RedactedEntity> extends HierarchicalModel<T
         leftArm.xRot += Mth.cos(w + Mth.PI) * 0.4F * a;
         rightArm.xRot += Mth.cos(w) * 0.4F * a;
         // It moves in jerks, like a page being turned.
-        float jerk = (float) Math.floor(ageInTicks * 0.25F);
+        float jerkT = ageInTicks * 0.25F;
+        float jerk = Mth.floor(jerkT) + Anim.smooth((jerkT - Mth.floor(jerkT) - 0.75F) * 4.0F);
         head.zRot += Mth.sin(jerk * 1.7F) * 0.12F;
         // The bars will not keep still: they twitch, and the one over the eyes slides off them
         // for a moment every so often (for longer when it is coming for you).
@@ -123,14 +124,12 @@ public class RedactedModel<T extends RedactedEntity> extends HierarchicalModel<T
         barMouth.x += Mth.sin(jerk * 2.3F) * 0.3F;
         kneeBar.x += Mth.sin(ageInTicks * 0.6F) * 0.2F;
         float reveal = Mth.sin(ageInTicks * 0.045F);
-        float slide = reveal > (hunting ? 0.3F : 0.85F) ? (reveal - (hunting ? 0.3F : 0.85F)) * (hunting ? 9.0F : 30.0F) : 0.0F;
+        float slide = Math.max(0.0F, reveal - Mth.lerp(hunting, 0.85F, 0.3F)) * Mth.lerp(hunting, 30.0F, 9.0F);
         barEyes.x += Math.min(4.5F, slide) + Mth.sin(ageInTicks * 1.1F) * 0.15F;
         looseSheet.zRot += Mth.sin(ageInTicks * 0.08F) * 0.04F + Mth.sin(w) * 0.05F * a;
-        if (hunting) {
-            rightArm.xRot -= 0.9F;
-            rightForearm.xRot -= 0.4F;
-            head.xRot -= 0.15F;
-        }
+        rightArm.xRot -= 0.9F * hunting;
+        rightForearm.xRot -= 0.4F * hunting;
+        head.xRot -= 0.15F * hunting;
         if (attackTime > 0.0F) {
             float s = Mth.sin(Mth.sqrt(attackTime) * Mth.PI);
             rightArm.xRot -= 1.4F * s;

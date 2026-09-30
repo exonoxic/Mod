@@ -103,7 +103,7 @@ public class SmudgeModel<T extends SmudgeEntity> extends HierarchicalModel<T> {
         head.xRot += headPitch * Mth.DEG_TO_RAD;
         float a = Math.min(1.0F, limbSwingAmount);
         float w = limbSwing * 0.6662F;
-        boolean fixated = entity.isFixated();
+        float fixated = Anim.ease(entity, 0, entity.isFixated(), ageInTicks, 0.15F);
         leftLeg.xRot += Mth.cos(w) * 1.1F * a;
         rightLeg.xRot += Mth.cos(w + Mth.PI) * 1.1F * a;
         leftShin.xRot += Math.max(0.0F, Mth.sin(w)) * 0.8F * a;
@@ -112,12 +112,14 @@ public class SmudgeModel<T extends SmudgeEntity> extends HierarchicalModel<T> {
         rightArm.xRot += Mth.cos(w) * 0.5F * a;
         // It droops, the head too heavy on one side.
         body.xRot += 0.06F;
-        head.zRot += fixated ? 0.0F : 0.28F + Mth.sin(ageInTicks * 0.03F) * 0.06F;
-        head.xRot += fixated ? 0.0F : 0.15F;
+        head.zRot += (0.28F + Mth.sin(ageInTicks * 0.03F) * 0.06F) * (1.0F - fixated);
+        head.xRot += 0.15F * (1.0F - fixated);
         leftForearm.zRot += Mth.sin(ageInTicks * 0.05F) * 0.05F;
-        // Murmuring: the mouth never stops.
-        float talk = fixated ? 1.1F : 0.55F;
-        lowerLip.y += Mth.abs(Mth.sin(ageInTicks * talk)) * 1.1F + Mth.abs(Mth.sin(ageInTicks * talk * 2.7F)) * 0.4F;
+        // Murmuring: the mouth never stops, and goes faster while it follows you (two rhythms
+        // blended, so it never jumps from one to the other).
+        float murmur = Mth.abs(Mth.sin(ageInTicks * 0.55F)) * 1.1F + Mth.abs(Mth.sin(ageInTicks * 0.55F * 2.7F)) * 0.4F;
+        float gabble = Mth.abs(Mth.sin(ageInTicks * 1.1F)) * 1.1F + Mth.abs(Mth.sin(ageInTicks * 1.1F * 2.7F)) * 0.4F;
+        lowerLip.y += Mth.lerp(fixated, murmur, gabble);
         // Every so often the drawing is redrawn a hair out of place.
         float redraw = Mth.sin(ageInTicks * 0.7F) > 0.93F ? 0.35F : 0.0F;
         body.x += redraw;
@@ -125,12 +127,10 @@ public class SmudgeModel<T extends SmudgeEntity> extends HierarchicalModel<T> {
         headGuide.x += redraw * 2.0F;
         centreLine.x -= redraw;
         headGuide.zRot += Mth.sin(ageInTicks * 0.02F) * 0.05F;
-        if (fixated) {
-            // Following you: arms lifting a little towards you, as if to ask something.
-            leftArm.xRot -= 0.5F + Mth.sin(ageInTicks * 0.05F) * 0.1F;
-            rightArm.xRot -= 0.35F;
-            leftForearm.xRot -= 0.3F;
-        }
+        // Following you: arms lifting a little towards you, as if to ask something.
+        leftArm.xRot -= (0.5F + Mth.sin(ageInTicks * 0.05F) * 0.1F) * fixated;
+        rightArm.xRot -= 0.35F * fixated;
+        leftForearm.xRot -= 0.3F * fixated;
     }
 
     @Override

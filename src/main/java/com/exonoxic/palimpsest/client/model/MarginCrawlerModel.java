@@ -122,9 +122,9 @@ public class MarginCrawlerModel<T extends MarginCrawlerEntity> extends Hierarchi
         leftStalk.xRot += Mth.sin(ageInTicks * 0.07F) * 0.1F;
         pennant.yRot += Mth.sin(ageInTicks * 0.3F) * 0.3F;
         // The visor lifts when it means to fight, and the face grins out.
-        boolean fighting = entity.isAggressive();
-        visor.xRot -= fighting ? 1.3F : Math.max(0.0F, Mth.sin(ageInTicks * 0.03F) - 0.8F) * 5.0F;
-        lance.xRot += Mth.cos(w) * 0.12F * a + (fighting ? 0.1F : 0.0F);
+        float fighting = Anim.ease(entity, 0, entity.isAggressive(), ageInTicks, 0.2F);
+        visor.xRot -= Mth.lerp(fighting, Math.max(0.0F, Mth.sin(ageInTicks * 0.03F) - 0.8F) * 5.0F, 1.3F);
+        lance.xRot += Mth.cos(w) * 0.12F * a + 0.1F * fighting;
         if (attackTime > 0.0F) lance.z -= Mth.sin(Mth.sqrt(attackTime) * Mth.PI) * 3.0F;
     }
 }

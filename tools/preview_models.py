@@ -196,8 +196,13 @@ def ruler(im, scale, model_height_px):
 # Named poses approximate states from the Java animations: part -> (dxRot, dyRot, dzRot[, dx, dy, dz]).
 POSES = {
     "knocker": {
-        "knocking": {"right_upper_arm": (-1.45, 0, 0.2), "right_forearm": (-1.1, 0, 0), "right_hand": (0.5, 0, 0),
-                     "head": (0, 0, 0.38), "neck": (0.18, 0, 0), "chest": (0.1, 0, 0)},
+        # A knock landing (HIT in the Knocker's animation), and nails at the top of a scratch.
+        "knocking": {"right_upper_arm": (0.084, -0.182, 0.301), "right_forearm": (-1.578, 0, 0), "right_hand": (-1.242, 0, 0),
+                     "right_finger_0": (1.4, 0, 0), "right_finger_1": (1.4, 0, 0), "right_finger_2": (1.4, 0, 0),
+                     "right_thumb": (0.6, 0, 0), "head": (0, 0, 0.38), "neck": (0.18, 0, 0)},
+        "scratch": {"right_upper_arm": (-0.736, 1.014, 0.637), "right_forearm": (-0.83, 0, 0), "right_hand": (-2.27, 0, 0),
+                    "right_finger_0": (0.35, 0, 0), "right_finger_1": (0.35, 0, 0), "right_finger_2": (0.35, 0, 0),
+                    "head": (0, 0, 0.38), "neck": (0.18, 0, 0)},
         "lunge": {"jaw": (0.95, 0, 0), "ring": (0.6, 0, 0), "chest": (0.18, 0, 0), "neck": (-0.25, 0, 0), "head": (-0.25, 0, 0),
                   "left_upper_arm": (-1.35, 0, -0.18), "right_upper_arm": (-1.35, 0, 0.18), "left_forearm": (0.15, 0, 0),
                   "right_forearm": (0.15, 0, 0), "left_finger_0": (0, 0, 0.35), "left_finger_2": (0, 0, -0.35),

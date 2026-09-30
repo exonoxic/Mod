@@ -159,28 +159,25 @@ public class RasureModel<T extends RasureEntity> extends HierarchicalModel<T> {
         // The cut down its face: a crack of red that widens when it strikes.
         float open = 0.25F + Math.max(0.0F, Mth.sin(ageInTicks * 0.04F) - 0.7F) * 3.0F;
         int phase = entity.getPhase();
-        if (entity.isShielded()) {
-            bladeArm.xRot -= 2.6F;
-            leftArm.xRot -= 2.6F;
-            head.xRot -= 0.5F;
-        } else if (attackTime > 0) {
-            float s = Mth.sin(Mth.sqrt(attackTime) * Mth.PI);
-            bladeArm.xRot -= 2.2F * s;
-            bladeArm.yRot += 0.8F * s;
-            body.yRot -= 0.4F * s;
-            open += 1.5F * s;
-        } else {
-            bladeArm.xRot += -0.25F + Mth.sin(ageInTicks * 0.06F) * 0.08F;
-            leftArm.xRot += -0.15F + Mth.cos(ageInTicks * 0.06F) * 0.08F;
-            finger0.xRot += Mth.sin(ageInTicks * 0.2F) * 0.2F;
-            finger1.xRot += Mth.sin(ageInTicks * 0.2F + 0.7F) * 0.2F;
-            finger2.xRot += Mth.sin(ageInTicks * 0.2F + 1.4F) * 0.2F;
-            finger3.xRot += Mth.sin(ageInTicks * 0.2F + 2.1F) * 0.2F;
-        }
-        if (phase == com.exonoxic.palimpsest.entity.boss.RasureEntity.BLANK_PAGE) {
-            head.zRot += 0.4F;
-            open += 1.0F;
-        }
+        float shielded = Anim.ease(entity, 0, entity.isShielded(), ageInTicks, 0.2F);
+        float blank = Anim.ease(entity, 1, phase == com.exonoxic.palimpsest.entity.boss.RasureEntity.BLANK_PAGE, ageInTicks, 0.08F);
+        bladeArm.xRot -= 2.6F * shielded;
+        leftArm.xRot -= 2.6F * shielded;
+        head.xRot -= 0.5F * shielded;
+        float s = attackTime > 0 ? Mth.sin(Mth.sqrt(attackTime) * Mth.PI) * (1.0F - shielded) : 0.0F;
+        bladeArm.xRot -= 2.2F * s;
+        bladeArm.yRot += 0.8F * s;
+        body.yRot -= 0.4F * s;
+        open += 1.5F * s;
+        float rest = (1.0F - shielded) * (1.0F - s);
+        bladeArm.xRot += (-0.25F + Mth.sin(ageInTicks * 0.06F) * 0.08F) * rest;
+        leftArm.xRot += (-0.15F + Mth.cos(ageInTicks * 0.06F) * 0.08F) * rest;
+        finger0.xRot += Mth.sin(ageInTicks * 0.2F) * 0.2F * rest;
+        finger1.xRot += Mth.sin(ageInTicks * 0.2F + 0.7F) * 0.2F * rest;
+        finger2.xRot += Mth.sin(ageInTicks * 0.2F + 1.4F) * 0.2F * rest;
+        finger3.xRot += Mth.sin(ageInTicks * 0.2F + 2.1F) * 0.2F * rest;
+        head.zRot += 0.4F * blank;
+        open += 1.0F * blank;
         faceLeft.x += open;
         faceRight.x -= open;
     }

@@ -153,8 +153,64 @@ public class KnockerModel<T extends KnockerEntity> extends HierarchicalModel<T> 
         float crawl = entity.squeeze.crawl(ageInTicks - entity.tickCount);
         float stoop = entity.squeeze.stoop(ageInTicks - entity.tickCount);
         float breath = Mth.sin(ageInTicks * 0.07F);
-        // Crawling, it claws itself along rather than striding.
-        float a = Math.min(1.0F, limbSwingAmount) * (1.0F - 0.45F * crawl);
+        float pt = ageInTicks - entity.tickCount;
+        int state = entity.getState();
+        // Every state eases in and out rather than snapping.
+        float knocking = Anim.ease(entity, 0, state == com.exonoxic.palimpsest.entity.KnockerEntity.KNOCKING, ageInTicks, 0.18F);
+        float lunging = Anim.ease(entity, 1, state == com.exonoxic.palimpsest.entity.KnockerEntity.LUNGE, ageInTicks, 0.3F);
+        float searching = Anim.ease(entity, 2, state == com.exonoxic.palimpsest.entity.KnockerEntity.SEARCHING, ageInTicks, 0.1F);
+        float leaving = Anim.ease(entity, 3, state == com.exonoxic.palimpsest.entity.KnockerEntity.LEAVING, ageInTicks, 0.1F);
+        float idle = Math.max(0.0F, 1.0F - knocking - lunging - searching - leaving);
+        // Bent double or crawling, its body keeps that shape; only the jaw and hands still act.
+        float upright = 1.0F - Math.max(crawl, stoop);
+
+        // ---- gestures: each starts a few ticks before its sound (KnockerEntity.GESTURE_LEAD), so the
+        // arm is drawn back in time for the blows to land on the hits in the recording
+        final float[] COCK = {0.264F, -0.106F, 0.242F, -2.120F, -2.469F};
+        final float[] HIT = {0.084F, -0.182F, 0.301F, -1.578F, -1.242F};
+        final float[] SCRATCH_TOP = {-0.736F, 1.014F, 0.637F, -0.830F, -2.270F};
+        final float[] SCRATCH_END = {-0.032F, -0.204F, 0.766F, -0.452F, -2.464F};
+        final float[] S_COCK = {0.126F, 0.705F, -0.306F, -3.751F, -0.609F};
+        final float[] S_HIT = {0.207F, 0.689F, 0.164F, -3.154F, -0.686F};
+        final float[] S_SCRATCH_TOP = {-0.370F, 0.719F, -0.230F, -3.584F, 0.002F};
+        final float[] S_SCRATCH_END = {0.516F, 0.475F, 0.494F, -3.699F, 0.623F};
+        int kind = entity.gestureKind();
+        float gt = entity.gestureTime(pt);
+        float reach = 0.0F;   // how far the right arm is taken over by a gesture (0..1)
+        float hit = 0.0F;     // 0 cocked back, 1 knuckles on the wood (or 0 top, 1 bottom of a scratch)
+        boolean scratching = false;
+        if (kind == com.exonoxic.palimpsest.entity.KnockerEntity.GESTURE_KNOCK || kind == com.exonoxic.palimpsest.entity.KnockerEntity.GESTURE_POUND) {
+            // event.knock holds three knocks 17 ticks apart (further apart at a lower pitch).
+            float gap = kind == com.exonoxic.palimpsest.entity.KnockerEntity.GESTURE_POUND ? 17.0F / com.exonoxic.palimpsest.entity.KnockerEntity.POUND_PITCH : 17.0F;
+            float t = gt - com.exonoxic.palimpsest.entity.KnockerEntity.GESTURE_LEAD;
+            reach = Anim.keys(gt, 0.0F, 0.0F, 3.0F, 1.0F, gap * 2.0F + 12.0F, 1.0F, gap * 2.0F + 22.0F, 0.0F);
+            hit = 0.3F + Anim.knock(t) + Anim.knock(t - gap) + Anim.knock(t - gap * 2.0F);
+        } else if (kind == com.exonoxic.palimpsest.entity.KnockerEntity.GESTURE_TAP) {
+            // Quick raps of the knuckles, 6 and 11 ticks after the first.
+            float t = gt - com.exonoxic.palimpsest.entity.KnockerEntity.GESTURE_LEAD;
+            reach = Anim.keys(gt, 0.0F, 0.0F, 3.0F, 1.0F, 18.0F, 1.0F, 28.0F, 0.0F);
+            hit = 0.3F + 0.6F * (Anim.knock(t) + Anim.knock(t - 6.0F) + Anim.knock(t - 11.0F));
+        } else if (kind == com.exonoxic.palimpsest.entity.KnockerEntity.GESTURE_GLASS_TAP) {
+            // Slow taps on the glass, 18 and 38 ticks after the first.
+            float t = gt - com.exonoxic.palimpsest.entity.KnockerEntity.GESTURE_LEAD;
+            reach = Anim.keys(gt, 0.0F, 0.0F, 3.0F, 1.0F, 48.0F, 1.0F, 60.0F, 0.0F);
+            hit = 0.35F + 0.55F * (Anim.knock(t) + Anim.knock(t - 18.0F) + Anim.knock(t - 38.0F));
+        } else if (kind == com.exonoxic.palimpsest.entity.KnockerEntity.GESTURE_SCRATCH) {
+            // Up to the glass or the boards, then the nails dragged all the way down, slowly.
+            scratching = true;
+            reach = Anim.keys(gt, 0.0F, 0.0F, 4.0F, 1.0F, 86.0F, 1.0F, 98.0F, 0.0F);
+            hit = Anim.keys(gt, 4.0F, 0.0F, 84.0F, 1.0F) + Mth.sin(gt * 2.1F) * 0.012F * reach;
+        }
+        // While it knocks the hand stays up at the door between rounds.
+        if (!scratching && knocking > reach) {
+            if (reach <= 0.0F) hit = 0.3F + Mth.sin(ageInTicks * 0.05F) * 0.04F;
+            reach = knocking;
+        }
+        reach *= 1.0F - crawl;
+        float armFree = 1.0F - reach;
+
+        // ---- walking, crawling
+        float a = Math.min(1.0F, limbSwingAmount) * (1.0F - crawl);
         float w = limbSwing * 0.42F;
         chest.xRot += breath * 0.03F;
         neck.xRot += breath * 0.025F;
@@ -165,83 +221,128 @@ public class KnockerModel<T extends KnockerEntity> extends HierarchicalModel<T> 
         head.zRot += Mth.sin(ageInTicks * 0.021F) * 0.14F;
         leftEar.yRot += Mth.sin(ageInTicks * 0.13F) * 0.08F;
         rightEar.yRot -= Mth.sin(ageInTicks * 0.13F + 1.3F) * 0.08F;
-        // Long, slow strides; knees fold on the back swing; the whole body bobs.
+        // Long, slow strides; knees fold on the back swing; the whole body bobs and rolls.
         leftThigh.xRot += Mth.cos(w) * 0.85F * a;
         rightThigh.xRot += Mth.cos(w + Mth.PI) * 0.85F * a;
         leftShin.xRot += Math.max(0.0F, Mth.sin(w)) * 1.1F * a;
         rightShin.xRot += Math.max(0.0F, -Mth.sin(w)) * 1.1F * a;
         hips.y -= Mth.abs(Mth.cos(w)) * 0.9F * a;
+        hips.zRot += Mth.cos(w) * 0.05F * a;
+        chest.zRot -= Mth.cos(w) * 0.04F * a;
         leftUpperArm.xRot += Mth.cos(w + Mth.PI) * 0.45F * a;
-        rightUpperArm.xRot += Mth.cos(w) * 0.45F * a;
+        rightUpperArm.xRot += Mth.cos(w) * 0.45F * a * armFree;
         leftForearm.xRot -= Math.max(0.0F, Mth.cos(w)) * 0.35F * a;
-        rightForearm.xRot -= Math.max(0.0F, -Mth.cos(w)) * 0.35F * a;
-        // Cloth and iron move a beat behind the body.
+        rightForearm.xRot -= Math.max(0.0F, -Mth.cos(w)) * 0.35F * a * armFree;
+        if (crawl > 0.0F) {
+            // Flat on its belly it hauls itself along hand over hand: reach, plant, drag the body up
+            // to the hand with the elbow high, lift, reach again; the legs shove on the other beat.
+            float p = limbSwing * 0.11F;
+            float q = p + 0.5F;
+            rightUpperArm.xRot += crawl * Anim.loop(p, 0.0F, -0.121F, 0.2F, -0.540F, 0.4F, -0.847F, 0.6F, -0.993F, 0.8F, -0.997F, 1.0F, -0.121F);
+            rightUpperArm.yRot += crawl * Anim.loop(p, 0.0F, -0.980F, 0.2F, -0.771F, 0.4F, -0.537F, 0.6F, -0.445F, 0.8F, -0.773F, 1.0F, -0.980F);
+            rightUpperArm.zRot += crawl * Anim.loop(p, 0.0F, -0.707F, 0.2F, -0.726F, 0.4F, -0.836F, 0.6F, -1.222F, 0.8F, -0.406F, 1.0F, -0.707F);
+            rightForearm.xRot += crawl * Anim.loop(p, 0.0F, 1.174F, 0.2F, 1.878F, 0.4F, 2.439F, 0.6F, 2.833F, 0.8F, 2.026F, 1.0F, 1.174F);
+            rightHand.xRot += crawl * Anim.loop(p, 0.0F, -1.322F, 0.2F, -1.174F, 0.4F, -0.935F, 0.6F, -0.750F, 0.8F, -1.870F, 1.0F, -1.322F);
+            leftUpperArm.xRot += crawl * Anim.loop(q, 0.0F, -0.121F, 0.2F, -0.540F, 0.4F, -0.847F, 0.6F, -0.993F, 0.8F, -0.997F, 1.0F, -0.121F);
+            leftUpperArm.yRot += crawl * Anim.loop(q, 0.0F, 0.980F, 0.2F, 0.771F, 0.4F, 0.537F, 0.6F, 0.445F, 0.8F, 0.773F, 1.0F, 0.980F);
+            leftUpperArm.zRot += crawl * Anim.loop(q, 0.0F, 0.707F, 0.2F, 0.726F, 0.4F, 0.836F, 0.6F, 1.222F, 0.8F, 0.406F, 1.0F, 0.707F);
+            leftForearm.xRot += crawl * Anim.loop(q, 0.0F, 1.174F, 0.2F, 1.878F, 0.4F, 2.439F, 0.6F, 2.833F, 0.8F, 2.026F, 1.0F, 1.174F);
+            leftHand.xRot += crawl * Anim.loop(q, 0.0F, -1.322F, 0.2F, -1.174F, 0.4F, -0.935F, 0.6F, -0.750F, 0.8F, -1.870F, 1.0F, -1.322F);
+            float pr = Mth.sin(p * (Mth.PI * 2.0F));
+            float kickR = 0.5F + 0.5F * Mth.cos(q * (Mth.PI * 2.0F));
+            float kickL = 0.5F + 0.5F * Mth.cos(p * (Mth.PI * 2.0F));
+            rightThigh.zRot -= crawl * 0.45F * kickR;
+            rightThigh.xRot -= crawl * 0.35F * kickR;
+            rightShin.xRot += crawl * 0.8F * kickR;
+            leftThigh.zRot += crawl * 0.45F * kickL;
+            leftThigh.xRot -= crawl * 0.35F * kickL;
+            leftShin.xRot += crawl * 0.8F * kickL;
+            hips.zRot += crawl * pr * 0.12F;
+            chest.yRot += crawl * pr * 0.1F;
+            neck.yRot -= crawl * pr * 0.12F;
+            head.zRot -= crawl * pr * 0.1F;
+            hips.y += crawl * Mth.abs(Mth.cos(p * (Mth.PI * 2.0F))) * 0.6F;
+            // Fingers dig in while the hand is planted and trail while it reaches.
+            float digR = Anim.loop(p, 0.0F, 0.9F, 0.6F, 0.9F, 0.75F, -0.2F, 0.95F, -0.2F, 1.0F, 0.9F);
+            float digL = Anim.loop(q, 0.0F, 0.9F, 0.6F, 0.9F, 0.75F, -0.2F, 0.95F, -0.2F, 1.0F, 0.9F);
+            rightFinger0.xRot += crawl * digR;
+            rightFinger1.xRot += crawl * digR;
+            rightFinger2.xRot += crawl * digR;
+            leftFinger0.xRot += crawl * digL;
+            leftFinger1.xRot += crawl * digL;
+            leftFinger2.xRot += crawl * digL;
+        }
+
+        // ---- the right arm, given over to a gesture
+        if (reach > 0.0F) {
+            float[] from = scratching ? SCRATCH_TOP : COCK;
+            float[] to = scratching ? SCRATCH_END : HIT;
+            float[] sFrom = scratching ? S_SCRATCH_TOP : S_COCK;
+            float[] sTo = scratching ? S_SCRATCH_END : S_HIT;
+            float s = stoop;
+            rightUpperArm.xRot += reach * Mth.lerp(s, Mth.lerp(hit, from[0], to[0]), Mth.lerp(hit, sFrom[0], sTo[0]));
+            rightUpperArm.yRot += reach * Mth.lerp(s, Mth.lerp(hit, from[1], to[1]), Mth.lerp(hit, sFrom[1], sTo[1]));
+            rightUpperArm.zRot += reach * Mth.lerp(s, Mth.lerp(hit, from[2], to[2]), Mth.lerp(hit, sFrom[2], sTo[2]));
+            rightForearm.xRot += reach * Mth.lerp(s, Mth.lerp(hit, from[3], to[3]), Mth.lerp(hit, sFrom[3], sTo[3]));
+            rightHand.xRot += reach * Mth.lerp(s, Mth.lerp(hit, from[4], to[4]), Mth.lerp(hit, sFrom[4], sTo[4]));
+            // A fist to knock with, fingers crooked like hooks to scratch with.
+            float curl = scratching ? 0.35F : 1.4F;
+            rightFinger0.xRot += reach * curl;
+            rightFinger1.xRot += reach * curl;
+            rightFinger2.xRot += reach * curl;
+            rightThumb.xRot += reach * (scratching ? 0.2F : 0.6F);
+            // Its head goes close to the door, an ear to the wood; each blow runs through its body.
+            float jolt = scratching ? 0.0F : Math.max(0.0F, hit - 0.6F) * (kind == com.exonoxic.palimpsest.entity.KnockerEntity.GESTURE_POUND ? 0.5F : 0.25F);
+            head.zRot += reach * 0.38F * upright;
+            neck.xRot += reach * (0.18F + jolt * 0.3F) * upright;
+            chest.xRot += reach * jolt * 0.3F;
+            head.xRot -= reach * jolt * 0.2F;
+            jaw.xRot += reach * (scratching ? 0.25F + hit * 0.15F : 0.06F);
+        }
+        if (knocking > 0.0F && reach < knocking) jaw.xRot += 0.08F * knocking;
+
+        // ---- cloth and iron move a beat behind the body
         shroudBack.xRot += -Mth.abs(Mth.sin(w)) * 0.1F * a + breath * 0.02F;
         shroudBackLower.xRot += -Mth.abs(Mth.sin(w + 0.4F)) * 0.25F * a + breath * 0.02F;
         shroudFlap.xRot += -Mth.abs(Mth.sin(w + 0.6F)) * 0.18F * a;
         shroudStrip.xRot += -Mth.abs(Mth.sin(w + 1.1F)) * 0.25F * a;
         shroudStrip.zRot += Mth.sin(ageInTicks * 0.05F) * 0.05F;
         ring.xRot += -Mth.sin(w * 2.0F) * 0.3F * a + Mth.sin(ageInTicks * 0.06F) * 0.1F;
-        float flex = Mth.sin(ageInTicks * 0.09F);
-        leftFinger0.xRot += flex * 0.12F;
+        float flex = Mth.sin(ageInTicks * 0.09F) * (1.0F - reach);
+        leftFinger0.xRot += Mth.sin(ageInTicks * 0.09F) * 0.12F;
         leftFinger1.xRot += Mth.sin(ageInTicks * 0.09F + 0.8F) * 0.12F;
         leftFinger2.xRot += Mth.sin(ageInTicks * 0.09F + 1.6F) * 0.12F;
         rightFinger0.xRot -= flex * 0.1F;
-        rightFinger2.xRot -= Mth.sin(ageInTicks * 0.09F + 1.2F) * 0.1F;
+        rightFinger2.xRot -= Mth.sin(ageInTicks * 0.09F + 1.2F) * 0.1F * (1.0F - reach);
 
-        int state = entity.getState();
-        // Bent double or crawling, its body keeps that shape; only the jaw and hands still act.
-        float upright = 1.0F - Math.max(crawl, stoop);
-        int knock = entity.getKnockAnim();
-        if (knock > 0) {
-            // One knock: the arm is up at the door, the forearm swings in and the head presses close.
-            float k = knock / 10.0F;
-            float strike = Mth.sin(k * Mth.PI);
-            rightUpperArm.xRot += (-1.45F) * upright;
-            rightUpperArm.zRot += (0.2F) * upright;
-            rightForearm.xRot += (-0.45F - strike * 0.65F) * upright;
-            rightHand.xRot += (0.5F) * upright;
-            head.zRot += (0.38F) * upright;
-            neck.xRot += (0.18F) * upright;
-            chest.xRot += (0.08F + strike * 0.05F) * upright;
-        } else if (state == com.exonoxic.palimpsest.entity.KnockerEntity.KNOCKING) {
-            // Between knocks the hand rests on the door and it listens.
-            rightUpperArm.xRot += (-1.4F) * upright;
-            rightUpperArm.zRot += (0.2F) * upright;
-            rightForearm.xRot += (-0.75F) * upright;
-            head.zRot += (0.42F) * upright;
-            neck.xRot += (0.22F) * upright;
-            jaw.xRot += 0.08F;
-        }
-        if (state == com.exonoxic.palimpsest.entity.KnockerEntity.LUNGE) {
+        // ---- states
+        if (lunging > 0.0F) {
             float shake = Mth.sin(ageInTicks * 1.7F) * 0.05F;
-            jaw.xRot += 0.95F + shake;
-            ring.xRot += 0.6F;
-            chest.xRot += (0.18F) * upright;
-            neck.xRot -= (0.25F) * upright;
-            head.xRot -= (0.25F) * upright;
-            leftUpperArm.xRot += (-1.35F + shake) * upright;
-            rightUpperArm.xRot += (-1.35F - shake) * upright;
-            leftUpperArm.zRot -= (0.18F) * upright;
-            rightUpperArm.zRot += (0.18F) * upright;
-            leftForearm.xRot += (0.15F) * upright;
-            rightForearm.xRot += (0.15F) * upright;
-            leftFinger0.zRot += 0.35F;
-            leftFinger2.zRot -= 0.35F;
-            rightFinger0.zRot -= 0.35F;
-            rightFinger2.zRot += 0.35F;
-        } else if (state == com.exonoxic.palimpsest.entity.KnockerEntity.SEARCHING) {
-            // Going round the house: hunched, head cocked, listening at the walls.
-            neck.xRot += (0.28F) * upright;
-            head.zRot += 0.4F + Mth.sin(ageInTicks * 0.05F) * 0.08F;
-            jaw.xRot += 0.12F;
-        } else if (state == com.exonoxic.palimpsest.entity.KnockerEntity.LEAVING) {
-            neck.xRot += (0.4F) * upright;
-            head.xRot += (0.25F) * upright;
-            chest.xRot += (0.1F) * upright;
-        } else {
-            jaw.xRot += 0.05F + Math.max(0.0F, Mth.sin(ageInTicks * 0.031F)) * 0.12F;
+            jaw.xRot += (0.95F + shake) * lunging;
+            ring.xRot += 0.6F * lunging;
+            float u = lunging * upright;
+            chest.xRot += 0.18F * u;
+            neck.xRot -= 0.25F * u;
+            head.xRot -= 0.25F * u;
+            leftUpperArm.xRot += (-1.35F + shake) * u;
+            rightUpperArm.xRot += (-1.35F - shake) * u * armFree;
+            leftUpperArm.zRot -= 0.18F * u;
+            rightUpperArm.zRot += 0.18F * u * armFree;
+            leftForearm.xRot += 0.15F * u;
+            rightForearm.xRot += 0.15F * u * armFree;
+            leftFinger0.zRot += 0.35F * lunging;
+            leftFinger2.zRot -= 0.35F * lunging;
+            rightFinger0.zRot -= 0.35F * lunging;
+            rightFinger2.zRot += 0.35F * lunging;
         }
+        // Going round the house: hunched, head cocked, listening at the walls.
+        neck.xRot += 0.28F * searching * upright;
+        head.zRot += (0.4F + Mth.sin(ageInTicks * 0.05F) * 0.08F) * searching * (1.0F - reach);
+        jaw.xRot += 0.12F * searching;
+        neck.xRot += 0.4F * leaving * upright;
+        head.xRot += 0.25F * leaving * upright;
+        chest.xRot += 0.1F * leaving * upright;
+        jaw.xRot += (0.05F + Math.max(0.0F, Mth.sin(ageInTicks * 0.031F)) * 0.12F) * idle;
         if (attackTime > 0.0F) {
             float s = Mth.sin(Mth.sqrt(attackTime) * Mth.PI);
             rightUpperArm.xRot -= 1.1F * s;

@@ -103,9 +103,8 @@ public final class HorrorEvents {
                     if (door == null) return false;
                     Vec3 at = Vec3.atCenterOf(door);
                     ServerPlayer p = ctx.player;
-                    for (int i = 0; i < 3; i++) {
-                        ServerScheduler.schedule(1 + i * 14, () -> Sounds.playTo(p, ModSounds.EVENT_KNOCK.get(), SoundSource.HOSTILE, at, 0.9F, 1.0F));
-                    }
+                    // The one sound is all three knocks.
+                    Sounds.playTo(p, ModSounds.EVENT_KNOCK.get(), SoundSource.HOSTILE, at, 0.9F, 1.0F);
                     BleedManager.unlock(p, "knocking");
                     return true;
                 }).build());

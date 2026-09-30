@@ -126,9 +126,8 @@ public final class GateTravel {
         Vec3 c = Vec3.atCenterOf(center);
         if (CommonConfig.ALLOW_WORLD_ALTERATION.get()) WorldAlterations.snuffTorches(level, reader, 12, 12, true);
         level.playSound(null, center, ModSounds.GATE_OPEN.get(), SoundSource.BLOCKS, 1.5F, 0.8F);
-        for (int i = 0; i < 3; i++) {
-            ServerScheduler.schedule(20 + i * 16, () -> level.playSound(null, center, ModSounds.EVENT_KNOCK.get(), SoundSource.BLOCKS, 1.2F, 0.8F));
-        }
+        // Three knocks from the other side (one sound holds all three).
+        ServerScheduler.schedule(20, () -> level.playSound(null, center, ModSounds.EVENT_KNOCK.get(), SoundSource.BLOCKS, 1.2F, 0.8F));
         ServerScheduler.schedule(80, () -> {
             if (FolioGate.valid(level, shape.origin(), shape.widthDir(), true)) {
                 FolioGate.fill(level, shape);

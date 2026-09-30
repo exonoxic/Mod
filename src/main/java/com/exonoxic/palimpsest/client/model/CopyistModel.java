@@ -153,17 +153,17 @@ public class CopyistModel<T extends CopyistEntity> extends HierarchicalModel<T> 
         float crawl = entity.squeeze.crawl(ageInTicks - entity.tickCount);
         float stoop = entity.squeeze.stoop(ageInTicks - entity.tickCount);
         float w = limbSwing * 0.55F;
-        // Crawling, it claws itself along rather than striding.
-        float a = Math.min(1.0F, limbSwingAmount) * (1.0F - 0.45F * crawl);
+        // Crawling, it claws itself along (below) rather than striding.
+        float a = Math.min(1.0F, limbSwingAmount) * (1.0F - crawl);
         head.yRot += netHeadYaw * Mth.DEG_TO_RAD * 0.6F;
         neck.yRot += netHeadYaw * Mth.DEG_TO_RAD * 0.35F;
         head.xRot += headPitch * Mth.DEG_TO_RAD * 0.5F;
         // It copies animals badly: slow curious tilts broken by sudden snaps of the head.
-        float snap = Mth.sin(ageInTicks * 0.23F) > 0.93F ? 0.45F : 0.0F;
+        float snap = Anim.pulse(Mth.sin(ageInTicks * 0.23F), 0.93F) * 0.45F;
         head.zRot += Mth.sin(ageInTicks * 0.04F) * 0.22F + snap;
-        head.yRot += Mth.sin(ageInTicks * 0.11F) > 0.95F ? -0.5F : 0.0F;
+        head.yRot -= Anim.pulse(Mth.sin(ageInTicks * 0.11F), 0.95F) * 0.5F;
         // Its jaw works in bursts, chewing nothing.
-        if (Mth.sin(ageInTicks * 0.05F) > 0.55F) jaw.xRot += Math.max(0.0F, Mth.sin(ageInTicks * 0.9F)) * 0.3F;
+        jaw.xRot += Anim.pulse(Mth.sin(ageInTicks * 0.05F), 0.55F) * Math.max(0.0F, Mth.sin(ageInTicks * 0.9F)) * 0.3F;
         // A four-limbed walk: arms as forelegs, knuckles down.
         leftThigh.xRot += Mth.cos(w) * 0.8F * a;
         rightThigh.xRot += Mth.cos(w + Mth.PI) * 0.8F * a;
@@ -191,6 +191,30 @@ public class CopyistModel<T extends CopyistEntity> extends HierarchicalModel<T> 
             rightUpperArm.xRot -= 1.1F * s;
             jaw.xRot += 0.7F * s;
             head.xRot -= 0.4F * s;
+        }
+        if (crawl > 0.0F) {
+            // Flat out it drags itself on its arms, hand over hand, the hide trailing behind.
+            float p = limbSwing * 0.1F;
+            float q = p + 0.5F;
+            rightUpperArm.xRot += crawl * Anim.loop(p, 0.0F, -0.007F, 0.2F, -0.245F, 0.4F, -0.496F, 0.6F, -0.630F, 0.8F, -0.798F, 1.0F, -0.007F);
+            rightUpperArm.yRot += crawl * Anim.loop(p, 0.0F, -1.002F, 0.2F, -0.873F, 0.4F, -0.648F, 0.6F, -0.409F, 0.8F, -0.974F, 1.0F, -1.002F);
+            rightUpperArm.zRot += crawl * Anim.loop(p, 0.0F, -0.952F, 0.2F, -0.966F, 0.4F, -1.031F, 0.6F, -1.429F, 0.8F, -0.688F, 1.0F, -0.952F);
+            rightForearm.xRot += crawl * Anim.loop(p, 0.0F, 0.826F, 0.2F, 1.358F, 0.4F, 1.954F, 0.6F, 2.487F, 0.8F, 1.858F, 1.0F, 0.826F);
+            rightHand.xRot += crawl * Anim.loop(p, 0.0F, 1.484F, 0.2F, 1.706F, 0.4F, 1.622F, 0.6F, 0.992F, 0.8F, 2.084F, 1.0F, 1.484F);
+            leftUpperArm.xRot += crawl * Anim.loop(q, 0.0F, -0.007F, 0.2F, -0.245F, 0.4F, -0.496F, 0.6F, -0.630F, 0.8F, -0.798F, 1.0F, -0.007F);
+            leftUpperArm.yRot += crawl * Anim.loop(q, 0.0F, 1.002F, 0.2F, 0.873F, 0.4F, 0.648F, 0.6F, 0.409F, 0.8F, 0.974F, 1.0F, 1.002F);
+            leftUpperArm.zRot += crawl * Anim.loop(q, 0.0F, 0.952F, 0.2F, 0.966F, 0.4F, 1.031F, 0.6F, 1.429F, 0.8F, 0.688F, 1.0F, 0.952F);
+            leftForearm.xRot += crawl * Anim.loop(q, 0.0F, 0.826F, 0.2F, 1.358F, 0.4F, 1.954F, 0.6F, 2.487F, 0.8F, 1.858F, 1.0F, 0.826F);
+            leftHand.xRot += crawl * Anim.loop(q, 0.0F, 1.484F, 0.2F, 1.706F, 0.4F, 1.622F, 0.6F, 0.992F, 0.8F, 2.084F, 1.0F, 1.484F);
+            float roll = Mth.sin(p * (Mth.PI * 2.0F));
+            float kickR = 0.5F + 0.5F * Mth.cos(q * (Mth.PI * 2.0F));
+            float kickL = 0.5F + 0.5F * Mth.cos(p * (Mth.PI * 2.0F));
+            rightThigh.zRot -= crawl * 0.35F * kickR;
+            rightShin.xRot += crawl * 0.5F * kickR;
+            leftThigh.zRot += crawl * 0.35F * kickL;
+            leftShin.xRot += crawl * 0.5F * kickL;
+            pelvis.zRot += crawl * roll * 0.1F;
+            neck.yRot -= crawl * roll * 0.12F;
         }
         if (crawl > 0.0F) {
             pelvis.xRot += crawl * 0.77F;

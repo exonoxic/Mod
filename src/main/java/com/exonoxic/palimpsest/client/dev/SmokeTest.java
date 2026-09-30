@@ -558,16 +558,12 @@ public final class SmokeTest {
                 view(p, -3.2, Y + 1.9, 2.2, 0.5, Y + 1.7, 2.8);
             });
             // Where a real one stands: the block in front of the door, knocking with its right hand.
-            mannequin(ModEntities.KNOCKER.get(), 0.5, Y, 2.5, 0F, k -> {
-                data(k, "STATE", KnockerEntity.KNOCKING);
-                data(k, "KNOCK_ANIM", 5);
-            });
+            mannequin(ModEntities.KNOCKER.get(), 0.5, Y, 2.5, 0F, k -> data(k, "STATE", KnockerEntity.KNOCKING));
         });
+        // Photographed just after the first blow lands.
+        step(3, () -> knockerGesture(KnockerEntity.GESTURE_KNOCK));
         shot("featured_knocker_knocking");
-        step(10, () -> {
-            MANNEQUINS.forEach(k -> data(k, "KNOCK_ANIM", 0));
-            server((srv, p) -> view(p, 2.2, Y + 2.3, -1.6, 0.5, Y + 1.5, 2.2));
-        });
+        step(10, () -> server((srv, p) -> view(p, 2.2, Y + 2.3, -1.6, 0.5, Y + 1.5, 2.2)));
         shot("featured_knocker_listening_behind");
         step(20, () -> {
             clearMannequins();
@@ -743,6 +739,9 @@ public final class SmokeTest {
         });
         step(20, () -> {});
         shot("knocker_window");
+        // Half way through dragging its nails down the glass.
+        step(40, () -> knockerGesture(KnockerEntity.GESTURE_SCRATCH));
+        shot("knocker_window_scratch");
         step(60, () -> server((srv, p) -> {
             command(srv, p, "time set 18000");
             p.removeEffect(MobEffects.NIGHT_VISION);
@@ -771,8 +770,11 @@ public final class SmokeTest {
         return e;
     }
 
-    static void mannequinsDo(Consumer<Entity> action) {
-        MANNEQUINS.forEach(action);
+    /** Starts a gesture on every posed Knocker. */
+    static void knockerGesture(int kind) {
+        MANNEQUINS.forEach(e -> {
+            if (e instanceof KnockerEntity k) k.playGesture(kind);
+        });
     }
 
     static void turn(Entity e, float yaw) {

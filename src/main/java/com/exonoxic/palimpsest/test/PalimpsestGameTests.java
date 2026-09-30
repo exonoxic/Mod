@@ -33,6 +33,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Blocks;
@@ -277,7 +278,7 @@ public final class PalimpsestGameTests {
         });
     }
 
-    /** Knockers (2.7 blocks tall) put into sealed spaces one and two blocks high fold to fit instead of suffocating. */
+    /** Knockers (2.7 blocks tall) put into sealed spaces one and two blocks high fold to fit instead of suffocating, and speed up. */
     @GameTest(template = EMPTY, timeoutTicks = 100)
     public static void knockerFoldsToFit(GameTestHelper helper) {
         BlockPos lowCell = new BlockPos(2, 1, 4);
@@ -292,6 +293,12 @@ public final class PalimpsestGameTests {
             check(mid.getPose() == Squeeze.STOOP && mid.getBbHeight() < 2.0F,
                     "a Knocker in a two-high space should stoop (pose " + mid.getPose() + ", height " + mid.getBbHeight() + ")");
             check(low.getHealth() >= low.getMaxHealth() && mid.getHealth() >= mid.getMaxHealth(), "a folded Knocker should not suffocate");
+            // Folded down it goes faster, not slower.
+            double base = low.getAttributeBaseValue(Attributes.MOVEMENT_SPEED);
+            check(low.getAttributeValue(Attributes.MOVEMENT_SPEED) > base * 1.7D,
+                    "a crawling Knocker should scuttle (speed " + low.getAttributeValue(Attributes.MOVEMENT_SPEED) + ", base " + base + ")");
+            check(mid.getAttributeValue(Attributes.MOVEMENT_SPEED) > base * 1.3D,
+                    "a stooping Knocker should lope (speed " + mid.getAttributeValue(Attributes.MOVEMENT_SPEED) + ", base " + base + ")");
             helper.succeed();
         });
     }

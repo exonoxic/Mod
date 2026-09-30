@@ -112,28 +112,29 @@ public class QuillcrowModel<T extends QuillcrowEntity> extends HierarchicalModel
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         root().getAllParts().forEach(ModelPart::resetPose);
         // A crow's head: it holds still, then snaps to a new angle, always coming back to you.
-        float snap = (float) Math.floor(ageInTicks / 9.0F);
+        float snapT = ageInTicks / 9.0F;
+        float snap = Mth.floor(snapT) + Anim.smooth((snapT - Mth.floor(snapT) - 0.85F) / 0.15F);
         head.yRot += netHeadYaw * Mth.DEG_TO_RAD + Mth.sin(snap * 2.7F) * 0.35F;
         head.xRot += headPitch * Mth.DEG_TO_RAD;
-        head.zRot += Mth.sin(snap * 1.3F) > 0.6F ? 0.7F : 0.0F;
+        head.zRot += Anim.pulse(Mth.sin(snap * 1.3F), 0.6F) * 0.7F;
         beakDrip.zRot += Mth.sin(ageInTicks * 0.2F) * 0.2F;
-        if (entity.isFlying()) {
-            float flap = Mth.cos(ageInTicks * 1.6F) * 1.1F;
-            leftWing.zRot -= 0.3F + flap;
-            rightWing.zRot += 0.3F + flap;
-            leftQuill2.xRot -= flap * 0.2F;
-            rightQuill2.xRot -= flap * 0.2F;
-            leftLeg.xRot += 1.2F;
-            rightLeg.xRot += 1.2F;
-            tail.xRot += 0.2F;
-        } else {
-            leftLeg.xRot += Mth.cos(limbSwing * 0.6662F) * 1.2F * limbSwingAmount;
-            rightLeg.xRot += Mth.cos(limbSwing * 0.6662F + Mth.PI) * 1.2F * limbSwingAmount;
-            // Now and then it rouses its feathers.
-            float rouse = Mth.sin(ageInTicks * 0.05F) > 0.97F ? Mth.sin(ageInTicks * 2.0F) * 0.15F : 0.0F;
-            leftWing.zRot -= rouse;
-            rightWing.zRot += rouse;
-            ruff.y -= Math.abs(rouse) * 2.0F;
-        }
+        // Taking off and landing blend over a few ticks: wings open out, legs tuck up.
+        float fly = Anim.ease(entity, 0, entity.isFlying(), ageInTicks, 0.3F);
+        float flap = Mth.cos(ageInTicks * 1.6F) * 1.1F * fly;
+        leftWing.zRot -= 0.3F * fly + flap;
+        rightWing.zRot += 0.3F * fly + flap;
+        leftQuill2.xRot -= flap * 0.2F;
+        rightQuill2.xRot -= flap * 0.2F;
+        leftLeg.xRot += 1.2F * fly;
+        rightLeg.xRot += 1.2F * fly;
+        tail.xRot += 0.2F * fly;
+        float ground = 1.0F - fly;
+        leftLeg.xRot += Mth.cos(limbSwing * 0.6662F) * 1.2F * limbSwingAmount * ground;
+        rightLeg.xRot += Mth.cos(limbSwing * 0.6662F + Mth.PI) * 1.2F * limbSwingAmount * ground;
+        // Now and then it rouses its feathers.
+        float rouse = Anim.pulse(Mth.sin(ageInTicks * 0.05F), 0.97F) * Mth.sin(ageInTicks * 2.0F) * 0.15F * ground;
+        leftWing.zRot -= rouse;
+        rightWing.zRot += rouse;
+        ruff.y -= Math.abs(rouse) * 2.0F;
     }
 }

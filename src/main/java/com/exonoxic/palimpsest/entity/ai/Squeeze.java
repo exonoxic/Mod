@@ -97,22 +97,24 @@ public final class Squeeze {
         }
         Pose current = mob.getPose();
         // Dying, sleeping and the like are not ours to change.
-        if (!free || rank(current) < 0) return;
-        Pose fits = tallestFitting();
-        if (rank(held) > rank(fits)) fits = held;
-        if (rank(fits) > rank(current)) {
-            roomy = 0;
-            mob.setPose(fits);
-            mob.playSound(ModSounds.SQUEEZE_CRACK.get(), fits == CRAWL ? 1.0F : 0.7F, 0.85F + mob.getRandom().nextFloat() * 0.3F);
-        } else if (rank(fits) < rank(current)) {
-            if (++roomy >= ROOMY_TICKS) {
+        if (free && rank(current) >= 0) {
+            Pose fits = tallestFitting();
+            if (rank(held) > rank(fits)) fits = held;
+            if (rank(fits) > rank(current)) {
                 roomy = 0;
                 mob.setPose(fits);
+                mob.playSound(ModSounds.SQUEEZE_CRACK.get(), fits == CRAWL ? 1.0F : 0.7F, 0.85F + mob.getRandom().nextFloat() * 0.3F);
+            } else if (rank(fits) < rank(current)) {
+                if (++roomy >= ROOMY_TICKS) {
+                    roomy = 0;
+                    mob.setPose(fits);
+                }
+            } else {
+                roomy = 0;
             }
-        } else {
-            roomy = 0;
+            sounds();
         }
-        sounds();
+        scuttle(mob.getPose());
     }
 
     private void scuttle(Pose pose) {

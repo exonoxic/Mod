@@ -312,7 +312,8 @@ public final class Trailer {
         // "This world was written over another." Then, in the dark, three knocks.
         card("open", 100, 72, 2, false, "This world was written over another.").each = t -> {
             if (t == 1) TrailerRecorder.cue("music music_undertext 0.30");
-            if (t == 70 || t == 79 || t == 88) ui("event.knock", 0.9F, 1.0F);
+            // One sound, three knocks.
+            if (t == 70) ui("event.knock", 0.9F, 1.0F);
         };
 
         // Outside: the hut in the glade, a light in the window, and something at the door.
@@ -322,11 +323,11 @@ public final class Trailer {
             mannequin(ModEntities.KNOCKER.get(), x(0.5), y(0), z(4.5), 180F, k -> data(k, "STATE", KnockerEntity.KNOCKING));
         };
         wide.camera = dolly(v(8.0, 2.8, 13.5), v(4.6, 2.0, 9.6), v(0.5, 1.4, 4.4), v(0.5, 1.6, 4.3));
-        wide.each = t -> knockAt(t, 18, 30, 42, 82, 94, 106);
+        wide.each = t -> knockAt(t, 18, 82);
 
         Shot profile = shot("knocker_profile", 64);
         profile.camera = dolly(v(-3.6, 1.9, 6.4), v(-2.5, 1.8, 5.7), v(0.5, 1.8, 4.4), v(0.5, 1.7, 4.3));
-        profile.each = t -> knockAt(t, 10, 22, 34);
+        profile.each = t -> knockAt(t, 10);
 
         // Inside, later: nobody answered, so it has come round to the window.
         Shot window = shot("knocker_window", 140);
@@ -339,12 +340,11 @@ public final class Trailer {
         };
         window.camera = dolly(v(-1.0, 1.62, -1.2), v(-1.0, 1.62, 1.1), v(-1.0, 1.6, 3.0), v(-1.0, 1.65, 3.0));
         window.each = t -> {
-            if (t == 22 || t == 44 || t == 66) {
-                sound("entity.knocker.glass_tap", v(-1.0, 1.8, 3.0), 1.2F, 0.95F);
-                MannequinAnim.knock(6);
-            }
-            if (t == 100) sound("entity.knocker.glass_scratch", v(-1.0, 1.7, 3.0), 1.2F, 0.9F);
-            MannequinAnim.tick();
+            // Slow taps on the glass, then its nails dragged down it (each gesture starts a moment before its sound).
+            if (t == 16) SmokeTest.knockerGesture(KnockerEntity.GESTURE_GLASS_TAP);
+            if (t == 16 + KnockerEntity.GESTURE_LEAD) sound("entity.knocker.glass_tap", v(-1.0, 1.8, 3.0), 1.2F, 1.0F);
+            if (t == 74) SmokeTest.knockerGesture(KnockerEntity.GESTURE_SCRATCH);
+            if (t == 74 + KnockerEntity.GESTURE_LEAD) sound("entity.knocker.glass_scratch", v(-1.0, 1.7, 3.0), 1.2F, 1.0F);
         };
 
         card("dont_answer", 56, 56, 3, false, "When it knocks,", "don't answer.").each = t -> {
@@ -551,7 +551,7 @@ public final class Trailer {
             }
         };
         card("coda", 90, 0, 1, false).each = t -> {
-            if (t == 18 || t == 27 || t == 36) ui("event.knock", 0.85F, 1.0F);
+            if (t == 18) ui("event.knock", 0.85F, 1.0F);
             if (t == 66) ui("entity.knocker.glass_tap", 1.0F, 0.9F);
         };
         Shot end = shot("end", 0);
@@ -587,15 +587,12 @@ public final class Trailer {
         return u * u * (3 - 2 * u);
     }
 
-    /** Knocks (three, a pause, three) on the hut door by the posed Knocker, at the given ticks. */
+    /** Three knocks on the hut door by the posed Knocker (one sound holds all three), the first landing at each given tick. */
     private static void knockAt(int t, int... when) {
         for (int w : when) {
-            if (t == w) {
-                sound("event.knock", v(0.5, 1.0, 3.5), 2.0F, 0.95F);
-                MannequinAnim.knock(10);
-            }
+            if (t == w - KnockerEntity.GESTURE_LEAD) SmokeTest.knockerGesture(KnockerEntity.GESTURE_KNOCK);
+            if (t == w) sound("event.knock", v(0.5, 1.0, 3.5), 2.0F, 1.0F);
         }
-        MannequinAnim.tick();
     }
 
     /** The glade cleared, with a hunter at {@code z} and the player standing across it; over water if {@code pond}. */
@@ -726,26 +723,9 @@ public final class Trailer {
 
     // ------------------------------------------------------------------ small things
 
-    /** Knocking for the posed Knocker, which no server ticks down. */
+    /** The posed creature the current shot is about. */
     private static final class MannequinAnim {
         static Entity subject;
-        static int knock;
-
-        static void knock(int ticks) {
-            knock = ticks;
-            SmokeTest.mannequinsDo(e -> {
-                if (e instanceof KnockerEntity) data(e, "KNOCK_ANIM", ticks);
-            });
-        }
-
-        static void tick() {
-            if (knock > 0) {
-                knock--;
-                SmokeTest.mannequinsDo(e -> {
-                    if (e instanceof KnockerEntity) data(e, "KNOCK_ANIM", knock);
-                });
-            }
-        }
     }
 
     private static KnockerEntity knocker() {

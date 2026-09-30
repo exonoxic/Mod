@@ -77,6 +77,20 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
     public static final int LUNGE = 2;
     public static final int LEAVING = 3;
     public static final int SEARCHING = 4;
+    /**
+     * Gestures, each timed to the hits in its sound: three knocks on a door (event.knock holds all
+     * three), the same pounded slower and harder, knuckles rapped on a wall, slow taps on a window,
+     * and nails dragged down either.
+     */
+    public static final int GESTURE_KNOCK = 1;
+    public static final int GESTURE_TAP = 2;
+    public static final int GESTURE_SCRATCH = 3;
+    public static final int GESTURE_POUND = 4;
+    public static final int GESTURE_GLASS_TAP = 5;
+    /** Ticks a gesture starts before its sound: the arm draws back first, and the blow lands on the sound. */
+    public static final int GESTURE_LEAD = 4;
+    /** Pitch of the pounding (a lower pitch plays the knocks further apart). */
+    public static final float POUND_PITCH = 0.76F;
     /** Rounds of three knocks before it goes quiet and looks for another way in. */
     private static final int KNOCK_ROUNDS = 3;
     /** How long it searches before going back to knock again. */
@@ -85,7 +99,8 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
     private static final double CREEP_SPEED = 0.8D;
 
     private static final EntityDataAccessor<Integer> STATE = SynchedEntityData.defineId(KnockerEntity.class, EntityDataSerializers.INT);
-    private static final EntityDataAccessor<Integer> KNOCK_ANIM = SynchedEntityData.defineId(KnockerEntity.class, EntityDataSerializers.INT);
+    /** The latest gesture: a count in the high bits, so the same gesture twice still reads as new, and its kind in the low three. */
+    private static final EntityDataAccessor<Integer> GESTURE = SynchedEntityData.defineId(KnockerEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Optional<UUID>> VIEWER = SynchedEntityData.defineId(KnockerEntity.class, EntityDataSerializers.OPTIONAL_UUID);
 
     private final ApparitionState apparition = new ApparitionState();
@@ -115,6 +130,17 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
     private int brightTicks;
     private int heartbeatIn;
     private int silence;
+    private int gestures;
+    /** A gesture's sound, waiting out {@link #GESTURE_LEAD}. */
+    @Nullable
+    private SoundEvent gestureSound;
+    private BlockPos gestureSoundAt = BlockPos.ZERO;
+    private float gestureVolume;
+    private float gesturePitch;
+    private int gestureSoundIn;
+    /** Client: the gesture being played and the tick it started on. */
+    private int gestureKind;
+    private int gestureStart = -1000;
     /** Bends double under a doorway, crawls through anything a block high. */
     public final Squeeze squeeze = Squeeze.of(this, 0.7F, 2.7F);
 
@@ -209,8 +235,36 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
         return entityData.get(STATE);
     }
 
-    public int getKnockAnim() {
-        return entityData.get(KNOCK_ANIM);
+    /** Starts a gesture on every watching client, and its sound {@link #GESTURE_LEAD} ticks later. */
+    private void gesture(int kind, SoundEvent sound, BlockPos at, float volume, float pitch) {
+        entityData.set(GESTURE, (++gestures << 3) | kind);
+        gestureSound = sound;
+        gestureSoundAt = at.immutable();
+        gestureVolume = volume;
+        gesturePitch = pitch;
+        gestureSoundIn = GESTURE_LEAD;
+    }
+
+    /** Plays a gesture on this client (the server's arrive through {@link #GESTURE}). */
+    public void playGesture(int kind) {
+        gestureKind = kind;
+        gestureStart = tickCount;
+    }
+
+    /** Client: the gesture being played, or last played. */
+    public int gestureKind() {
+        return gestureKind;
+    }
+
+    /** Client: ticks since that gesture began. */
+    public float gestureTime(float partialTick) {
+        return tickCount - gestureStart + partialTick;
+    }
+
+    @Override
+    public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
+        super.onSyncedDataUpdated(key);
+        if (GESTURE.equals(key) && level().isClientSide && entityData.get(GESTURE) != 0) playGesture(entityData.get(GESTURE) & 7);
     }
 
     @Override
@@ -227,7 +281,7 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
     protected void defineSynchedData() {
         super.defineSynchedData();
         entityData.define(STATE, LUNGE);
-        entityData.define(KNOCK_ANIM, 0);
+        entityData.define(GESTURE, 0);
         entityData.define(VIEWER, Optional.empty());
     }
 
@@ -271,8 +325,10 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
         squeeze.tick(true);
         super.tick();
         if (level().isClientSide) return;
-        int anim = entityData.get(KNOCK_ANIM);
-        if (anim > 0) entityData.set(KNOCK_ANIM, anim - 1);
+        if (gestureSound != null && --gestureSoundIn <= 0) {
+            level().playSound(null, gestureSoundAt, gestureSound, SoundSource.HOSTILE, gestureVolume, gesturePitch);
+            gestureSound = null;
+        }
         switch (getState()) {
             case KNOCKING -> tickKnocking();
             case LUNGE -> tickLunge();
@@ -305,19 +361,17 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
             }
         }
         if (knocksLeft > 0 && --knockDelay <= 0) {
-            // Back again after searching, it pounds rather than knocks.
-            level().playSound(null, door, ModSounds.EVENT_KNOCK.get(), SoundSource.HOSTILE, angry ? 1.7F : 1.0F,
-                    angry ? 0.72F + random.nextFloat() * 0.08F : 0.95F + random.nextFloat() * 0.1F);
-            entityData.set(KNOCK_ANIM, 10);
+            // One sound holds the three knocks. Back again after searching, it pounds rather than knocks.
+            gesture(angry ? GESTURE_POUND : GESTURE_KNOCK, ModSounds.EVENT_KNOCK.get(), door, angry ? 1.7F : 1.0F,
+                    angry ? POUND_PITCH : 0.97F + random.nextFloat() * 0.06F);
             knocksLeft--;
-            knockDelay = angry ? 8 : 12;
         } else if (knocksLeft == 0 && --knockCooldown <= 0) {
             // Three, and three, and three. Then nothing, which is worse.
             if (++rounds > KNOCK_ROUNDS) {
                 startSearching();
                 return;
             }
-            knocksLeft = 3;
+            knocksLeft = 1;
             knockDelay = 0;
             knockCooldown = 160 + random.nextInt(220);
         }
@@ -627,8 +681,7 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
         SoundEvent sound = glass
                 ? (scratch ? ModSounds.KNOCKER_GLASS_SCRATCH.get() : ModSounds.KNOCKER_GLASS_TAP.get())
                 : (scratch ? ModSounds.KNOCKER_SCRATCH.get() : ModSounds.KNOCKER_TAP.get());
-        level().playSound(null, at, sound, SoundSource.HOSTILE, 1.0F, 0.9F + random.nextFloat() * 0.2F);
-        if (!scratch) entityData.set(KNOCK_ANIM, 6);
+        gesture(scratch ? GESTURE_SCRATCH : glass ? GESTURE_GLASS_TAP : GESTURE_TAP, sound, at, 1.0F, 0.95F + random.nextFloat() * 0.1F);
     }
 
     /** Puts out torches within reach (when the world may be altered). */

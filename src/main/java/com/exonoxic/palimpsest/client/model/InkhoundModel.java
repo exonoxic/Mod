@@ -140,7 +140,7 @@ public class InkhoundModel<T extends InkhoundEntity> extends HierarchicalModel<T
         root().getAllParts().forEach(ModelPart::resetPose);
         float a = Math.min(1.0F, limbSwingAmount);
         float w = limbSwing * 0.62F;
-        boolean hunting = entity.isAggressive();
+        float hunting = Anim.ease(entity, 0, entity.isAggressive(), ageInTicks, 0.2F);
         // Always listening: each ear turns on its own, the head sweeps and tilts.
         neck.yRot += netHeadYaw * Mth.DEG_TO_RAD * 0.4F;
         head.yRot += netHeadYaw * Mth.DEG_TO_RAD * 0.6F + Mth.sin(ageInTicks * 0.05F) * 0.18F * (1.0F - a);
@@ -148,8 +148,8 @@ public class InkhoundModel<T extends InkhoundEntity> extends HierarchicalModel<T
         head.zRot += Mth.sin(ageInTicks * 0.033F) * 0.2F * (1.0F - a);
         leftEar.yRot += Mth.sin(ageInTicks * 0.11F) * 0.35F;
         rightEar.yRot += Mth.sin(ageInTicks * 0.09F + 2.1F) * 0.35F;
-        leftEar.xRot += Mth.sin(ageInTicks * 0.23F) > 0.9F ? -0.3F : 0.0F;
-        rightEar.xRot += Mth.sin(ageInTicks * 0.19F + 1.0F) > 0.9F ? -0.3F : 0.0F;
+        leftEar.xRot -= Anim.pulse(Mth.sin(ageInTicks * 0.23F), 0.9F) * 0.3F;
+        rightEar.xRot -= Anim.pulse(Mth.sin(ageInTicks * 0.19F + 1.0F), 0.9F) * 0.3F;
         // The jaw never quite closes; it trembles.
         jaw.xRot += 0.08F + Mth.sin(ageInTicks * 0.6F) * 0.025F;
         // A long, low lope: the spine flexes, the chest dips.
@@ -170,15 +170,13 @@ public class InkhoundModel<T extends InkhoundEntity> extends HierarchicalModel<T
         tail.xRot -= a * 0.35F;
         jawDrip.zRot += Mth.sin(ageInTicks * 0.1F) * 0.2F;
         chestDrip.zRot += Mth.sin(ageInTicks * 0.08F + 1.0F) * 0.15F;
-        if (hunting) {
-            // It has heard you: head low, ears flat, the mouth wide on its little pale teeth.
-            jaw.xRot += 0.75F + Mth.sin(ageInTicks * 1.3F) * 0.05F;
-            head.xRot -= 0.2F;
-            neck.xRot += 0.25F;
-            leftEar.xRot += 0.55F;
-            rightEar.xRot += 0.55F;
-            tail.xRot += 0.4F;
-        }
+        // It has heard you: head low, ears flat, the mouth wide on its little pale teeth.
+        jaw.xRot += (0.75F + Mth.sin(ageInTicks * 1.3F) * 0.05F) * hunting;
+        head.xRot -= 0.2F * hunting;
+        neck.xRot += 0.25F * hunting;
+        leftEar.xRot += 0.55F * hunting;
+        rightEar.xRot += 0.55F * hunting;
+        tail.xRot += 0.4F * hunting;
         if (attackTime > 0.0F) {
             float s = Mth.sin(Mth.sqrt(attackTime) * Mth.PI);
             jaw.xRot += 0.6F * s;
