@@ -320,7 +320,7 @@ public final class Trailer {
         Shot wide = shot("knocker_wide", 110);
         wide.setup = () -> {
             clearMannequins();
-            mannequin(ModEntities.KNOCKER.get(), x(0.5), y(0), z(4.5), 180F, k -> data(k, "STATE", KnockerEntity.KNOCKING));
+            mannequin(ModEntities.KNOCKER.get(), x(0.5), y(0), z(4.85), 180F, k -> data(k, "STATE", KnockerEntity.KNOCKING));
         };
         wide.camera = dolly(v(8.0, 2.8, 13.5), v(4.6, 2.0, 9.6), v(0.5, 1.4, 4.4), v(0.5, 1.6, 4.3));
         wide.each = t -> knockAt(t, 18, 82);

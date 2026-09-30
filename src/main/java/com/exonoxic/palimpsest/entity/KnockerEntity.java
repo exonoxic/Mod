@@ -208,6 +208,13 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
             e.setPersistenceRequired();
         });
         if (k == null) return false;
+        // Hunched, its head is well ahead of its feet: stand it back from the door so its face is
+        // against the wood rather than through it.
+        Vec3 back = new Vec3(k.getX() - (door.getX() + 0.5D), 0.0D, k.getZ() - (door.getZ() + 0.5D));
+        if (back.lengthSqr() > 1.0E-4D) {
+            Vec3 step = back.normalize().scale(0.35D);
+            if (level.noCollision(k, k.getBoundingBox().move(step))) k.setPos(k.position().add(step));
+        }
         Vec3 to = Vec3.atCenterOf(door).subtract(k.position());
         float yaw = (float) (Math.toDegrees(Math.atan2(to.z, to.x)) - 90.0D);
         k.setYRot(yaw);

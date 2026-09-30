@@ -127,6 +127,9 @@ K_GRIME = (88, 78, 64)
 K_IRON = (44, 43, 48)
 K_IRON_L = (98, 96, 106)
 K_RUST = (128, 68, 40)
+K_CLAW = (92, 80, 62)
+K_CLAW_L = (156, 140, 104)
+K_CLAW_TIP = (214, 204, 170)
 K_KNUCKLE = (160, 78, 70)
 K_NAIL = (64, 58, 56)
 
@@ -331,6 +334,8 @@ def knocker():
                                    "bottom": [("ascii", ["KKK", "KKK"], {"K": K_KNUCKLE})]})
     finger = _k_skin({"all": [("ascii", ["", "", "", "", "", "N"], {"N": K_NAIL})],
                                "bottom": [("ascii", ["N"], {"N": K_NAIL})]})
+    # Horn-dark at the root, yellowing to a pale point.
+    claw = dict(base=K_CLAW, noise=4, features={"all": [("ascii", ["", "c", "c", "C", "C"], {"c": K_CLAW_L, "C": K_CLAW_TIP})]})
     iron = dict(base=K_IRON, noise=5, shade=False, features={"front": [("px", [(0, 0, K_IRON_L)])],
                                                              "top": [("px", [(0, 0, K_IRON_L), (-1, 0, (70, 60, 56))])]})
     foot = _k_skin({"top": [("ascii", ["..", "d.", ".d", "d.", "..", "NN"], {"d": K_SKIN_D, "N": K_NAIL})],
@@ -340,11 +345,16 @@ def knocker():
         s = side
         m = sx < 0
         fingers = []
+        # Every finger ends in a long, hooked, yellowed claw.
         for i, fx in enumerate((-1.0, 0.0, 1.0)):
             fingers.append(P(f"{s}_finger_{i}", (fx, 3, -0.3), rot=(0, 0, (i - 1) * 0.06 * -sx),
-                             boxes=[B(-0.5, 0, -0.5, 1, 6, 1, mirror=m)], paint=finger))
+                             boxes=[B(-0.5, 0, -0.5, 1, 6, 1, mirror=m)], paint=finger, children=[
+                                 P(f"{s}_claw_{i}", (0, 5.8, -0.1), rot=(-0.75, 0, 0),
+                                   boxes=[B(-0.5, 0, -0.5, 1, 5, 1, mirror=m, inflate=-0.1)], paint=claw)]))
         fingers.append(P(f"{s}_thumb", (1.8 * -sx, 1, -0.6), rot=(-0.3, 0, 0.5 * sx),
-                         boxes=[B(-0.5, 0, -0.5, 1, 3, 1, mirror=m)], paint=finger))
+                         boxes=[B(-0.5, 0, -0.5, 1, 3, 1, mirror=m)], paint=finger, children=[
+                             P(f"{s}_thumb_claw", (0, 3, -0.1), rot=(-0.5, 0, 0),
+                               boxes=[B(-0.5, 0, -0.5, 1, 3, 1, mirror=m, inflate=-0.1)], paint=claw)]))
         return P(f"{s}_upper_arm", (4.3 * sx, -7.2, 0), rot=(-0.34, 0, -0.07 * sx),
                  boxes=[B(-1, -1, -1, 2, 13, 2, mirror=m)], paint=wrap, children=[
                      P(f"{s}_forearm", (0, 12, 0), rot=(-0.28, 0, 0),
