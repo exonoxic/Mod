@@ -7,6 +7,7 @@ import com.exonoxic.palimpsest.entity.KnockerEntity;
 import com.exonoxic.palimpsest.entity.RedactedEntity;
 import com.exonoxic.palimpsest.entity.ai.Squeeze;
 import com.exonoxic.palimpsest.registry.ModEntities;
+import com.exonoxic.palimpsest.world.ModStructures;
 import com.exonoxic.palimpsest.world.dimension.ModDimensions;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.logging.LogUtils;
@@ -19,6 +20,7 @@ import net.minecraft.client.tutorial.TutorialSteps;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
+import net.minecraft.core.HolderSet;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
@@ -36,7 +38,6 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LevelSettings;
 import net.minecraft.world.level.WorldDataConfiguration;
-import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DoorBlock;
@@ -45,6 +46,9 @@ import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.levelgen.structure.Structure;
+import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
@@ -57,6 +61,7 @@ import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BooleanSupplier;
 import java.util.function.IntConsumer;
 
@@ -136,8 +141,10 @@ public final class Trailer {
 
     /** The glade: the block at its centre, on the ground. Set on the server thread. */
     private static volatile BlockPos base;
-    /** Where the camera stands in the Undertext, for the last shots. */
+    /** Open ground in the Undertext, for the bosses. */
     private static volatile BlockPos under;
+    /** What an Undertext shot circles: {focus, (radius, 0, 0)}. */
+    private static volatile Vec3[] sight;
 
     private Trailer() {}
 
@@ -535,8 +542,8 @@ public final class Trailer {
             killMobs(p.serverLevel());
             p.setGameMode(GameType.SPECTATOR);
         }));
-        undertext("blotwood", 90, 30F);
-        undertext("inkwell_sea", 80, 120F);
+        undertext(ModStructures.FADED_VILLAGE, 100, 30F);
+        undertext(ModStructures.MARGINALIA_SPIRE, 90, 200F);
 
         // And what waits at the bottom of it.
         boss("bookbinder", ModEntities.BOOKBINDER.get(), 80, v0(3.6, 3.0, -4.8), v0(1.9, 2.9, -2.6), v0(0.5, 1.8, 0.5), v0(0.5, 2.5, 0.5),
@@ -625,42 +632,67 @@ public final class Trailer {
         });
     }
 
-    private static void undertext(String biome, int length, float heading) {
-        Shot s = shot("undertext_" + biome, length);
+    /**
+     * A slow half-orbit round one of the Undertext's structures, framed from its real bounds. The
+     * bosses that follow are posed on open ground a little way off from the last one.
+     */
+    private static void undertext(ResourceKey<Structure> key, int length, float heading) {
+        Shot s = shot("undertext_" + key.location().getPath(), length);
         s.preroll = 160;
         s.maxWait = 600;
         s.setup = () -> {
             clearMannequins();
             under = null;
+            sight = null;
             server((srv, p) -> {
                 ServerLevel level = srv.getLevel(ModDimensions.UNDERTEXT);
                 if (level == null) {
                     LOG.error("[trailer] TRAILER_FAIL the Undertext is not loaded");
                     return;
                 }
-                ResourceKey<Biome> key = ResourceKey.create(Registries.BIOME, Palimpsest.id(biome));
-                Pair<BlockPos, Holder<Biome>> found = level.findClosestBiome3d(h -> h.is(key), new BlockPos(0, 64, 0), 3000, 32, 64);
-                BlockPos at = found == null ? new BlockPos(0, 64, 0) : found.getFirst();
-                level.getChunk(at.getX() >> 4, at.getZ() >> 4);
-                int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING, at.getX(), at.getZ());
-                BlockPos stand = new BlockPos(at.getX(), top, at.getZ());
-                moveTo(p, level, stand.getX() + 0.5, stand.getY() + 2.0, stand.getZ() + 0.5, heading, 8F);
-                under = stand;
-                LOG.info("[trailer] undertext {} at {}", biome, stand);
+                BoundingBox box = structureBox(level, key);
+                BlockPos c = box == null ? new BlockPos(0, 64, 0) : box.getCenter();
+                double radius = box == null ? 16.0D : Math.min(40.0D, Math.max(box.getXSpan(), box.getZSpan()) * 0.5D + 10.0D);
+                int ground = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, c.getX(), c.getZ());
+                Vec3 focus = new Vec3(c.getX() + 0.5D, ground + (box == null ? 4.0D : Math.min(12.0D, (box.maxY() - ground) * 0.45D)), c.getZ() + 0.5D);
+                double h = Math.toRadians(heading);
+                moveTo(p, level, focus.x - Math.sin(h) * radius, focus.y + radius * 0.35D, focus.z + Math.cos(h) * radius, heading + 180F, 15F);
+                // Open ground for the bosses, well clear of the building.
+                BlockPos away = BlockPos.containing(focus.x - Math.sin(h) * (radius + 18), focus.y, focus.z + Math.cos(h) * (radius + 18));
+                under = new BlockPos(away.getX(), level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, away.getX(), away.getZ()), away.getZ());
+                sight = new Vec3[]{focus, new Vec3(radius, 0, 0)};
+                LOG.info("[trailer] undertext {} at {} (radius {})", key.location(), c, radius);
             });
         };
-        s.ready = () -> under != null && Minecraft.getInstance().level != null
+        s.ready = () -> sight != null && Minecraft.getInstance().level != null
                 && Minecraft.getInstance().level.dimension() == ModDimensions.UNDERTEXT;
         s.camera = (t, u) -> {
-            BlockPos b = under;
+            Vec3[] at = sight;
             ClientLevel level = Minecraft.getInstance().level;
-            if (b == null || level == null || level.dimension() != ModDimensions.UNDERTEXT) return null;
-            Vec3 c = Vec3.atBottomCenterOf(b);
-            float e = ease(u);
-            double yaw = Math.toRadians(heading + 35 * e);
-            Vec3 eye = c.add(0, 7.0 + 1.5 * e, 0).add(-Math.sin(Math.toRadians(heading)) * 3 * e, 0, Math.cos(Math.toRadians(heading)) * 3 * e);
-            return new Vec3[]{eye, eye.add(-Math.sin(yaw) * 20, -6.0, Math.cos(yaw) * 20)};
+            if (at == null || level == null || level.dimension() != ModDimensions.UNDERTEXT) return null;
+            Vec3 focus = at[0];
+            double radius = at[1].x;
+            double a = Math.toRadians(heading + 70.0D * ease(u));
+            Vec3 eye = focus.add(-Math.sin(a) * radius, radius * (0.35D - 0.1D * u), Math.cos(a) * radius);
+            return new Vec3[]{eye, focus};
         };
+    }
+
+    /** The bounds of the nearest copy of a structure in this dimension, with its chunks loaded, or null. */
+    private static BoundingBox structureBox(ServerLevel level, ResourceKey<Structure> key) {
+        Optional<Holder.Reference<Structure>> holder = level.registryAccess().registryOrThrow(Registries.STRUCTURE).getHolder(key);
+        if (holder.isEmpty()) return null;
+        Pair<BlockPos, Holder<Structure>> found = level.getChunkSource().getGenerator()
+                .findNearestMapStructure(level, HolderSet.direct(holder.get()), new BlockPos(0, 64, 0), 100, false);
+        if (found == null) return null;
+        BlockPos at = found.getFirst();
+        StructureStart start = level.getChunk(at.getX() >> 4, at.getZ() >> 4).getStartForStructure(holder.get().value());
+        if (start == null || !start.isValid()) return new BoundingBox(at);
+        BoundingBox box = start.getBoundingBox();
+        for (int cx = box.minX() >> 4; cx <= box.maxX() >> 4; cx++) {
+            for (int cz = box.minZ() >> 4; cz <= box.maxZ() >> 4; cz++) level.getChunk(cx, cz);
+        }
+        return box;
     }
 
     private static void boss(String name, EntityType<?> type, int length, Vec3 eye0, Vec3 eye1, Vec3 look0, Vec3 look1, String sound) {
