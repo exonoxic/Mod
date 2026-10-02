@@ -1,0 +1,8 @@
+{
+  "type": "palimpsest:dry_land",
+  "biomes": "#palimpsest:has_structure/copying_house",
+  "step": "surface_structures",
+  "spawn_overrides": {},
+  "terrain_adaptation": "beard_thin",
+  "structure": "palimpsest:copying_house_inner"
+}

@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "item": "palimpsest:reading_stand"
+    },
+    "title": {
+      "translate": "advancements.palimpsest.many_hands.title"
+    },
+    "description": {
+      "translate": "advancements.palimpsest.many_hands.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "granted": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "granted"
+    ]
+  ],
+  "parent": "palimpsest:rubrication"
+}

@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "palimpsest:lampblack"
+    },
+    {
+      "item": "palimpsest:lampblack"
+    },
+    {
+      "item": "minecraft:iron_nugget"
+    },
+    {
+      "item": "minecraft:glass_bottle"
+    }
+  ],
+  "result": {
+    "item": "palimpsest:iron_gall_ink",
+    "count": 2
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SS",
+    "SS"
+  ],
+  "key": {
+    "S": {
+      "item": "palimpsest:inkstone"
+    }
+  },
+  "result": {
+    "item": "palimpsest:polished_inkstone",
+    "count": 4
+  }
+}

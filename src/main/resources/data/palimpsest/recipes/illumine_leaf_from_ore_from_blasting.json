@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "ingredient": {
+    "item": "palimpsest:illumine_ore"
+  },
+  "result": "palimpsest:illumine_leaf",
+  "experience": 1.0,
+  "cookingtime": 100
+}

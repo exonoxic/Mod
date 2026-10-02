@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/stairs",
+  "textures": {
+    "bottom": "palimpsest:block/blotwood_planks",
+    "top": "palimpsest:block/blotwood_planks",
+    "side": "palimpsest:block/blotwood_planks"
+  }
+}

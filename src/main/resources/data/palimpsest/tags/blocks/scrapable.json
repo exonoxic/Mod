@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "palimpsest:palimpsest_stone",
+    "palimpsest:deepslate_palimpsest_stone",
+    "palimpsest:ruled_vellum",
+    "palimpsest:vellum_soil"
+  ]
+}

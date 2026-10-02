@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "V",
+    "C",
+    "B"
+  ],
+  "key": {
+    "V": {
+      "item": "palimpsest:vermilion"
+    },
+    "C": {
+      "item": "minecraft:clay_ball"
+    },
+    "B": {
+      "item": "minecraft:bone_meal"
+    }
+  },
+  "result": {
+    "item": "palimpsest:rubric_chalk",
+    "count": 1
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "palimpsest:block/blotwood_slab"
+    },
+    "type=top": {
+      "model": "palimpsest:block/blotwood_slab_top"
+    },
+    "type=double": {
+      "model": "palimpsest:block/blotwood_planks"
+    }
+  }
+}

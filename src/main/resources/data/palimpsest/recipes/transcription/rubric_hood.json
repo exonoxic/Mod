@@ -1,0 +1,17 @@
+{
+  "type": "palimpsest:transcription",
+  "result": {
+    "item": "palimpsest:rubric_hood"
+  },
+  "time": 300,
+  "surface": {
+    "item": "palimpsest:blank_vellum"
+  },
+  "ink": {
+    "item": "palimpsest:vermilion"
+  },
+  "subject": {
+    "item": "minecraft:leather_helmet"
+  },
+  "keep_nbt": true
+}

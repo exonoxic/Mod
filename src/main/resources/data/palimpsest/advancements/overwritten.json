@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "item": "palimpsest:blank_vellum"
+    },
+    "title": {
+      "translate": "advancements.palimpsest.overwritten.title"
+    },
+    "description": {
+      "translate": "advancements.palimpsest.overwritten.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "granted": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "granted"
+    ]
+  ],
+  "parent": "palimpsest:the_tear"
+}

@@ -1,0 +1,40 @@
+{
+  "display": {
+    "icon": {
+      "item": "palimpsest:gall_iron_sword"
+    },
+    "title": {
+      "translate": "advancements.palimpsest.inkbane.title"
+    },
+    "description": {
+      "translate": "advancements.palimpsest.inkbane.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "has": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "palimpsest:gall_iron_sword",
+              "palimpsest:iron_rasorium",
+              "palimpsest:illumined_censer",
+              "palimpsest:rasure_edge"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has"
+    ]
+  ],
+  "parent": "palimpsest:gall_iron"
+}

@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "minecraft:bread"
+    },
+    {
+      "item": "palimpsest:cooked_pale_venison"
+    },
+    {
+      "item": "palimpsest:blank_vellum"
+    }
+  ],
+  "result": {
+    "item": "palimpsest:scribes_ration",
+    "count": 2
+  }
+}

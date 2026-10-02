@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "item": "palimpsest:vermilion"
+    },
+    "title": {
+      "translate": "advancements.palimpsest.the_rubricator.title"
+    },
+    "description": {
+      "translate": "advancements.palimpsest.the_rubricator.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "granted": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "granted"
+    ]
+  ],
+  "parent": "palimpsest:the_undertext"
+}

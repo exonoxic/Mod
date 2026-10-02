@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "palimpsest:scraped_expanse",
+    "palimpsest:blotwood",
+    "palimpsest:rubric_wastes",
+    "palimpsest:marginalia"
+  ]
+}

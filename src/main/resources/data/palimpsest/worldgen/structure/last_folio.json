@@ -1,0 +1,8 @@
+{
+  "type": "palimpsest:dry_land",
+  "biomes": "#palimpsest:has_structure/last_folio",
+  "step": "surface_structures",
+  "spawn_overrides": {},
+  "terrain_adaptation": "beard_box",
+  "structure": "palimpsest:last_folio_inner"
+}

@@ -1,0 +1,36 @@
+{
+  "type": "palimpsest:ritual",
+  "offerings": [
+    {
+      "item": "palimpsest:bookbinder_needle"
+    },
+    {
+      "item": "palimpsest:binding_thread"
+    },
+    {
+      "item": "palimpsest:binding_thread"
+    },
+    {
+      "item": "palimpsest:illumine_leaf"
+    },
+    {
+      "item": "palimpsest:black_quill"
+    },
+    {
+      "item": "palimpsest:iron_gall_ink"
+    }
+  ],
+  "catalyst": {
+    "item": "palimpsest:margin_compass"
+  },
+  "result": {
+    "item": "palimpsest:margin_compass",
+    "count": 1,
+    "nbt": {
+      "Attuned": true
+    }
+  },
+  "dimension": "palimpsest:undertext",
+  "duration": 200,
+  "bleed": 15
+}

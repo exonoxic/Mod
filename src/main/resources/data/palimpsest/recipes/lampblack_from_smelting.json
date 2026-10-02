@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "ingredient": {
+    "tag": "palimpsest:blotwood_logs"
+  },
+  "result": "palimpsest:lampblack",
+  "experience": 0.15,
+  "cookingtime": 200
+}

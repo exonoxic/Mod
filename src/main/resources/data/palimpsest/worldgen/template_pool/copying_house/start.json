@@ -1,0 +1,15 @@
+{
+  "name": "palimpsest:copying_house/start",
+  "fallback": "minecraft:empty",
+  "elements": [
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "palimpsest:copying_house/copying_house",
+        "projection": "rigid",
+        "processors": "palimpsest:decay_heavy"
+      }
+    }
+  ]
+}

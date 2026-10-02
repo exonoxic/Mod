@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/template_torch",
+  "textures": {
+    "torch": "palimpsest:block/spent_torch"
+  },
+  "render_type": "minecraft:cutout"
+}

@@ -1,0 +1,8 @@
+{
+  "type": "palimpsest:dry_land",
+  "biomes": "#palimpsest:has_structure/scrap_shrine",
+  "step": "surface_structures",
+  "spawn_overrides": {},
+  "terrain_adaptation": "beard_thin",
+  "structure": "palimpsest:scrap_shrine_inner"
+}

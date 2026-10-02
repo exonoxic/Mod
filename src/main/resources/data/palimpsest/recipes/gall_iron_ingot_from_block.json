@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "palimpsest:gall_iron_block"
+    }
+  ],
+  "result": {
+    "item": "palimpsest:gall_iron_ingot",
+    "count": 9
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "type": "palimpsest:transcription",
+  "result": {
+    "item": "palimpsest:music_disc_lower_writing"
+  },
+  "time": 600,
+  "surface": {
+    "item": "palimpsest:faded_page"
+  },
+  "ink": {
+    "item": "palimpsest:iron_gall_ink"
+  },
+  "subject": {
+    "item": "minecraft:music_disc_13"
+  }
+}

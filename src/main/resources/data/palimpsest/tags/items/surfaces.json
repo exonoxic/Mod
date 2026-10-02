@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "palimpsest:blank_vellum",
+    "palimpsest:faded_page",
+    "minecraft:paper",
+    "minecraft:string"
+  ]
+}

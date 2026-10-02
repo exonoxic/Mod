@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "palimpsest:cinnabar"
+    }
+  ],
+  "result": {
+    "item": "palimpsest:vermilion",
+    "count": 2
+  }
+}

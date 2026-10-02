@@ -1,0 +1,25 @@
+{
+  "type": "palimpsest:ritual",
+  "offerings": [
+    {
+      "item": "minecraft:ender_pearl"
+    },
+    {
+      "item": "palimpsest:blank_vellum"
+    },
+    {
+      "item": "palimpsest:vermilion"
+    }
+  ],
+  "catalyst": {
+    "item": "minecraft:paper"
+  },
+  "result": {
+    "item": "palimpsest:bookmark",
+    "count": 2
+  },
+  "duration": 100,
+  "bleed": 6,
+  "backlash_chance": 0.05,
+  "backlash": "bleed"
+}

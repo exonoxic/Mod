@@ -1,0 +1,8 @@
+{
+  "type": "palimpsest:dry_land",
+  "biomes": "#palimpsest:has_structure/doubled_house",
+  "step": "surface_structures",
+  "spawn_overrides": {},
+  "terrain_adaptation": "beard_thin",
+  "structure": "palimpsest:doubled_house_inner"
+}

@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "palimpsest:inkstone"
+  },
+  "result": "palimpsest:inkstone_brick_slab",
+  "count": 2
+}

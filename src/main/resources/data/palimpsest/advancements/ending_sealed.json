@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "item": "palimpsest:scriveners_quill"
+    },
+    "title": {
+      "translate": "advancements.palimpsest.ending_sealed.title"
+    },
+    "description": {
+      "translate": "advancements.palimpsest.ending_sealed.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "granted": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "granted"
+    ]
+  ],
+  "parent": "palimpsest:rasure"
+}

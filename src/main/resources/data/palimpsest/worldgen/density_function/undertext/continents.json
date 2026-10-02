@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:flat_cache",
+  "argument": {
+    "type": "minecraft:noise",
+    "noise": "palimpsest:undertext/continents",
+    "xz_scale": 0.5,
+    "y_scale": 0.0
+  }
+}

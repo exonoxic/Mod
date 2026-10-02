@@ -1,0 +1,42 @@
+{
+  "type": "palimpsest:ritual",
+  "offerings": [
+    {
+      "item": "palimpsest:undertext_fragment"
+    },
+    {
+      "item": "palimpsest:undertext_fragment"
+    },
+    {
+      "item": "palimpsest:undertext_fragment"
+    },
+    {
+      "item": "palimpsest:undertext_fragment"
+    },
+    {
+      "item": "palimpsest:blank_vellum"
+    },
+    {
+      "item": "palimpsest:iron_gall_ink"
+    },
+    {
+      "item": "palimpsest:black_quill"
+    },
+    {
+      "item": "palimpsest:candlewort"
+    }
+  ],
+  "catalyst": {
+    "item": "minecraft:book"
+  },
+  "result": {
+    "item": "palimpsest:folio_of_descent",
+    "count": 1
+  },
+  "time": "night",
+  "dimension": "minecraft:overworld",
+  "duration": 160,
+  "bleed": 40,
+  "backlash_chance": 0.15,
+  "backlash": "knocker"
+}

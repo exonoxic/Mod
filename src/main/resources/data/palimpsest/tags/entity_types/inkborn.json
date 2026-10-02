@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    "palimpsest:blotling",
+    "palimpsest:margin_crawler",
+    "palimpsest:inkhound",
+    "palimpsest:knocker",
+    "palimpsest:copyist",
+    "palimpsest:longhand",
+    "palimpsest:redacted",
+    "palimpsest:erratum"
+  ]
+}

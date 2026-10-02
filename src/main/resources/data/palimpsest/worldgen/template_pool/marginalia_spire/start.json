@@ -1,0 +1,15 @@
+{
+  "name": "palimpsest:marginalia_spire/start",
+  "fallback": "minecraft:empty",
+  "elements": [
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "palimpsest:marginalia_spire/marginalia_spire",
+        "projection": "rigid",
+        "processors": "palimpsest:undertext_fade"
+      }
+    }
+  ]
+}

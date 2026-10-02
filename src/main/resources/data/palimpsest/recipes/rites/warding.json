@@ -1,0 +1,27 @@
+{
+  "type": "palimpsest:ritual",
+  "offerings": [
+    {
+      "item": "palimpsest:vermilion"
+    },
+    {
+      "item": "palimpsest:vermilion"
+    },
+    {
+      "item": "minecraft:glowstone_dust"
+    },
+    {
+      "item": "palimpsest:blank_vellum"
+    }
+  ],
+  "catalyst": {
+    "item": "minecraft:lantern"
+  },
+  "result": {
+    "item": "palimpsest:rubric_ward",
+    "count": 1
+  },
+  "time": "any",
+  "duration": 100,
+  "bleed": 4
+}

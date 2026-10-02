@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/stairs",
+  "textures": {
+    "bottom": "palimpsest:block/vellum_bricks",
+    "top": "palimpsest:block/vellum_bricks",
+    "side": "palimpsest:block/vellum_bricks"
+  }
+}

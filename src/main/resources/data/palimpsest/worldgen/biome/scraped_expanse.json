@@ -1,0 +1,120 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.5,
+  "downfall": 0.0,
+  "effects": {
+    "fog_color": 10261122,
+    "water_color": 1314841,
+    "water_fog_color": 525835,
+    "ambient_sound": "palimpsest:ambient.undertext.loop",
+    "mood_sound": {
+      "sound": "palimpsest:ambient.undertext.mood",
+      "tick_delay": 6000,
+      "block_search_extent": 8,
+      "offset": 2.0
+    },
+    "additions_sound": {
+      "sound": "palimpsest:ambient.undertext.additions",
+      "tick_chance": 0.008
+    },
+    "music": {
+      "sound": "palimpsest:music.undertext",
+      "min_delay": 12000,
+      "max_delay": 24000,
+      "replace_current_music": false
+    },
+    "sky_color": 13221798,
+    "grass_color_modifier": "none",
+    "grass_color": 14077104,
+    "foliage_color": 2762290,
+    "particle": {
+      "options": {
+        "type": "palimpsest:ash_fleck"
+      },
+      "probability": 0.0025
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "palimpsest:blotling",
+        "weight": 40,
+        "minCount": 1,
+        "maxCount": 3
+      },
+      {
+        "type": "palimpsest:margin_crawler",
+        "weight": 30,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "palimpsest:inkhound",
+        "weight": 25,
+        "minCount": 2,
+        "maxCount": 3
+      },
+      {
+        "type": "palimpsest:redacted",
+        "weight": 6,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
+    "creature": [
+      {
+        "type": "palimpsest:smudge",
+        "weight": 8,
+        "minCount": 1,
+        "maxCount": 3
+      },
+      {
+        "type": "palimpsest:pale_stag",
+        "weight": 6,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "palimpsest:quillcrow",
+        "weight": 4,
+        "minCount": 1,
+        "maxCount": 2
+      }
+    ],
+    "ambient": [
+      {
+        "type": "palimpsest:foxing_moth",
+        "weight": 10,
+        "minCount": 2,
+        "maxCount": 4
+      }
+    ],
+    "water_creature": [],
+    "underground_water_creature": [],
+    "water_ambient": [],
+    "misc": [],
+    "axolotls": []
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "palimpsest:undertext_illumine_ore"
+    ],
+    [],
+    [],
+    [
+      "palimpsest:undertext_erased_grass",
+      "palimpsest:undertext_candlewort",
+      "palimpsest:undertext_dead_blotwood",
+      "palimpsest:undertext_page_pillar"
+    ],
+    []
+  ]
+}
