@@ -415,7 +415,8 @@ def knocker():
         // Every state eases in and out rather than snapping.
         float knocking = Anim.ease(entity, 0, state == $K.KNOCKING, ageInTicks, 0.18F);
         float lunging = Anim.ease(entity, 1, state == $K.LUNGE, ageInTicks, 0.3F);
-        float searching = Anim.ease(entity, 2, state == $K.SEARCHING, ageInTicks, 0.1F);
+        // Stalking, it carries itself as it does going round the house: hunched, head cocked.
+        float searching = Anim.ease(entity, 2, state == $K.SEARCHING || state == $K.STALKING, ageInTicks, 0.1F);
         float leaving = Anim.ease(entity, 3, state == $K.LEAVING, ageInTicks, 0.1F);
         float idle = Math.max(0.0F, 1.0F - knocking - lunging - searching - leaving);
         // Bent double or crawling, its body keeps that shape; only the jaw and hands still act.

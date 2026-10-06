@@ -35,6 +35,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.animal.Pig;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DoorBlock;
@@ -330,6 +331,36 @@ public final class PalimpsestGameTests {
             check(copyist.getX() > goal.getX(), "the Copyist has not climbed through yet (at x " + (copyist.getX() - helper.absolutePos(BlockPos.ZERO).getX())
                     + ", poses seen " + seen + ")");
             check(seen.contains(Squeeze.CRAWL), "the Copyist never crawled into the hole");
+        });
+    }
+
+    /**
+     * A Knocker with someone in view does not go straight for them: it shadows them for some seconds,
+     * closing in but keeping out of reach, and only then comes.
+     */
+    @GameTest(template = YARD, timeoutTicks = 600)
+    public static void knockerStalksBeforeItComes(GameTestHelper helper) {
+        for (int x = 0; x <= 16; x++) {
+            for (int z = 0; z <= 16; z++) helper.setBlock(new BlockPos(x, 0, z), Blocks.STONE);
+        }
+        Player quarry = helper.makeMockSurvivalPlayer();
+        Vec3 at = Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(15, 1, 8)));
+        quarry.setPos(at.x, at.y, at.z);
+        KnockerEntity knocker = helper.spawn(ModEntities.KNOCKER.get(), new BlockPos(1, 1, 8));
+        knocker.stalk(quarry);
+        long[] came = {-1L};
+        double[] nearest = {Double.MAX_VALUE};
+        helper.onEachTick(() -> {
+            if (came[0] >= 0) return;
+            if (knocker.getState() == KnockerEntity.LUNGE) came[0] = helper.getTick();
+            else nearest[0] = Math.min(nearest[0], knocker.distanceTo(quarry));
+        });
+        helper.succeedWhen(() -> {
+            check(knocker.isAlive(), "the Knocker vanished instead of stalking");
+            check(came[0] >= 0, "the Knocker is still only stalking (state " + knocker.getState() + ", " + knocker.distanceTo(quarry) + " away)");
+            check(came[0] >= 150, "the Knocker came for its quarry after only " + came[0] + " ticks, without stalking it first");
+            check(nearest[0] < 9.0D, "the Knocker never closed in while it stalked (nearest " + nearest[0] + ")");
+            check(nearest[0] > 3.4D, "the Knocker walked right up to its quarry while it was only stalking (nearest " + nearest[0] + ")");
         });
     }
 

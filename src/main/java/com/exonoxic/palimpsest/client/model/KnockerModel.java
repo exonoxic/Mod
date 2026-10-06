@@ -182,7 +182,8 @@ public class KnockerModel<T extends KnockerEntity> extends HierarchicalModel<T> 
         // Every state eases in and out rather than snapping.
         float knocking = Anim.ease(entity, 0, state == com.exonoxic.palimpsest.entity.KnockerEntity.KNOCKING, ageInTicks, 0.18F);
         float lunging = Anim.ease(entity, 1, state == com.exonoxic.palimpsest.entity.KnockerEntity.LUNGE, ageInTicks, 0.3F);
-        float searching = Anim.ease(entity, 2, state == com.exonoxic.palimpsest.entity.KnockerEntity.SEARCHING, ageInTicks, 0.1F);
+        // Stalking, it carries itself as it does going round the house: hunched, head cocked.
+        float searching = Anim.ease(entity, 2, state == com.exonoxic.palimpsest.entity.KnockerEntity.SEARCHING || state == com.exonoxic.palimpsest.entity.KnockerEntity.STALKING, ageInTicks, 0.1F);
         float leaving = Anim.ease(entity, 3, state == com.exonoxic.palimpsest.entity.KnockerEntity.LEAVING, ageInTicks, 0.1F);
         float idle = Math.max(0.0F, 1.0F - knocking - lunging - searching - leaving);
         // Bent double or crawling, its body keeps that shape; only the jaw and hands still act.

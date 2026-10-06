@@ -310,7 +310,7 @@ public final class SmokeTest {
             step(8, () -> server((srv, p) -> {
                 for (KnockerEntity k : p.serverLevel().getEntitiesOfClass(KnockerEntity.class, p.getBoundingBox().inflate(32))) {
                     if (Math.abs(k.getX() - 0.5D) < 1.0D && k.getZ() > -4.3D && k.getZ() < -1.7D) huntGap++;
-                    if (k.getState() == KnockerEntity.LUNGE) {
+                    if (k.getState() == KnockerEntity.LUNGE || k.getState() == KnockerEntity.STALKING) {
                         huntLunge++;
                         Vec3 eye = p.getEyePosition();
                         Vec3 at = k.getEyePosition();

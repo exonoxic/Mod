@@ -395,7 +395,8 @@ public final class Trailer {
         };
         gap.camera = (t, u) -> new Vec3[]{null, v(0.5, 0.45 + 0.1 * u, -3.0)};
 
-        Shot lunge = shot("hunt_lunge", 80);
+        // In the room with you it stands and watches first; then it comes.
+        Shot lunge = shot("hunt_lunge", 220);
         lunge.preroll = 0;
         lunge.camera = (t, u) -> {
             KnockerEntity k = knocker();

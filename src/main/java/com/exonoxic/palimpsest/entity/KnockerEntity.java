@@ -69,14 +69,21 @@ import java.util.UUID;
  * the door and knocks again, harder. Lanterns and the like, which it cannot put out, keep it
  * off, as do wards and the dawn.</p>
  *
- * <p>States: KNOCKING at a door; SEARCHING for another way in; LUNGE after the door opens (or
- * someone steps outside, or it gets in); LEAVING at dawn, when warded off, or when it gives up.</p>
+ * <p>And when it does have you in view (you stepped outside, or it got in), it does not come at
+ * once. It follows, keeping its distance, stopping dead whenever you look at it and closing in
+ * when you look away, for a quarter of a minute or so. Then it comes. Walking up to it, or
+ * hurting it, ends the waiting early.</p>
+ *
+ * <p>States: KNOCKING at a door; SEARCHING for another way in; STALKING someone it can see;
+ * LUNGE when it comes for them (or the door is opened in its face); LEAVING at dawn, when warded
+ * off, or when it gives up.</p>
  */
 public class KnockerEntity extends Monster implements Apparition, Squeezer {
     public static final int KNOCKING = 1;
     public static final int LUNGE = 2;
     public static final int LEAVING = 3;
     public static final int SEARCHING = 4;
+    public static final int STALKING = 5;
     /**
      * Gestures, each timed to the hits in its sound: three knocks on a door (event.knock holds all
      * three), the same pounded slower and harder, knuckles rapped on a wall, slow taps on a window,
@@ -105,6 +112,17 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
     private static final int SEARCH_BEFORE_RETURN = 1200;
     private static final double PROWL_SPEED = 0.55D;
     private static final double CREEP_SPEED = 0.8D;
+    private static final double STALK_SPEED = 0.5D;
+    /** How long it shadows someone before it comes for them, in ticks: out in the open, and once it is in the house with them. */
+    private static final int STALK_MIN = 160;
+    private static final int STALK_MAX = 320;
+    private static final int STALK_INSIDE_MIN = 60;
+    private static final int STALK_INSIDE_MAX = 140;
+    /** Stalking, it comes no nearer than this; and anyone who comes this near to it has stopped being stalked. */
+    private static final double STALK_KEEP = 6.0D;
+    private static final double STALK_BREAK = 3.5D;
+    /** With nobody to haunt (a spawn egg, a command), it waits this long for someone before it goes. */
+    private static final int UNBOUND_WAIT = 600;
 
     private static final EntityDataAccessor<Integer> STATE = SynchedEntityData.defineId(KnockerEntity.class, EntityDataSerializers.INT);
     /** The latest gesture: a count in the high bits, so the same gesture twice still reads as new, and its kind in the low three. */
@@ -141,6 +159,10 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
     private int brightTicks;
     private int heartbeatIn;
     private int silence;
+    private int stalkTicks;
+    /** Ticks since it last had whoever it is after in view (stalking or lunging). */
+    private int lostSight;
+    private int unbound;
     private int gestures;
     /** A gesture's sound, waiting out {@link #GESTURE_LEAD}. */
     @Nullable
@@ -229,13 +251,13 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
         return true;
     }
 
-    /** Arrives already hunting (a gate read in a storm, a rite gone wrong). */
+    /** Arrives already hunting (a gate read in a storm, a rite gone wrong): a short look, then it comes. */
     public static void comeThrough(ServerLevel level, BlockPos pos, ServerPlayer player) {
         KnockerEntity k = Apparitions.spawn(ModEntities.KNOCKER.get(), level, pos, player, e -> {
             e.apparition.begin(player, -1, 0);
             e.setPersistenceRequired();
         });
-        if (k != null) k.lunge(player);
+        if (k != null) k.stalk(player, STALK_INSIDE_MIN, STALK_INSIDE_MAX);
     }
 
     /** Whether it has found a way in and is coming through it. */
@@ -292,7 +314,8 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
-        entityData.define(STATE, LUNGE);
+        // Nobody's in particular until it is given a door or a quarry (see tickStalking).
+        entityData.define(STATE, STALKING);
         entityData.define(GESTURE, 0);
         entityData.define(VIEWER, Optional.empty());
     }
@@ -313,15 +336,32 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
         });
     }
 
-    private void lunge(Player target) {
+    private void lunge(LivingEntity target) {
         creeping = false;
         watching = 0;
+        lostSight = 0;
         squeeze.holdAtLeast(Pose.STANDING);
         entityData.set(STATE, LUNGE);
         entityData.set(VIEWER, Optional.empty());
         lungeTicks = 900;
         setTarget(target);
         playSound(ModSounds.KNOCKER_LUNGE.get(), 2.0F, 0.9F + random.nextFloat() * 0.15F);
+    }
+
+    /** Has someone in view and starts to shadow them: {@link #STALK_MIN} to {@link #STALK_MAX} ticks of it, then it comes. */
+    public void stalk(LivingEntity target) {
+        stalk(target, STALK_MIN, STALK_MAX);
+    }
+
+    private void stalk(LivingEntity target, int min, int max) {
+        creeping = false;
+        watching = 0;
+        lostSight = 0;
+        squeeze.holdAtLeast(Pose.STANDING);
+        entityData.set(STATE, STALKING);
+        stalkTicks = min + random.nextInt(max - min + 1);
+        setTarget(target);
+        getNavigation().stop();
     }
 
     private void leave() {
@@ -346,6 +386,7 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
             case LUNGE -> tickLunge();
             case LEAVING -> tickLeaving();
             case SEARCHING -> tickSearching();
+            case STALKING -> tickStalking();
             default -> leave();
         }
     }
@@ -353,7 +394,9 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
     private void tickKnocking() {
         getNavigation().stop();
         if (door == null || !(level().getBlockState(door).getBlock() instanceof DoorBlock)) {
-            leave();
+            // The door has gone (broken down, burnt). That is not a reason to leave: it is a way in.
+            door = null;
+            startSearching();
             return;
         }
         getLookControl().setLookAt(door.getX() + 0.5, door.getY() + 1.2, door.getZ() + 0.5);
@@ -387,10 +430,9 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
             knockDelay = 0;
             knockCooldown = 160 + random.nextInt(220);
         }
-        Player outside = level().getNearestPlayer(this, 14);
-        if (outside != null && !outside.isCreative() && !outside.isSpectator() && hasLineOfSight(outside)
-                && level().canSeeSky(outside.blockPosition().above()) && !WardHelper.isPlayerWarded(outside)) {
-            lunge(outside);
+        Player outside = level().getNearestPlayer(getX(), getY(), getZ(), 14, true);
+        if (outside != null && exposed(outside)) {
+            stalk(outside);
             return;
         }
         if (--visit <= 0 || WardHelper.isWarded(level(), door, 16) || (level().isDay() && level().canSeeSky(blockPosition().above(2)))) {
@@ -405,16 +447,7 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
 
     private void tickLunge() {
         LivingEntity target = getTarget();
-        if (target == null && lungeTicks == 0) {
-            // Spawned without a door (egg, command): pick up whoever is nearest, briefly.
-            Player nearest = level().getNearestPlayer(this, 24);
-            if (nearest != null && !nearest.isCreative() && !nearest.isSpectator()) {
-                lunge(nearest);
-                return;
-            }
-        }
-        boolean lost = target == null || !target.isAlive() || (target instanceof Player p && (p.isCreative() || p.isSpectator()));
-        if (lost || --lungeTicks <= 0) {
+        if (gone(target) || --lungeTicks <= 0) {
             leave();
             return;
         }
@@ -424,7 +457,96 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
             leave();
             return;
         }
-        if (target instanceof Player p && WardHelper.isPlayerWarded(p) && distanceToSqr(p) < 36) leave();
+        if (target instanceof Player p && WardHelper.isPlayerWarded(p) && distanceToSqr(p) < 36) {
+            leave();
+            return;
+        }
+        // They got indoors and shut it out. It does not stand at the wall until it gives up: it goes
+        // back to trying the house.
+        if (shutOut(target)) besiege();
+    }
+
+    // ------------------------------------------------------------------ following, before it comes
+
+    private void tickStalking() {
+        LivingEntity target = getTarget();
+        if (target == null) {
+            // Nobody's yet (a spawn egg, a command, a reload): whoever comes near will do.
+            Player near = level().getNearestPlayer(getX(), getY(), getZ(), 24, true);
+            if (near != null) stalk(near);
+            else if (++unbound > UNBOUND_WAIT) leave();
+            return;
+        }
+        if (gone(target)) {
+            leave();
+            return;
+        }
+        snuffAround();
+        if (tooBright(13) || (target instanceof Player w && WardHelper.isPlayerWarded(w) && distanceToSqr(w) < 36)) {
+            leave();
+            return;
+        }
+        double distSq = distanceToSqr(target);
+        boolean sees = hasLineOfSight(target);
+        // Walk up to it and it stops waiting.
+        if (sees && distSq < STALK_BREAK * STALK_BREAK) {
+            lunge(target);
+            return;
+        }
+        if (shutOut(target)) {
+            besiege();
+            return;
+        }
+        if (sees && --stalkTicks <= 0) {
+            lunge(target);
+            return;
+        }
+        if (target instanceof ServerPlayer sp) heartbeat(sp);
+        getLookControl().setLookAt(target, 30.0F, 30.0F);
+        // It stops dead while they look at it, and closes in while they do not; never quite into reach.
+        if ((sees && lookedAtBy(target)) || (sees && distSq < STALK_KEEP * STALK_KEEP)) {
+            getNavigation().stop();
+        } else if (getNavigation().isDone() || tickCount % 10 == 0) {
+            getNavigation().moveTo(target, STALK_SPEED);
+        }
+    }
+
+    private static boolean gone(@Nullable LivingEntity target) {
+        return target == null || !target.isAlive() || (target instanceof Player p && (p.isCreative() || p.isSpectator()));
+    }
+
+    /** Out of sight for four seconds and more, with no way through to them: they are behind a wall it cannot pass. */
+    private boolean shutOut(LivingEntity target) {
+        if (hasLineOfSight(target)) {
+            lostSight = 0;
+            return false;
+        }
+        if (++lostSight < 80 || lostSight % 20 != 0) return false;
+        Path way = wayIn(target.blockPosition());
+        return way == null || !way.canReach();
+    }
+
+    /** Back to going round the house, for a while at least. */
+    private void besiege() {
+        setTarget(null);
+        visit = Math.max(visit, 1200);
+        startSearching();
+    }
+
+    /** Is this one looking more or less straight at it? */
+    private boolean lookedAtBy(LivingEntity viewer) {
+        Vec3 to = getEyePosition().subtract(viewer.getEyePosition());
+        double len = to.length();
+        return len > 1.0E-3D && viewer.getViewVector(1.0F).dot(to.scale(1.0D / len)) > 0.9D;
+    }
+
+    /** Only the one it came for hears it: their own heart, faster the closer it gets. */
+    private void heartbeat(ServerPlayer sp) {
+        if (--heartbeatIn > 0) return;
+        float near = (float) Mth.clamp(1.0D - Math.sqrt(distanceToSqr(sp)) / 24.0D, 0.0D, 1.0D);
+        float pitch = 0.85F + 0.5F * near;
+        Sounds.playTo(sp, ModSounds.EVENT_HEARTBEAT.get(), SoundSource.AMBIENT, sp.getEyePosition(), 0.3F + 0.5F * near, pitch);
+        heartbeatIn = (int) (76 / pitch);
     }
 
     // ------------------------------------------------------------------ looking for another way in
@@ -458,8 +580,7 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
             return;
         }
         if (exposed(p)) {
-            squeeze.holdAtLeast(Pose.STANDING);
-            lunge(p);
+            stalk(p);
             return;
         }
         if (creeping) {
@@ -536,17 +657,12 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
     /** Found a way in: it comes through quietly and only shows itself when it is close. */
     private void tickCreeping(Player p) {
         if (distanceToSqr(p) < 8 * 8 && hasLineOfSight(p)) {
+            // In the room with them, and seen. It still does not come at once.
             if (p instanceof ServerPlayer sp) Sounds.playTo(sp, ModSounds.EVENT_STINGER.get(), SoundSource.HOSTILE, sp.getEyePosition(), 0.9F, 1.0F);
-            lunge(p);
+            stalk(p, STALK_INSIDE_MIN, STALK_INSIDE_MAX);
             return;
         }
-        // Only the one it came for hears it: their own heart, faster the closer it gets.
-        if (p instanceof ServerPlayer sp && --heartbeatIn <= 0) {
-            float near = (float) Mth.clamp(1.0D - Math.sqrt(distanceToSqr(sp)) / 24.0D, 0.0D, 1.0D);
-            float pitch = 0.85F + 0.5F * near;
-            Sounds.playTo(sp, ModSounds.EVENT_HEARTBEAT.get(), SoundSource.AMBIENT, sp.getEyePosition(), 0.3F + 0.5F * near, pitch);
-            heartbeatIn = (int) (76 / pitch);
-        }
+        if (p instanceof ServerPlayer sp) heartbeat(sp);
         snuffAround();
         if (tooBright(13)) {
             leave();
@@ -771,7 +887,9 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
     @Override
     public boolean hurt(DamageSource source, float amount) {
         boolean hurt = super.hurt(source, amount);
-        if (hurt && !level().isClientSide && (getState() == KNOCKING || getState() == SEARCHING) && source.getEntity() instanceof Player p) lunge(p);
+        // Hurting it ends any waiting.
+        if (hurt && !level().isClientSide && getState() != LUNGE && getState() != LEAVING && source.getEntity() instanceof Player p
+                && !p.isCreative()) lunge(p);
         return hurt;
     }
 
@@ -812,7 +930,9 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         apparition.load(tag);
-        entityData.set(STATE, tag.contains("State") ? tag.getInt("State") : LEAVING);
+        // No state at all is one made by /summon or an egg: it keeps the one it was made with. One
+        // saved mid-charge has lost whoever it was after, and looks for them again.
+        if (tag.contains("State")) entityData.set(STATE, tag.getInt("State") == LUNGE ? STALKING : tag.getInt("State"));
         visit = tag.getInt("Visit");
         opened = tag.getBoolean("Opened");
         door = tag.contains("Door") ? NbtUtils.readBlockPos(tag.getCompound("Door")) : null;
