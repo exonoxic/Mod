@@ -39,6 +39,7 @@ import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DoorBlock;
@@ -51,6 +52,8 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -360,8 +363,14 @@ public final class PalimpsestGameTests {
             else nearest[0] = Math.min(nearest[0], knocker.distanceTo(quarry));
         });
         helper.succeedWhen(() -> {
-            String what = knocker.describe() + ", " + knocker.distanceTo(quarry) + " away, nearest " + nearest[0] + ", came at " + came[0]
-                    + (knocker.isAlive() ? "" : ", gone");
+            // What, if anything, stands between them (it should be open ground).
+            BlockHitResult between = helper.getLevel().clip(new ClipContext(knocker.getEyePosition(), quarry.getEyePosition(),
+                    ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, knocker));
+            BlockPos origin = helper.absolutePos(BlockPos.ZERO);
+            String what = knocker.describe() + ", at " + knocker.position().subtract(Vec3.atLowerCornerOf(origin)) + ", " + knocker.distanceTo(quarry)
+                    + " away, nearest " + nearest[0] + ", came at " + came[0] + (knocker.isAlive() ? "" : ", gone")
+                    + (between.getType() == HitResult.Type.MISS ? ", clear view" : ", view blocked by " + helper.getLevel().getBlockState(between.getBlockPos())
+                    + " at " + between.getBlockPos().subtract(origin));
             check(came[0] >= 0, "the Knocker never came for its quarry (" + what + ")");
             check(came[0] >= 150, "the Knocker came for its quarry without stalking it first (" + what + ")");
             check(nearest[0] < 9.0D, "the Knocker never closed in while it stalked (" + what + ")");
