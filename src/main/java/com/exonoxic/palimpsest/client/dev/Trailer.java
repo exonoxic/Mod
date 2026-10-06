@@ -380,6 +380,9 @@ public final class Trailer {
             }
             if (t == 118) {
                 server((srv, p) -> {
+                    // (Cracks outlive the block they were on, and would show on the next shot's new door.)
+                    p.serverLevel().destroyBlockProgress(-7001, at(0, 0, 3), -1);
+                    p.serverLevel().destroyBlockProgress(-7002, at(0, 1, 3), -1);
                     p.serverLevel().destroyBlock(at(0, 0, 3), false);
                     p.serverLevel().playSound(null, at(0, 1, 3), SoundEvents.ZOMBIE_BREAK_WOODEN_DOOR, SoundSource.HOSTILE, 2.0F, 0.7F);
                 });
