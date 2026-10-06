@@ -360,11 +360,12 @@ public final class PalimpsestGameTests {
             else nearest[0] = Math.min(nearest[0], knocker.distanceTo(quarry));
         });
         helper.succeedWhen(() -> {
-            check(knocker.isAlive(), "the Knocker vanished instead of stalking");
-            check(came[0] >= 0, "the Knocker is still only stalking (state " + knocker.getState() + ", " + knocker.distanceTo(quarry) + " away)");
-            check(came[0] >= 150, "the Knocker came for its quarry after only " + came[0] + " ticks, without stalking it first");
-            check(nearest[0] < 9.0D, "the Knocker never closed in while it stalked (nearest " + nearest[0] + ")");
-            check(nearest[0] > 3.4D, "the Knocker walked right up to its quarry while it was only stalking (nearest " + nearest[0] + ")");
+            String what = knocker.describe() + ", " + knocker.distanceTo(quarry) + " away, nearest " + nearest[0] + ", came at " + came[0]
+                    + (knocker.isAlive() ? "" : ", gone");
+            check(came[0] >= 0, "the Knocker never came for its quarry (" + what + ")");
+            check(came[0] >= 150, "the Knocker came for its quarry without stalking it first (" + what + ")");
+            check(nearest[0] < 9.0D, "the Knocker never closed in while it stalked (" + what + ")");
+            check(nearest[0] > 3.4D, "the Knocker walked right up to its quarry while it was only stalking (" + what + ")");
         });
     }
 
