@@ -27,6 +27,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BiomeTags;
 import net.minecraft.util.Mth;
@@ -352,6 +353,39 @@ public final class Trailer {
             if (t == 16 + KnockerEntity.GESTURE_LEAD) sound("entity.knocker.glass_tap", v(-1.0, 1.8, 3.0), 1.2F, 1.0F);
             if (t == 74) SmokeTest.knockerGesture(KnockerEntity.GESTURE_SCRATCH);
             if (t == 74 + KnockerEntity.GESTURE_LEAD) sound("entity.knocker.glass_scratch", v(-1.0, 1.7, 3.0), 1.2F, 1.0F);
+        };
+
+        // Later still: back at the door, with its nails, until the door comes down.
+        Shot breakIn = shot("knocker_breaks_in", 140);
+        breakIn.setup = () -> {
+            clearMannequins();
+            MannequinAnim.subject = mannequin(ModEntities.KNOCKER.get(), x(0.5), y(0), z(4.0 + KnockerEntity.REACH + 0.03), 180F,
+                    k -> data(k, "STATE", KnockerEntity.SEARCHING));
+        };
+        breakIn.camera = dolly(v(-3.6, 2.0, 6.8), v(-2.1, 1.8, 5.5), v(0.5, 1.6, 4.0), v(0.5, 1.5, 3.6));
+        breakIn.each = t -> {
+            if (t == 4 || t == 64) SmokeTest.knockerGesture(KnockerEntity.GESTURE_SCRATCH);
+            if (t == 4 + KnockerEntity.GESTURE_LEAD || t == 64 + KnockerEntity.GESTURE_LEAD) sound("entity.knocker.scratch", v(0.5, 1.4, 3.6), 1.6F, 0.95F);
+            Minecraft mc = Minecraft.getInstance();
+            if ((t == 40 || t == 95) && mc.level != null) {
+                mc.level.playLocalSound(x(0.5), y(1.0), z(3.5), SoundEvents.ZOMBIE_ATTACK_WOODEN_DOOR, SoundSource.HOSTILE, 1.2F, 0.6F, false);
+            }
+            // The cracks spread as they do on any block being broken; then it gives.
+            if (t >= 10 && t < 118 && (t - 10) % 12 == 0) {
+                int stage = (t - 10) / 12;
+                server((srv, p) -> {
+                    p.serverLevel().destroyBlockProgress(-7001, at(0, 0, 3), stage);
+                    p.serverLevel().destroyBlockProgress(-7002, at(0, 1, 3), stage);
+                });
+            }
+            if (t == 118) {
+                server((srv, p) -> {
+                    p.serverLevel().destroyBlock(at(0, 0, 3), false);
+                    p.serverLevel().playSound(null, at(0, 1, 3), SoundEvents.ZOMBIE_BREAK_WOODEN_DOOR, SoundSource.HOSTILE, 2.0F, 0.7F);
+                });
+                if (MannequinAnim.subject != null) data(MannequinAnim.subject, "STATE", KnockerEntity.LUNGE);
+                sound("entity.knocker.lunge", v(0.5, 1.6, 4.5), 1.6F, 0.95F);
+            }
         };
 
         card("dont_answer", 56, 56, 3, false, "When it knocks,", "don't answer.").each = t -> {
