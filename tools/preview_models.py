@@ -89,8 +89,10 @@ def collect(model, pose):
         for c in part.children:
             visit(c, m2, t2)
 
+    # "__root__" poses the whole model (as the swim does): a rotation about the origin, then an offset.
+    whole = tuple(pose.get("__root__", ())) + (0,) * 6
     for p in model.parts:
-        visit(p, np.eye(3), np.zeros(3))
+        visit(p, rot_zyx(*whole[:3]), np.array(whole[3:6], dtype=float))
     return quads
 
 
@@ -243,10 +245,13 @@ POSES = {
 
 
 def blend_poses():
-    """Each model's blend poses (crawling, stooping...) as named poses."""
+    """Each model's blend poses (crawling, stooping...) and two moments of its swim, as named poses."""
     for m in gm.MODELS:
         for var, _, deltas in m.blends:
             POSES.setdefault(m.name, {})[var] = deltas
+        if gm.swim_terms(m):
+            POSES.setdefault(m.name, {})["swim"] = gm.swim_pose(m, 0.5)
+            POSES.setdefault(m.name, {})["swim2"] = gm.swim_pose(m, 0.5 + 3.14159)
 
 
 def model_by_name(name):

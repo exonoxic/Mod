@@ -150,6 +150,10 @@ public class PaleStagModel<T extends PaleStagEntity> extends HierarchicalModel<T
     @Override
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         root().getAllParts().forEach(ModelPart::resetPose);
+        // Off the bottom in water it swims rather than walks (the walk below fades out as this fades in).
+        float swim = Anim.ease(entity, Anim.SWIM, entity.isInWater() && !entity.onGround(), ageInTicks, 0.12F);
+        float stroke = limbSwing * 0.5F + ageInTicks * 0.09F;
+        limbSwingAmount *= 1.0F - swim;
         float a = Math.min(1.0F, limbSwingAmount);
         float w = limbSwing * 0.5F;
         // It holds itself dead still and turns only its blank face to follow you: the neck does
@@ -174,5 +178,15 @@ public class PaleStagModel<T extends PaleStagEntity> extends HierarchicalModel<T
         tail.xRot += a * 0.6F;
         leftAntlerDripA.zRot += Mth.sin(ageInTicks * 0.09F) * 0.15F;
         rightAntlerDripA.zRot += Mth.sin(ageInTicks * 0.08F + 1.3F) * 0.15F;
+        if (swim > 0.0F) {
+            // Afloat it swims: legs churning under it, head held up out of the water.
+            root.xRot += swim * -0.1F;
+            root.y += swim * 9.0F;
+            frontLeftLeg.xRot += swim * Mth.sin(stroke * 1.6F) * 0.6F;
+            hindRightLeg.xRot += swim * Mth.sin(stroke * 1.6F + 1.5708F) * 0.6F;
+            frontRightLeg.xRot += swim * Mth.sin(stroke * 1.6F + 3.1416F) * 0.6F;
+            hindLeftLeg.xRot += swim * Mth.sin(stroke * 1.6F + 4.7124F) * 0.6F;
+            head.xRot += swim * -0.25F;
+        }
     }
 }

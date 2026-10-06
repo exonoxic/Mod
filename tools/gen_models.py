@@ -315,7 +315,8 @@ def write_java(model):
     }}
 """
     extra = "".join(f"import {i};\n" for i in model.extra_imports)
-    blend_vars = "".join(f"        float {var} = {expr};\n" for var, expr, _ in model.blends)
+    swim_pre, swim_post = swim_java(model)
+    blend_vars = swim_pre + "".join(f"        float {var} = {expr};\n" for var, expr, _ in model.blends)
     blend_offsets = ""
     names = {p.name for p in model.all_parts()}
     for var, _, deltas in model.blends:
@@ -374,7 +375,7 @@ public class {model.cls}<T extends {model.entity.split('.')[-1]}> extends Hierar
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {{
         root().getAllParts().forEach(ModelPart::resetPose);
 {blend_vars}{model.anim.rstrip()}
-{blend_offsets}    }}
+{swim_post}{blend_offsets}    }}
 {alpha_override}}}
 """
     os.makedirs(JAVA_DIR, exist_ok=True)
@@ -936,6 +937,162 @@ import bestiary  # noqa: E402
 
 MODELS = [creature_designs.knocker(), creature_designs.longhand(), bestiary.smudge(), bestiary.redacted(), bestiary.rubricator(), creature_designs.copyist(), bestiary.inkhound(), bestiary.pale_stag(), bestiary.quillcrow(),
           bestiary.foxing_moth(), bestiary.blotling(), bestiary.margin_crawler(), creature_designs.erratum(), creature_designs.erratum_eye(), bestiary.palehand(), bestiary.bookbinder(), bestiary.rasure()]
+
+
+# ---------------------------------------------------------------- swimming
+# Afloat (in water and off the bottom) a creature stops walking and swims instead. Each entry says
+# how: "crawl" for the two-legged ones (face down, arm over arm, legs kicking), "paddle" for anything
+# on four or more legs (legs churning under it, head held up), "drift" for the ones in robes. The
+# same numbers drive the Java and the preview tool's "swim" poses.
+def _biped(pitch, arms, legs=(), forearms=(), shins=(), head="head", hip=None, head_lift=0.9, kick=0.45):
+    return dict(kind="crawl", pitch=pitch, arms=arms, legs=legs, forearms=forearms, shins=shins, head=head, hip=hip,
+                head_lift=head_lift, kick=kick)
+
+
+_ARMS = ("left_upper_arm", "right_upper_arm")
+_FOREARMS = ("left_forearm", "right_forearm")
+SWIM = {
+    "knocker": _biped(1.05, _ARMS, ("left_thigh", "right_thigh"), _FOREARMS, ("left_shin", "right_shin"), hip="hips"),
+    "longhand": _biped(1.2, _ARMS, ("left_thigh", "right_thigh"), _FOREARMS, ("left_shin", "right_shin"), hip="pelvis"),
+    "copyist": _biped(0.75, _ARMS, ("left_thigh", "right_thigh"), _FOREARMS, ("left_shin", "right_shin"), hip="pelvis", head_lift=0.5),
+    "redacted": _biped(1.2, ("left_arm", "right_arm"), ("left_leg", "right_leg"), _FOREARMS, ("left_shin", "right_shin"), hip="hips"),
+    "smudge": _biped(1.2, ("left_arm", "right_arm"), ("left_leg", "right_leg"), _FOREARMS, ("left_shin", "right_shin"), hip="hips"),
+    "rubricator": dict(kind="drift", pitch=0.55, hip="body", head="head", arms=("left_arm", "right_arm"), trail=("skirt",), reach=1.0),
+    "rasure": dict(kind="drift", pitch=0.45, hip="body", head="head", arms=("left_arm", "blade_arm"), trail=("robe",), reach=0.7, drop=False),
+    "inkhound": dict(kind="paddle", pitch=-0.12, drop=4.0, head="head", head_lift=0.3, axis="xRot", amp=0.7,
+                     legs=("front_left_leg", "hind_right_leg", "front_right_leg", "hind_left_leg")),
+    "pale_stag": dict(kind="paddle", pitch=-0.1, drop=9.0, head="head", head_lift=0.25, axis="xRot", amp=0.6,
+                      legs=("front_left_leg", "hind_right_leg", "front_right_leg", "hind_left_leg")),
+    "bookbinder": dict(kind="paddle", pitch=0.0, drop=2.0, head="head", head_lift=0.0, axis="yRot", amp=0.45,
+                       legs=("left_leg_0", "right_leg_1", "left_leg_2", "right_leg_0", "left_leg_1", "right_leg_2")),
+    "margin_crawler": dict(kind="paddle", pitch=0.0, drop=0.0, head="head", head_lift=0.2, axis="yRot", amp=0.7,
+                           legs=("left_hand_0", "right_hand_0", "left_hand_1", "right_hand_1", "left_hand_2", "right_hand_2",
+                                 "left_hand_3", "right_hand_3")),
+    "erratum": dict(kind="paddle", pitch=0.0, drop=0.0, head=None, head_lift=0.0, axis="xRot", amp=0.5,
+                    legs=("left_leg_0", "right_leg_0", "left_leg_1", "right_leg_1", "left_leg_2", "right_leg_2")),
+}
+# Where the water comes to on something afloat (pixels below the model's origin; feet are at 24).
+_WATERLINE = 15.0
+
+
+def _rest_point(model, name):
+    """Where a part's pivot is in the rest pose (model space)."""
+    def find(parts, m, t):
+        for part in parts:
+            x, y, z = part.pivot
+            t2 = (t[0] + m[0][0] * x + m[0][1] * y + m[0][2] * z, t[1] + m[1][0] * x + m[1][1] * y + m[1][2] * z,
+                  t[2] + m[2][0] * x + m[2][1] * y + m[2][2] * z)
+            if part.name == name:
+                return t2
+            got = find(part.children, _mul(m, _rot(*part.rot)), t2)
+            if got:
+                return got
+        return None
+    return find(model.parts, ((1, 0, 0), (0, 1, 0), (0, 0, 1)), (0.0, 0.0, 0.0))
+
+
+def _rot(xr, yr, zr):
+    cx, sx, cy, sy, cz, sz = math.cos(xr), math.sin(xr), math.cos(yr), math.sin(yr), math.cos(zr), math.sin(zr)
+    rx = ((1, 0, 0), (0, cx, -sx), (0, sx, cx))
+    ry = ((cy, 0, sy), (0, 1, 0), (-sy, 0, cy))
+    rz = ((cz, -sz, 0), (sz, cz, 0), (0, 0, 1))
+    return _mul(rz, _mul(ry, rx))
+
+
+def _mul(a, b):
+    return tuple(tuple(sum(a[i][k] * b[k][j] for k in range(3)) for j in range(3)) for i in range(3))
+
+
+def swim_terms(model):
+    """[(part or None for the whole model, attribute, constant, amplitude, speed, phase, only-positive)]: each is
+    part.attr += swim * (constant + amplitude * sin(stroke * speed + phase)), the sine floored at 0 if only-positive."""
+    cfg = SWIM.get(model.name)
+    if not cfg:
+        return []
+    names = {p.name for p in model.all_parts()}
+    for key in ("arms", "legs", "forearms", "shins", "trail"):
+        for part in cfg.get(key, ()):
+            assert part in names, f"{model.name}: swim names unknown part {part}"
+    terms = []
+    pitch = cfg["pitch"]
+    if pitch:
+        terms.append((None, "xRot", pitch, 0, 0, 0, False))
+    if cfg["kind"] in ("crawl", "drift"):
+        # Tipped forward about the origin, then set down so the trunk lies just under the surface, over its own feet.
+        hip, head = _rest_point(model, cfg["hip"]), _rest_point(model, cfg["head"])
+        my, mz = (hip[1] + head[1]) / 2, (hip[2] + head[2]) / 2
+        y = my * math.cos(pitch) - mz * math.sin(pitch)
+        z = my * math.sin(pitch) + mz * math.cos(pitch)
+        if cfg.get("drop", True):
+            terms.append((None, "y", round(_WATERLINE + 1.0 - y, 1), 0, 0, 0, False))
+        terms.append((None, "z", round(-z * 0.7, 1), 0, 0, 0, False))
+    elif cfg.get("drop"):
+        terms.append((None, "y", cfg["drop"], 0, 0, 0, False))
+    if cfg["kind"] == "crawl":
+        for i, arm in enumerate(cfg["arms"]):
+            # Each arm swings from stretched out ahead to back along the body, turn about.
+            terms.append((arm, "xRot", -1.7, 1.3, 1.0, i * math.pi, False))
+            terms.append((arm, "zRot", 0.0, 0.25 * (-1 if i else 1), 1.0, i * math.pi + math.pi / 2, True))
+        for i, forearm in enumerate(cfg["forearms"]):
+            terms.append((forearm, "xRot", 0.0, -0.6, 1.0, i * math.pi + math.pi, True))
+        for i, leg in enumerate(cfg["legs"]):
+            terms.append((leg, "xRot", 0.1, cfg["kick"], 2.0, i * math.pi, False))
+        for i, shin in enumerate(cfg["shins"]):
+            terms.append((shin, "xRot", 0.2, 0.35, 2.0, i * math.pi + 1.0, True))
+        terms.append((cfg["head"], "xRot", -cfg["head_lift"], 0, 0, 0, False))
+    elif cfg["kind"] == "drift":
+        for i, arm in enumerate(cfg["arms"]):
+            terms.append((arm, "xRot", -1.2 * cfg["reach"], 0.7 * cfg["reach"], 1.0, i * math.pi, False))
+        for part in cfg["trail"]:
+            terms.append((part, "xRot", 0.25, 0.12, 1.0, 0.6, False))
+        terms.append((cfg["head"], "xRot", -pitch * 0.8, 0, 0, 0, False))
+    else:
+        legs = cfg["legs"]
+        for i, leg in enumerate(legs):
+            # Legs churn one after another round the body.
+            terms.append((leg, cfg["axis"], 0.0, cfg["amp"], 1.6, i * 2 * math.pi / len(legs), False))
+        if cfg["head"] and cfg["head_lift"]:
+            terms.append((cfg["head"], "xRot", -cfg["head_lift"], 0, 0, 0, False))
+    return terms
+
+
+def swim_pose(model, stroke):
+    """The swim as a preview pose at one moment of the stroke ("__root__" is the whole model)."""
+    pose = {}
+    for part, attr, const, amp, speed, phase, positive in swim_terms(model):
+        wave = math.sin(stroke * speed + phase)
+        v = const + amp * (max(0.0, wave) if positive else wave)
+        d = list(pose.get(part or "__root__", (0,) * 6))
+        d[("xRot", "yRot", "zRot", "x", "y", "z").index(attr)] += v
+        pose[part or "__root__"] = tuple(d)
+    return pose
+
+
+def swim_java(model):
+    """(lines before the animation, lines after it)."""
+    terms = swim_terms(model)
+    if not terms:
+        return "", ""
+    kind = SWIM[model.name]["kind"]
+    note = {"crawl": "Afloat it swims: face down, arm over arm, legs kicking.",
+            "paddle": "Afloat it swims: legs churning under it, head held up out of the water.",
+            "drift": "Afloat it is carried along, arms sweeping, its skirts trailing."}[kind]
+    pre = ("        // Off the bottom in water it swims rather than walks (the walk below fades out as this fades in).\n"
+           "        float swim = Anim.ease(entity, Anim.SWIM, entity.isInWater() && !entity.onGround(), ageInTicks, 0.12F);\n"
+           "        float stroke = limbSwing * 0.5F + ageInTicks * 0.09F;\n"
+           "        limbSwingAmount *= 1.0F - swim;\n")
+    post = f"        if (swim > 0.0F) {{\n            // {note}\n"
+    for part, attr, const, amp, speed, phase, positive in terms:
+        target = f"{camel(part)}.{attr}" if part else f"root.{attr}"
+        if not amp:
+            post += f"            {target} += swim * {f(const)};\n"
+            continue
+        arg = "stroke" + (f" * {f(speed)}" if speed != 1.0 else "") + (f" + {f(phase)}" if phase else "")
+        wave = f"Math.max(0.0F, Mth.sin({arg}))" if positive else f"Mth.sin({arg})"
+        expr = f"{wave} * {f(amp)}" if not const else f"{f(const)} + {wave} * {f(amp)}"
+        post += f"            {target} += swim * {'(' + expr + ')' if const else expr};\n"
+    post += "        }\n"
+    return pre, post
 
 
 def fair_copy_face():

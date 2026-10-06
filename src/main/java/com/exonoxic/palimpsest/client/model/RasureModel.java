@@ -138,6 +138,10 @@ public class RasureModel<T extends RasureEntity> extends HierarchicalModel<T> {
     @Override
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         root().getAllParts().forEach(ModelPart::resetPose);
+        // Off the bottom in water it swims rather than walks (the walk below fades out as this fades in).
+        float swim = Anim.ease(entity, Anim.SWIM, entity.isInWater() && !entity.onGround(), ageInTicks, 0.12F);
+        float stroke = limbSwing * 0.5F + ageInTicks * 0.09F;
+        limbSwingAmount *= 1.0F - swim;
         head.yRot += netHeadYaw * Mth.DEG_TO_RAD;
         head.xRot += headPitch * Mth.DEG_TO_RAD;
         float bob = Mth.sin(ageInTicks * 0.1F) * 1.5F;
@@ -180,5 +184,14 @@ public class RasureModel<T extends RasureEntity> extends HierarchicalModel<T> {
         open += 1.0F * blank;
         faceLeft.x += open;
         faceRight.x -= open;
+        if (swim > 0.0F) {
+            // Afloat it is carried along, arms sweeping, its skirts trailing.
+            root.xRot += swim * 0.45F;
+            root.z += swim * 0.6F;
+            leftArm.xRot += swim * (-0.84F + Mth.sin(stroke) * 0.49F);
+            bladeArm.xRot += swim * (-0.84F + Mth.sin(stroke + 3.1416F) * 0.49F);
+            robe.xRot += swim * (0.25F + Mth.sin(stroke + 0.6F) * 0.12F);
+            head.xRot += swim * -0.36F;
+        }
     }
 }

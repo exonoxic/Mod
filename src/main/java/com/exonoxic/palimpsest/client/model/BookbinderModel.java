@@ -168,6 +168,10 @@ public class BookbinderModel<T extends BookbinderEntity> extends HierarchicalMod
     @Override
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         root().getAllParts().forEach(ModelPart::resetPose);
+        // Off the bottom in water it swims rather than walks (the walk below fades out as this fades in).
+        float swim = Anim.ease(entity, Anim.SWIM, entity.isInWater() && !entity.onGround(), ageInTicks, 0.12F);
+        float stroke = limbSwing * 0.5F + ageInTicks * 0.09F;
+        limbSwingAmount *= 1.0F - swim;
         head.yRot += netHeadYaw * Mth.DEG_TO_RAD;
         head.xRot += headPitch * Mth.DEG_TO_RAD;
         // Now and then his head jerks to one side, against the stitches.
@@ -219,5 +223,15 @@ public class BookbinderModel<T extends BookbinderEntity> extends HierarchicalMod
             rightPaperArm.xRot -= 1.0F * s;
         }
         heap.y += Mth.sin(ageInTicks * 0.08F) * 0.4F;
+        if (swim > 0.0F) {
+            // Afloat it swims: legs churning under it, head held up out of the water.
+            root.y += swim * 2.0F;
+            leftLeg0.yRot += swim * Mth.sin(stroke * 1.6F) * 0.45F;
+            rightLeg1.yRot += swim * Mth.sin(stroke * 1.6F + 1.0472F) * 0.45F;
+            leftLeg2.yRot += swim * Mth.sin(stroke * 1.6F + 2.0944F) * 0.45F;
+            rightLeg0.yRot += swim * Mth.sin(stroke * 1.6F + 3.1416F) * 0.45F;
+            leftLeg1.yRot += swim * Mth.sin(stroke * 1.6F + 4.1888F) * 0.45F;
+            rightLeg2.yRot += swim * Mth.sin(stroke * 1.6F + 5.236F) * 0.45F;
+        }
     }
 }

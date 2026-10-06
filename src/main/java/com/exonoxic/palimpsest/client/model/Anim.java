@@ -13,6 +13,8 @@ import java.util.WeakHashMap;
  */
 public final class Anim {
     private static final int SLOTS = 8;
+    /** The slot the generated models keep "how far into swimming" in (the others are theirs to number from 0). */
+    public static final int SWIM = SLOTS - 1;
     /** Per entity and slot: the eased value, the age it was last updated at, and whether it has started. */
     private static final Map<Entity, float[]> EASED = new WeakHashMap<>();
 

@@ -138,6 +138,10 @@ public class ErratumModel<T extends ErratumEntity> extends HierarchicalModel<T> 
     @Override
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         root().getAllParts().forEach(ModelPart::resetPose);
+        // Off the bottom in water it swims rather than walks (the walk below fades out as this fades in).
+        float swim = Anim.ease(entity, Anim.SWIM, entity.isInWater() && !entity.onGround(), ageInTicks, 0.12F);
+        float stroke = limbSwing * 0.5F + ageInTicks * 0.09F;
+        limbSwingAmount *= 1.0F - swim;
         float ext = entity.legExtension();
         float w = limbSwing * 1.3F;
         // Folded flat under the block, the legs swing out and up as it rises.
@@ -160,5 +164,14 @@ public class ErratumModel<T extends ErratumEntity> extends HierarchicalModel<T> 
         }
         float gnash = Mth.sin(ageInTicks * 0.6F) * 0.2F * ext;
         for (ModelPart t : new ModelPart[]{tooth0, tooth1, tooth2, tooth3, tooth4, tooth5, tooth6, tooth7}) t.xRot += gnash;
+        if (swim > 0.0F) {
+            // Afloat it swims: legs churning under it, head held up out of the water.
+            leftLeg0.xRot += swim * Mth.sin(stroke * 1.6F) * 0.5F;
+            rightLeg0.xRot += swim * Mth.sin(stroke * 1.6F + 1.0472F) * 0.5F;
+            leftLeg1.xRot += swim * Mth.sin(stroke * 1.6F + 2.0944F) * 0.5F;
+            rightLeg1.xRot += swim * Mth.sin(stroke * 1.6F + 3.1416F) * 0.5F;
+            leftLeg2.xRot += swim * Mth.sin(stroke * 1.6F + 4.1888F) * 0.5F;
+            rightLeg2.xRot += swim * Mth.sin(stroke * 1.6F + 5.236F) * 0.5F;
+        }
     }
 }

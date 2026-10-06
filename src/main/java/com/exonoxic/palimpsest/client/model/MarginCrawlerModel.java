@@ -102,6 +102,10 @@ public class MarginCrawlerModel<T extends MarginCrawlerEntity> extends Hierarchi
     @Override
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         root().getAllParts().forEach(ModelPart::resetPose);
+        // Off the bottom in water it swims rather than walks (the walk below fades out as this fades in).
+        float swim = Anim.ease(entity, Anim.SWIM, entity.isInWater() && !entity.onGround(), ageInTicks, 0.12F);
+        float stroke = limbSwing * 0.5F + ageInTicks * 0.09F;
+        limbSwingAmount *= 1.0F - swim;
         float a = Math.min(1.0F, limbSwingAmount);
         float w = limbSwing * 1.4F;
         neck.xRot += Mth.sin(w) * 0.1F * a;
@@ -126,5 +130,17 @@ public class MarginCrawlerModel<T extends MarginCrawlerEntity> extends Hierarchi
         visor.xRot -= Mth.lerp(fighting, Math.max(0.0F, Mth.sin(ageInTicks * 0.03F) - 0.8F) * 5.0F, 1.3F);
         lance.xRot += Mth.cos(w) * 0.12F * a + 0.1F * fighting;
         if (attackTime > 0.0F) lance.z -= Mth.sin(Mth.sqrt(attackTime) * Mth.PI) * 3.0F;
+        if (swim > 0.0F) {
+            // Afloat it swims: legs churning under it, head held up out of the water.
+            leftHand0.yRot += swim * Mth.sin(stroke * 1.6F) * 0.7F;
+            rightHand0.yRot += swim * Mth.sin(stroke * 1.6F + 0.7854F) * 0.7F;
+            leftHand1.yRot += swim * Mth.sin(stroke * 1.6F + 1.5708F) * 0.7F;
+            rightHand1.yRot += swim * Mth.sin(stroke * 1.6F + 2.3562F) * 0.7F;
+            leftHand2.yRot += swim * Mth.sin(stroke * 1.6F + 3.1416F) * 0.7F;
+            rightHand2.yRot += swim * Mth.sin(stroke * 1.6F + 3.927F) * 0.7F;
+            leftHand3.yRot += swim * Mth.sin(stroke * 1.6F + 4.7124F) * 0.7F;
+            rightHand3.yRot += swim * Mth.sin(stroke * 1.6F + 5.4978F) * 0.7F;
+            head.xRot += swim * -0.2F;
+        }
     }
 }

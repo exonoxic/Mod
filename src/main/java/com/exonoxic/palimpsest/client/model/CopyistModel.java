@@ -150,6 +150,10 @@ public class CopyistModel<T extends CopyistEntity> extends HierarchicalModel<T> 
     @Override
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         root().getAllParts().forEach(ModelPart::resetPose);
+        // Off the bottom in water it swims rather than walks (the walk below fades out as this fades in).
+        float swim = Anim.ease(entity, Anim.SWIM, entity.isInWater() && !entity.onGround(), ageInTicks, 0.12F);
+        float stroke = limbSwing * 0.5F + ageInTicks * 0.09F;
+        limbSwingAmount *= 1.0F - swim;
         float crawl = entity.squeeze.crawl(ageInTicks - entity.tickCount);
         float stoop = entity.squeeze.stoop(ageInTicks - entity.tickCount);
         float w = limbSwing * 0.55F;
@@ -191,6 +195,23 @@ public class CopyistModel<T extends CopyistEntity> extends HierarchicalModel<T> 
             rightUpperArm.xRot -= 1.1F * s;
             jaw.xRot += 0.7F * s;
             head.xRot -= 0.4F * s;
+        }
+        if (swim > 0.0F) {
+            // Afloat it swims: face down, arm over arm, legs kicking.
+            root.xRot += swim * 0.75F;
+            root.y += swim * 13.4F;
+            root.z += swim * 2.2F;
+            leftUpperArm.xRot += swim * (-1.7F + Mth.sin(stroke) * 1.3F);
+            leftUpperArm.zRot += swim * Math.max(0.0F, Mth.sin(stroke + 1.5708F)) * 0.25F;
+            rightUpperArm.xRot += swim * (-1.7F + Mth.sin(stroke + 3.1416F) * 1.3F);
+            rightUpperArm.zRot += swim * Math.max(0.0F, Mth.sin(stroke + 4.7124F)) * -0.25F;
+            leftForearm.xRot += swim * Math.max(0.0F, Mth.sin(stroke + 3.1416F)) * -0.6F;
+            rightForearm.xRot += swim * Math.max(0.0F, Mth.sin(stroke + 6.2832F)) * -0.6F;
+            leftThigh.xRot += swim * (0.1F + Mth.sin(stroke * 2.0F) * 0.45F);
+            rightThigh.xRot += swim * (0.1F + Mth.sin(stroke * 2.0F + 3.1416F) * 0.45F);
+            leftShin.xRot += swim * (0.2F + Math.max(0.0F, Mth.sin(stroke * 2.0F + 1.0F)) * 0.35F);
+            rightShin.xRot += swim * (0.2F + Math.max(0.0F, Mth.sin(stroke * 2.0F + 4.1416F)) * 0.35F);
+            head.xRot += swim * -0.5F;
         }
         if (crawl > 0.0F) {
             pelvis.xRot += crawl * 0.77F;
