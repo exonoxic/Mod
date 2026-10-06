@@ -104,8 +104,11 @@ import java.util.function.Consumer;
 public final class SmokeTest {
     private static final Logger LOG = LogUtils.getLogger();
     private static final boolean ENABLED = Boolean.getBoolean("palimpsest.smokeTest");
-    /** For working on one thing at a time: only the real Knocker at a door, then quit (PALIMPSEST_SMOKE_QUICK=true). */
-    private static final boolean QUICK = Boolean.getBoolean("palimpsest.smokeQuick");
+    /**
+     * For working on one thing at a time: only one scene, then quit. PALIMPSEST_SMOKE_QUICK=true (or
+     * "door") is the real Knocker at a door; "swim" is the creatures afloat in a pool.
+     */
+    private static final String QUICK = System.getProperty("palimpsest.smokeQuick", "false");
     private static final String WORLD = "palimpsest_smoke";
     private static final int Y = 200;
     private static final int SETTLE = 260;
@@ -187,9 +190,13 @@ public final class SmokeTest {
             p.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 1_000_000, 0, false, false));
         }));
 
-        if (QUICK) {
-            realDoor("a", 1.5, 4.6, 4.93, false, 4.0);
-            realDoor("b", 5.5, 2.4, 2.63, true, 3.8125);
+        if (!QUICK.equals("false")) {
+            if (QUICK.equals("swim")) {
+                swimmers();
+            } else {
+                realDoor("a", 1.5, 4.6, 4.93, false, 4.0);
+                realDoor("b", 5.5, 2.4, 2.63, true, 3.8125);
+            }
             step(20, () -> Minecraft.getInstance().stop());
             return;
         }
@@ -257,6 +264,7 @@ public final class SmokeTest {
             shot("creature_" + name);
         }
         featuredCreatures();
+        swimmers();
         bestiaryPortraits();
         // A real Knocker nobody answers, end to end: a hut at night with a door on one side and a
         // one-block gap in the far wall; the player stands inside looking at the gap. The Knocker is
@@ -591,6 +599,41 @@ public final class SmokeTest {
             mannequin(type, 0.5, Y, 0.5, yaw, setup::accept);
         });
         shot("portrait_" + name);
+    }
+
+    /**
+     * Everything that swims, afloat in a pool three deep and seen from the side at two moments of the
+     * stroke, then from under the water. (Posed creatures stay where they are put, which here is
+     * with their feet a little over half a block under the surface, as a floating mob's are.)
+     */
+    private static void swimmers() {
+        List<EntityType<? extends Entity>> afloat = List.of(ModEntities.KNOCKER.get(), ModEntities.REDACTED.get(), ModEntities.LONGHAND.get(),
+                ModEntities.COPYIST.get(), ModEntities.INKHOUND.get(), ModEntities.PALE_STAG.get(), ModEntities.SMUDGE.get(),
+                ModEntities.RUBRICATOR.get(), ModEntities.MARGIN_CRAWLER.get());
+        step(40, () -> {
+            clearMannequins();
+            server((srv, p) -> {
+                ServerLevel level = p.serverLevel();
+                killMobs(level);
+                clear(level, -16, Y - 1, -12, 16, Y + 12, 24, Blocks.SMOOTH_STONE.defaultBlockState());
+                fill(level, -15, Y, 1, 15, Y + 2, 9, Blocks.SMOOTH_STONE.defaultBlockState());
+                fill(level, -14, Y, 2, 14, Y + 2, 8, Blocks.WATER.defaultBlockState());
+                // The near wall is glass, to see them from the side through it.
+                fill(level, -14, Y, 1, 14, Y + 2, 1, Blocks.GLASS.defaultBlockState());
+                view(p, 0.5, Y + 5.2, -7.5, 0.5, Y + 2.4, 5.0);
+            });
+            for (int i = 0; i < afloat.size(); i++) {
+                // In two rows, all heading the same way (to the right of the picture).
+                mannequin(afloat.get(i), -11.0 + (i / 2) * 5.6 + (i % 2) * 2.4, Y + 2.3, i % 2 == 0 ? 3.5 : 6.5, 90F, e -> {});
+            }
+        });
+        step(60, () -> {});
+        shot("swim_a");
+        step(35, () -> {});
+        shot("swim_b");
+        step(10, () -> server((srv, p) -> view(p, -4.0, Y + 1.4, 0.4, -4.0, Y + 2.3, 5.0)));
+        shot("swim_through_the_glass");
+        step(10, SmokeTest::clearMannequins);
     }
 
     private static void featuredCreatures() {
