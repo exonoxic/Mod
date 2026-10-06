@@ -26,6 +26,7 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
@@ -52,8 +53,14 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.event.ForgeEventFactory;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -66,8 +73,10 @@ import java.util.UUID;
  * the windows to look in. And every so often it tries the house again: any gap a block high will
  * do. If it finds one it comes through without a sound but the dragging, putting out the torches
  * as it passes, and only lets you see it when it is close. If it finds nothing, it goes back to
- * the door and knocks again, harder. Lanterns and the like, which it cannot put out, keep it
- * off, as do wards and the dawn.</p>
+ * the door and pounds on it. And then one of two things. It works at the door, slowly, with its
+ * nails, and only while nobody inside is looking that way, until the door comes down. Or it goes
+ * quiet for good: it stands somewhere out of sight of you beside the door and waits for you to come
+ * out. Lanterns and the like, which it cannot put out, keep it off, as do wards and the dawn.</p>
  *
  * <p>And when it does have you in view (you stepped outside, or it got in), it does not come at
  * once. It follows, keeping its distance, stopping dead whenever you look at it and closing in
@@ -123,6 +132,8 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
     private static final double STALK_BREAK = 3.5D;
     /** With nobody to haunt (a spawn egg, a command), it waits this long for someone before it goes. */
     private static final int UNBOUND_WAIT = 600;
+    /** Unwatched ticks of work it takes to bring a wooden door down. */
+    public static final int BREAK_TIME = 700;
 
     private static final EntityDataAccessor<Integer> STATE = SynchedEntityData.defineId(KnockerEntity.class, EntityDataSerializers.INT);
     /** The latest gesture: a count in the high bits, so the same gesture twice still reads as new, and its kind in the low three. */
@@ -163,6 +174,17 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
     /** Ticks since it last had whoever it is after in view (stalking or lunging). */
     private int lostSight;
     private int unbound;
+    /** Whoever it last had in view: who it is besieging when it came for nobody in particular. */
+    @Nullable
+    private Player lastQuarry;
+    /** The siege: straight back to the door (no more going round), then at the door with its nails, or out of sight beside it. */
+    private boolean toTheDoor;
+    private boolean breaking;
+    private int breakProgress;
+    private boolean hiding;
+    @Nullable
+    private BlockPos hideSpot;
+    private int seenHiding;
     private int gestures;
     /** A gesture's sound, waiting out {@link #GESTURE_LEAD}. */
     @Nullable
@@ -213,24 +235,8 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
      * if there is room (close enough to knock on it), otherwise a step back.
      */
     public static boolean spawnAtDoor(ServerLevel level, BlockPos door, ServerPlayer player) {
-        BlockState ds = level.getBlockState(door);
-        if (!(ds.getBlock() instanceof DoorBlock)) return false;
-        Direction facing = ds.getValue(DoorBlock.FACING);
-        BlockPos best = null;
-        double bestScore = -1;
-        for (Direction d : new Direction[]{facing, facing.getOpposite()}) {
-            for (int dist = 1; dist <= 2; dist++) {
-                BlockPos p = door.relative(d, dist);
-                if (!Spots.standable(level, p, 3)) continue;
-                double score = (level.canSeeSky(p.above(2)) ? 1000 : 0) + (dist == 1 ? 500 : 0) + p.distSqr(player.blockPosition());
-                if (score > bestScore) {
-                    bestScore = score;
-                    best = p;
-                }
-            }
-        }
-        if (best == null) return false;
-        BlockPos standAt = best;
+        BlockPos standAt = outside(level, door, player);
+        if (standAt == null) return false;
         KnockerEntity k = Apparitions.spawn(ModEntities.KNOCKER.get(), level, standAt, player, e -> {
             e.door = door.immutable();
             e.home = standAt.immutable();
@@ -251,6 +257,28 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
         return true;
     }
 
+    /** Where to stand at a door: on whichever side is open to the sky and away from the player, right up against it if there is room. */
+    @Nullable
+    private static BlockPos outside(ServerLevel level, BlockPos door, Player player) {
+        BlockState ds = level.getBlockState(door);
+        if (!(ds.getBlock() instanceof DoorBlock)) return null;
+        Direction facing = ds.getValue(DoorBlock.FACING);
+        BlockPos best = null;
+        double bestScore = -1;
+        for (Direction d : new Direction[]{facing, facing.getOpposite()}) {
+            for (int dist = 1; dist <= 2; dist++) {
+                BlockPos p = door.relative(d, dist);
+                if (!Spots.standable(level, p, 3)) continue;
+                double score = (level.canSeeSky(p.above(2)) ? 1000 : 0) + (dist == 1 ? 500 : 0) + p.distSqr(player.blockPosition());
+                if (score > bestScore) {
+                    bestScore = score;
+                    best = p;
+                }
+            }
+        }
+        return best == null ? null : best.immutable();
+    }
+
     /** Arrives already hunting (a gate read in a storm, a rite gone wrong): a short look, then it comes. */
     public static void comeThrough(ServerLevel level, BlockPos pos, ServerPlayer player) {
         KnockerEntity k = Apparitions.spawn(ModEntities.KNOCKER.get(), level, pos, player, e -> {
@@ -267,6 +295,12 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
 
     public int getState() {
         return entityData.get(STATE);
+    }
+
+    /** What it is up to, for game tests and logs. */
+    public String describe() {
+        return "state " + getState() + (creeping ? " creeping" : "") + (breaking ? " breaking " + breakProgress + "/" + BREAK_TIME : "")
+                + (hiding ? " hiding at " + hideSpot : "") + (toTheDoor ? " going to the door" : "") + " pose " + getPose();
     }
 
     /** Starts a gesture on every watching client, and its sound {@link #GESTURE_LEAD} ticks later. */
@@ -344,6 +378,7 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
         entityData.set(STATE, LUNGE);
         entityData.set(VIEWER, Optional.empty());
         lungeTicks = 900;
+        if (target instanceof Player p) lastQuarry = p;
         setTarget(target);
         playSound(ModSounds.KNOCKER_LUNGE.get(), 2.0F, 0.9F + random.nextFloat() * 0.15F);
     }
@@ -360,12 +395,15 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
         squeeze.holdAtLeast(Pose.STANDING);
         entityData.set(STATE, STALKING);
         stalkTicks = min + random.nextInt(max - min + 1);
+        if (target instanceof Player p) lastQuarry = p;
         setTarget(target);
         getNavigation().stop();
     }
 
     private void leave() {
         if (getState() == LEAVING) return;
+        if (breaking) stopBreaking();
+        hiding = false;
         squeeze.holdAtLeast(Pose.STANDING);
         entityData.set(STATE, LEAVING);
         setTarget(null);
@@ -423,7 +461,9 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
         } else if (knocksLeft == 0 && --knockCooldown <= 0) {
             // Three, and three, and three. Then nothing, which is worse.
             if (++rounds > KNOCK_ROUNDS) {
+                // Nobody answered. The first time it goes round the house; after that it has done with going round.
                 startSearching();
+                if (angry) beginSiege();
                 return;
             }
             knocksLeft = 1;
@@ -526,11 +566,196 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
         return way == null || !way.canReach();
     }
 
-    /** Back to going round the house, for a while at least. */
+    /** Shut out: back to the house, and this time straight to its door. */
     private void besiege() {
+        LivingEntity target = getTarget();
         setTarget(null);
-        visit = Math.max(visit, 1200);
+        visit = Math.max(visit, 2400);
+        if (door == null && target instanceof Player p && level() instanceof ServerLevel level) {
+            // It came for them in the open and they got indoors: the nearest door to them is the one.
+            BlockPos found = WorldAlterations.findDoor(level, p.blockPosition(), 10, true);
+            BlockPos stand = found == null ? null : outside(level, found, p);
+            if (stand != null) {
+                door = found.immutable();
+                home = stand;
+            }
+        }
         startSearching();
+        toTheDoor = true;
+    }
+
+    /**
+     * Besieges {@code quarry} behind {@code doorPos} from where it stands, as it does once it has given
+     * up going round the house: for game tests, and for anything that wants one at a door at once.
+     */
+    public void siege(Player quarry, BlockPos doorPos, boolean breakDown) {
+        lastQuarry = quarry;
+        door = doorPos.immutable();
+        home = blockPosition();
+        visit = Math.max(visit, 2400);
+        startSearching();
+        beginSiege(breakDown);
+    }
+
+    /** At the door, with nothing left to try: more often than not it sets about breaking it down, otherwise it hides and waits. */
+    private void beginSiege() {
+        beginSiege(random.nextInt(5) < 3);
+    }
+
+    private void beginSiege(boolean breakDown) {
+        silence = 0;
+        toTheDoor = false;
+        patrol = null;
+        visit = Math.max(visit, 2400);
+        if (breakDown && canBreak()) {
+            breaking = true;
+            if (door != null) standOff(towards(door), REACH);
+        } else {
+            beginHiding();
+        }
+    }
+
+    private boolean canBreak() {
+        return door != null && DoorBlock.isWoodenDoor(level().getBlockState(door)) && CommonConfig.ALLOW_WORLD_ALTERATION.get()
+                && CommonConfig.KNOCKER_BREAKS_DOORS.get() && ForgeEventFactory.getMobGriefingEvent(level(), this);
+    }
+
+    /**
+     * At the door with its nails. It only works while the one inside is not looking the door's way,
+     * so every time they turn to check, there is nothing to hear; and every time, the door is worse.
+     */
+    private void tickBreaking(Player p) {
+        if (door == null || !canBreak()) {
+            // The door has gone, or been swapped for one it cannot break.
+            stopBreaking();
+            if (door != null) beginHiding();
+            return;
+        }
+        getNavigation().stop();
+        getLookControl().setLookAt(door.getX() + 0.5D, door.getY() + 1.2D, door.getZ() + 0.5D);
+        if (home != null && distanceToSqr(home.getX() + 0.5D, home.getY(), home.getZ() + 0.5D) > 6.0D) {
+            // Knocked or pushed away from it: back to the door first.
+            if (tickCount % 20 == 0) getNavigation().moveTo(home.getX() + 0.5D, home.getY(), home.getZ() + 0.5D, PROWL_SPEED);
+            return;
+        }
+        if (looksTowards(p, door)) return;
+        if (breakProgress % 110 == 0) {
+            gesture(GESTURE_SCRATCH, ModSounds.KNOCKER_SCRATCH.get(), door, 0.7F, 0.9F + random.nextFloat() * 0.1F);
+        } else if (breakProgress % 110 == 60) {
+            level().playSound(null, door, SoundEvents.ZOMBIE_ATTACK_WOODEN_DOOR, SoundSource.HOSTILE, 0.35F, 0.6F + random.nextFloat() * 0.1F);
+        }
+        // The cracks only show when they change, like any block being broken.
+        if (++breakProgress * 10 / BREAK_TIME != (breakProgress - 1) * 10 / BREAK_TIME) {
+            level().destroyBlockProgress(getId(), door, breakProgress * 10 / BREAK_TIME);
+        }
+        if (breakProgress >= BREAK_TIME) {
+            BlockPos broken = door;
+            stopBreaking();
+            level().destroyBlock(broken, false, this);
+            level().playSound(null, broken, SoundEvents.ZOMBIE_BREAK_WOODEN_DOOR, SoundSource.HOSTILE, 1.5F, 0.7F);
+            // And now there is a way in, which the next look for one will find.
+            door = null;
+        }
+    }
+
+    private void stopBreaking() {
+        if (door != null) level().destroyBlockProgress(getId(), door, -1);
+        breaking = false;
+        breakProgress = 0;
+    }
+
+    private void beginHiding() {
+        hiding = true;
+        hideSpot = null;
+        seenHiding = 0;
+    }
+
+    /**
+     * Out of sight beside the door, not a sound, for as long as the night lasts. Whoever comes out
+     * finds it already there (the top of tickSearching takes it from here).
+     */
+    private void tickHiding(Player p) {
+        if (hideSpot != null && tickCount % 100 == 0 && !Spots.standable((ServerLevel) level(), hideSpot, 3)) hideSpot = null;
+        if (hideSpot == null) {
+            // Nowhere to be out of sight (yet): it stands where it is, and looks again in a moment.
+            if (tickCount % 20 == 0) hideSpot = hidingPlace((ServerLevel) level(), p);
+            if (hideSpot == null) {
+                getNavigation().stop();
+                return;
+            }
+        }
+        boolean there = distanceToSqr(hideSpot.getX() + 0.5D, hideSpot.getY(), hideSpot.getZ() + 0.5D) < 0.8D;
+        if (!there) {
+            // (A route worked out to the very block: the usual kind stops a block short, which here may be in full view.)
+            if (getNavigation().isDone() || tickCount % 40 == 0) getNavigation().moveTo(wayIn(hideSpot), PROWL_SPEED);
+            return;
+        }
+        getNavigation().stop();
+        if (door != null) getLookControl().setLookAt(door.getX() + 0.5D, door.getY() + 1.2D, door.getZ() + 0.5D);
+        // Found (through a window, say) and stared at: it finds somewhere else to be.
+        seenHiding = hasLineOfSight(p) && lookedAtBy(p) ? seenHiding + 1 : 0;
+        if (seenHiding > 40) {
+            seenHiding = 0;
+            hideSpot = null;
+        }
+    }
+
+    /**
+     * Somewhere to stand that the player cannot see from where they are: for choice flat against the
+     * house wall a couple of steps to one side of the door, where someone opening it sees nothing
+     * until they are out.
+     */
+    @Nullable
+    private BlockPos hidingPlace(ServerLevel level, Player p) {
+        BlockPos from = home != null ? home : door != null ? door : blockPosition();
+        // Which way is out of the door, if there is a door.
+        Direction out = door == null || door.equals(from) ? null
+                : Direction.getNearest(from.getX() - door.getX(), 0.0D, from.getZ() - door.getZ());
+        Vec3 eye = p.getEyePosition();
+        List<BlockPos> spots = new ArrayList<>();
+        Map<BlockPos, Double> cost = new HashMap<>();
+        // (Anywhere it can walk to from the doorstep is outside: if it could walk in, it would be on its way in.)
+        for (BlockPos pos : BlockPos.betweenClosed(from.offset(-5, -1, -5), from.offset(5, 1, 5))) {
+            if (!Spots.standable(level, pos, 3)) continue;
+            if (level.getBrightness(LightLayer.BLOCK, pos.above()) >= 13) continue;
+            if (hideSpot != null && pos.distSqr(hideSpot) < 4.0D) continue;
+            double score;
+            if (out != null) {
+                int dx = pos.getX() - door.getX(), dz = pos.getZ() - door.getZ();
+                int forward = dx * out.getStepX() + dz * out.getStepZ();
+                int aside = Math.abs(dx * out.getStepZ()) + Math.abs(dz * out.getStepX());
+                // Outside, and out of the line of the doorway; the closer to the wall the better.
+                if (forward < 1 || aside < 2) continue;
+                score = forward * 2.0D + aside;
+            } else {
+                score = pos.distSqr(from);
+                if (score < 4.0D) continue;
+            }
+            // Not where they can see its head or its chest.
+            Vec3 chest = new Vec3(pos.getX() + 0.5D, pos.getY() + 1.4D, pos.getZ() + 0.5D);
+            if (visible(eye, chest) || visible(eye, chest.add(0.0D, 1.0D, 0.0D))) continue;
+            BlockPos spot = pos.immutable();
+            spots.add(spot);
+            cost.put(spot, score);
+        }
+        // The best it can actually walk to (only a few routes are worth working out).
+        spots.sort(Comparator.comparingDouble(cost::get));
+        for (int i = 0; i < Math.min(6, spots.size()); i++) {
+            Path path = wayIn(spots.get(i));
+            if (path != null && path.canReach()) return spots.get(i);
+        }
+        return null;
+    }
+
+    private boolean visible(Vec3 eye, Vec3 point) {
+        return level().clip(new ClipContext(eye, point, ClipContext.Block.VISUAL, ClipContext.Fluid.NONE, this)).getType() == HitResult.Type.MISS;
+    }
+
+    /** Is this one facing the way of that block (walls or no walls between)? */
+    private static boolean looksTowards(LivingEntity viewer, BlockPos pos) {
+        Vec3 to = Vec3.atCenterOf(pos).subtract(viewer.getEyePosition());
+        double len = to.length();
+        return len < 1.0E-3D || (len < 32.0D && viewer.getViewVector(1.0F).dot(to.scale(1.0D / len)) > 0.7D);
     }
 
     /** Is this one looking more or less straight at it? */
@@ -562,6 +787,9 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
         silence = 60 + random.nextInt(60);
         pause = 0;
         taps = 0;
+        toTheDoor = false;
+        if (breaking) stopBreaking();
+        hiding = false;
         getNavigation().stop();
     }
 
@@ -580,7 +808,10 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
             return;
         }
         if (exposed(p)) {
-            stalk(p);
+            if (breaking) stopBreaking();
+            // Out they come. If it was waiting for exactly that, it has done most of its waiting already.
+            if (hiding) stalk(p, STALK_INSIDE_MIN, STALK_INSIDE_MAX);
+            else stalk(p);
             return;
         }
         if (creeping) {
@@ -595,12 +826,22 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
         if (searchTicks % 20 == 0) {
             Path way = wayIn(p.blockPosition());
             if (way != null && way.canReach()) {
+                if (breaking) stopBreaking();
+                hiding = false;
                 creeping = true;
                 watching = 0;
                 patrol = null;
                 getNavigation().moveTo(way, CREEP_SPEED);
                 return;
             }
+        }
+        if (breaking) {
+            tickBreaking(p);
+            return;
+        }
+        if (hiding) {
+            tickHiding(p);
+            return;
         }
         if (watching > 0) {
             tickWatching(p);
@@ -617,7 +858,7 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
             return;
         }
         if (patrol == null) {
-            if (searchTicks > SEARCH_BEFORE_RETURN && home != null && door != null) {
+            if ((toTheDoor || searchTicks > SEARCH_BEFORE_RETURN) && home != null && door != null) {
                 returning = true;
                 patrol = home;
                 getNavigation().moveTo(home.getX() + 0.5D, home.getY(), home.getZ() + 0.5D, PROWL_SPEED);
@@ -631,8 +872,11 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
         }
         boolean arrived = distanceToSqr(patrol.getX() + 0.5D, patrol.getY(), patrol.getZ() + 0.5D) < 2.0D;
         if (arrived || getNavigation().isDone()) {
-            if (returning) {
-                // Back at the door, it pounds on it: two rounds, harder and faster, then it goes looking again.
+            if (returning && (door == null || !(level().getBlockState(door).getBlock() instanceof DoorBlock))) {
+                returning = false;
+                door = null;
+            } else if (returning) {
+                // Back at the door, it pounds on it: two rounds, harder and faster. Then the siege (tickKnocking).
                 returning = false;
                 angry = true;
                 rounds = KNOCK_ROUNDS - 2;
@@ -720,6 +964,8 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
     private Player quarry() {
         Player p = apparition.target(level());
         if (p != null && p.isAlive() && !p.isSpectator() && p.level() == level()) return p;
+        if (lastQuarry != null && lastQuarry.isAlive() && !lastQuarry.isCreative() && !lastQuarry.isSpectator()
+                && lastQuarry.level() == level() && lastQuarry.distanceToSqr(this) < 48 * 48) return lastQuarry;
         Player near = level().getNearestPlayer(this, 32);
         return near != null && !near.isCreative() && !near.isSpectator() ? near : null;
     }
@@ -922,6 +1168,9 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
         tag.putBoolean("Opened", opened);
         tag.putInt("Rounds", rounds);
         tag.putBoolean("Angry", angry);
+        tag.putBoolean("Breaking", breaking);
+        tag.putInt("BreakProgress", breakProgress);
+        tag.putBoolean("Hiding", hiding);
         if (door != null) tag.put("Door", NbtUtils.writeBlockPos(door));
         if (home != null) tag.put("Home", NbtUtils.writeBlockPos(home));
     }
@@ -939,5 +1188,8 @@ public class KnockerEntity extends Monster implements Apparition, Squeezer {
         home = tag.contains("Home") ? NbtUtils.readBlockPos(tag.getCompound("Home")) : null;
         rounds = tag.getInt("Rounds");
         angry = tag.getBoolean("Angry");
+        breaking = tag.getBoolean("Breaking");
+        breakProgress = tag.getInt("BreakProgress");
+        hiding = tag.getBoolean("Hiding");
     }
 }

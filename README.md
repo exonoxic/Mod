@@ -176,6 +176,7 @@ world's `serverconfig` folder. `palimpsest-client.toml` is per player and lives 
 | `allowGates` | true | Player-built gates to the dimension |
 | `generateOres`, `generateScars`, `generatePlants` | true | Overworld worldgen additions |
 | `enableKnocker`, `enableCopyist`, `enableLonghand`, `enableFairCopy`, `enableErratum` | true | Switch individual visitors off |
+| `knockerBreaksDoors` | true | A Knocker with no way in may slowly break a wooden door down while nobody is looking at it (also needs `mobGriefing`); if off it only hides and waits |
 | `redactedRenamesItems` | true | Allow one creature's cosmetic item-name effect |
 | `overworldSpawnMultiplier` | 1.0 | Scales natural Overworld spawns |
 | `sharedApparitions` | true | Whether players standing nearby also see another player's apparitions |

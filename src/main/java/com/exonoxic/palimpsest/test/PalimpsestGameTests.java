@@ -10,6 +10,7 @@ import com.exonoxic.palimpsest.entity.InkhoundEntity;
 import com.exonoxic.palimpsest.entity.KnockerEntity;
 import com.exonoxic.palimpsest.entity.RedactedEntity;
 import com.exonoxic.palimpsest.entity.ai.Squeeze;
+import com.exonoxic.palimpsest.entity.boss.RasureEntity;
 import com.exonoxic.palimpsest.registry.ModBlocks;
 import com.exonoxic.palimpsest.registry.ModEntities;
 import com.exonoxic.palimpsest.registry.ModRecipes;
@@ -22,6 +23,8 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.gametest.framework.AfterBatch;
+import net.minecraft.gametest.framework.BeforeBatch;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -47,6 +50,7 @@ import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -361,6 +365,126 @@ public final class PalimpsestGameTests {
             check(came[0] >= 150, "the Knocker came for its quarry after only " + came[0] + " ticks, without stalking it first");
             check(nearest[0] < 9.0D, "the Knocker never closed in while it stalked (nearest " + nearest[0] + ")");
             check(nearest[0] > 3.4D, "the Knocker walked right up to its quarry while it was only stalking (nearest " + nearest[0] + ")");
+        });
+    }
+
+    /** Knockers only stay through the night, so their sieges are tested at night. */
+    @BeforeBatch(batch = "night")
+    public static void nightFalls(ServerLevel level) {
+        level.setDayTime(18000L);
+    }
+
+    @AfterBatch(batch = "night")
+    public static void dayBreaks(ServerLevel level) {
+        level.setDayTime(1000L);
+    }
+
+    /**
+     * A sealed stone hut in a yard (walls x 5..11, z 5..11, inside x 6..10, z 6..10) with an oak door
+     * in the middle of its south wall, someone standing inside it facing {@code yaw}, and a Knocker on
+     * the doorstep besieging them. Returns the Knocker; {@code quarry[0]} is who it is after.
+     */
+    private static KnockerEntity siegedHut(GameTestHelper helper, float yaw, boolean breakDown, Player[] quarry) {
+        for (int x = 0; x <= 16; x++) {
+            for (int z = 0; z <= 16; z++) helper.setBlock(new BlockPos(x, 0, z), Blocks.STONE);
+        }
+        for (int x = 5; x <= 11; x++) {
+            for (int z = 5; z <= 11; z++) {
+                for (int y = 1; y <= 4; y++) {
+                    boolean inside = x >= 6 && x <= 10 && z >= 6 && z <= 10 && y <= 3;
+                    helper.setBlock(new BlockPos(x, y, z), inside ? Blocks.AIR : Blocks.STONE_BRICKS);
+                }
+            }
+        }
+        BlockState door = Blocks.OAK_DOOR.defaultBlockState().setValue(DoorBlock.FACING, Direction.NORTH);
+        helper.setBlock(new BlockPos(8, 1, 11), door);
+        helper.setBlock(new BlockPos(8, 2, 11), door.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER));
+        Player inside = helper.makeMockSurvivalPlayer();
+        Vec3 at = Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(8, 1, 8)));
+        inside.setPos(at.x, at.y, at.z);
+        inside.setYRot(yaw);
+        inside.setYHeadRot(yaw);
+        inside.setXRot(0.0F);
+        quarry[0] = inside;
+        KnockerEntity knocker = helper.spawn(ModEntities.KNOCKER.get(), new BlockPos(8, 1, 12));
+        knocker.siege(inside, helper.absolutePos(new BlockPos(8, 1, 11)), breakDown);
+        return knocker;
+    }
+
+    /** With its quarry's back to the door, a besieging Knocker works at the door until it comes down. */
+    @GameTest(template = YARD, batch = "night", timeoutTicks = 1400)
+    public static void knockerBreaksTheDoorUnwatched(GameTestHelper helper) {
+        Player[] quarry = new Player[1];
+        KnockerEntity knocker = siegedHut(helper, 180.0F, true, quarry);
+        BlockPos door = new BlockPos(8, 1, 11);
+        helper.runAfterDelay(KnockerEntity.BREAK_TIME / 2, () -> check(helper.getBlockState(door).getBlock() instanceof DoorBlock,
+                "the door came down in half the time it should take"));
+        helper.succeedWhen(() -> {
+            check(knocker.isAlive() && knocker.getState() != KnockerEntity.LEAVING, "the Knocker gave up the siege (state " + knocker.getState() + ")");
+            check(!(helper.getBlockState(door).getBlock() instanceof DoorBlock), "the door is still standing (" + knocker.describe() + ")");
+        });
+    }
+
+    /** It only works while nobody is looking the door's way: stared at through the wood, it never gets anywhere. */
+    @GameTest(template = YARD, batch = "night", timeoutTicks = 1100)
+    public static void knockerLeavesAWatchedDoorAlone(GameTestHelper helper) {
+        Player[] quarry = new Player[1];
+        KnockerEntity knocker = siegedHut(helper, 0.0F, true, quarry);
+        helper.runAfterDelay(KnockerEntity.BREAK_TIME + 300, () -> {
+            check(knocker.isAlive() && knocker.getState() == KnockerEntity.SEARCHING, "the Knocker gave up the siege (state " + knocker.getState() + ")");
+            check(helper.getBlockState(new BlockPos(8, 1, 11)).getBlock() instanceof DoorBlock, "the Knocker broke a door that was being watched");
+            helper.succeed();
+        });
+    }
+
+    /** The other siege: it goes somewhere beside the door where the one inside cannot see it, and stays there. */
+    @GameTest(template = YARD, batch = "night", timeoutTicks = 500)
+    public static void knockerHidesByTheDoor(GameTestHelper helper) {
+        Player[] quarry = new Player[1];
+        KnockerEntity knocker = siegedHut(helper, 0.0F, false, quarry);
+        Vec3 doorstep = Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(8, 1, 12)));
+        helper.runAfterDelay(400, () -> {
+            check(knocker.isAlive() && knocker.getState() == KnockerEntity.SEARCHING, "the Knocker gave up the siege (state " + knocker.getState() + ")");
+            check(helper.getBlockState(new BlockPos(8, 1, 11)).getBlock() instanceof DoorBlock, "a hiding Knocker broke the door");
+            double moved = Math.sqrt(knocker.distanceToSqr(doorstep));
+            check(moved > 1.2D && moved < 8.0D, "the Knocker should be waiting beside the door, not " + moved + " blocks from the doorstep (" + knocker.describe() + ")");
+            check(!knocker.hasLineOfSight(quarry[0]), "the Knocker is hiding in plain sight");
+            check(knocker.getDeltaMovement().horizontalDistanceSqr() < 1.0E-3D, "the Knocker is still wandering about");
+            helper.succeed();
+        });
+    }
+
+    /**
+     * The Rasure's arena has a floor it scrapes holes in and a flooded space underneath. One that has
+     * fallen through, with its quarry still up on the floor, must not stay down there.
+     */
+    @GameTest(template = YARD, timeoutTicks = 300)
+    public static void rasureComesBackUpThroughTheFloor(GameTestHelper helper) {
+        for (int x = 0; x <= 16; x++) {
+            for (int z = 0; z <= 16; z++) {
+                helper.setBlock(new BlockPos(x, 0, z), Blocks.STONE);
+                helper.setBlock(new BlockPos(x, 6, z), Blocks.STONE);
+            }
+        }
+        ServerLevel level = helper.getLevel();
+        // Summoned two above its altar: the altar stands on the floor (y 6 here).
+        RasureEntity.summon(level, helper.absolutePos(new BlockPos(8, 9, 8)), null);
+        RasureEntity rasure = level.getEntitiesOfClass(RasureEntity.class, new AABB(helper.absolutePos(new BlockPos(8, 9, 8))).inflate(4)).get(0);
+        Vec3 under = Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(8, 1, 8)));
+        rasure.teleportTo(under.x, under.y, under.z);
+        Player quarry = helper.makeMockSurvivalPlayer();
+        Vec3 up = Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(12, 7, 12)));
+        quarry.setPos(up.x, up.y, up.z);
+        double floor = helper.absolutePos(new BlockPos(0, 6, 0)).getY();
+        helper.onEachTick(() -> rasure.setTarget(quarry));
+        helper.runAfterDelay(10, () -> check(rasure.getY() < floor, "the Rasure was never under the floor to begin with"));
+        helper.succeedWhen(() -> {
+            boolean back = helper.getTick() > 10 && rasure.getY() >= floor + 0.9D;
+            if (back || helper.getTick() >= 290) {
+                // It stands above the test structure, so it is not cleared away with it.
+                rasure.discard();
+            }
+            check(back, "the Rasure is still under the arena floor (y " + (rasure.getY() - floor) + " from it)");
         });
     }
 

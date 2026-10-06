@@ -31,6 +31,7 @@ public final class CommonConfig {
 
     // Creatures
     public static final ForgeConfigSpec.BooleanValue ENABLE_KNOCKER;
+    public static final ForgeConfigSpec.BooleanValue KNOCKER_BREAKS_DOORS;
     public static final ForgeConfigSpec.BooleanValue ENABLE_COPYIST;
     public static final ForgeConfigSpec.BooleanValue ENABLE_LONGHAND;
     public static final ForgeConfigSpec.BooleanValue ENABLE_FAIR_COPY;
@@ -82,6 +83,8 @@ public final class CommonConfig {
 
         b.comment("Creatures.").push("creatures");
         ENABLE_KNOCKER = b.define("enableKnocker", true);
+        KNOCKER_BREAKS_DOORS = b.comment("Whether a Knocker that finds no way in may slowly break a wooden door down while nobody is looking at it"
+                + " (also needs the mobGriefing game rule). If not, it only ever hides and waits.").define("knockerBreaksDoors", true);
         ENABLE_COPYIST = b.define("enableCopyist", true);
         ENABLE_LONGHAND = b.define("enableLonghand", true);
         ENABLE_FAIR_COPY = b.define("enableFairCopy", true);

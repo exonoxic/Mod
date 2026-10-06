@@ -34,6 +34,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.util.Mth;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -41,6 +42,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -79,6 +81,8 @@ public class RasureEntity extends Monster implements PalimpsestBoss {
     public static final int EXPOSED = 3;
     public static final int BLANK_PAGE = 4;
     private static final int ARENA_RADIUS = 22;
+    private static final String STRANDED = "PalimpsestStranded";
+    private static final String SUMMONED = "PalimpsestRasureSummoned";
 
     private static final EntityDataAccessor<Integer> PHASE = SynchedEntityData.defineId(RasureEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> SHIELDED = SynchedEntityData.defineId(RasureEntity.class, EntityDataSerializers.BOOLEAN);
@@ -94,6 +98,8 @@ public class RasureEntity extends Monster implements PalimpsestBoss {
     private int blinkCooldown = 120;
     private int revealed;
     private int emptyTicks;
+    /** How long it has been cut off from whoever it is after (see {@link #keepInArena}). */
+    private int stranded;
 
     public RasureEntity(EntityType<? extends Monster> type, Level level) {
         super(type, level);
@@ -199,6 +205,7 @@ public class RasureEntity extends Monster implements PalimpsestBoss {
             findPillars(level);
         }
 
+        keepInArena(level);
         List<ServerPlayer> players = arenaPlayers();
         if (players.isEmpty()) {
             if (++emptyTicks > 600) resetFight(level);
@@ -230,6 +237,73 @@ public class RasureEntity extends Monster implements PalimpsestBoss {
         }
     }
 
+    /**
+     * The floor it scrapes away drops whatever was standing on it into the flooded undercroft, and
+     * nothing that cannot use a ladder comes back up from there (nor goes down after a player who
+     * fell). So every second it looks at itself and at the Redacted it called up: one that has been on
+     * the wrong side of the floor from its quarry for three seconds, or has ended up outside the
+     * room altogether, stops being there and is beside its quarry instead, on whichever level they
+     * are. It is the kind of thing that moves between breaths anyway.
+     */
+    private void keepInArena(ServerLevel level) {
+        if (home == null || tickCount % 20 != 0) return;
+        if (isShielded()) stranded = 0;
+        else stranded = rejoinIfStranded(level, this, stranded);
+        AABB room = new AABB(home).inflate(ARENA_RADIUS + 8, 24, ARENA_RADIUS + 8);
+        for (RedactedEntity r : level.getEntitiesOfClass(RedactedEntity.class, room)) {
+            CompoundTag data = r.getPersistentData();
+            // Only its own: a Redacted that happens to be walking past outside is none of its business.
+            if (data.getBoolean(SUMMONED)) data.putInt(STRANDED, rejoinIfStranded(level, r, data.getInt(STRANDED)));
+        }
+    }
+
+    /** One look at one creature; returns how many looks in a row have found it cut off. */
+    private int rejoinIfStranded(ServerLevel level, Mob mob, int looks) {
+        LivingEntity quarry = mob.getTarget();
+        if (quarry == null || !quarry.isAlive()) quarry = level.getNearestPlayer(mob.getX(), mob.getY(), mob.getZ(), 64, true);
+        double dx = mob.getX() - (home.getX() + 0.5D), dz = mob.getZ() - (home.getZ() + 0.5D);
+        boolean outside = Math.abs(dx) > ARENA_RADIUS + 0.5D || Math.abs(dz) > ARENA_RADIUS + 0.5D || mob.getY() > floorY + 17 || mob.getY() < floorY - 9;
+        boolean below = mob.getY() < floorY - 0.5D;
+        boolean cutOff = quarry != null && below != (quarry.getY() < floorY - 0.5D);
+        if (!outside && !cutOff) return 0;
+        if (++looks < 3 && !outside) return looks;
+        Vec3 from = mob.position();
+        Vec3 to = besideQuarry(level, mob, quarry);
+        if (to == null) return looks;
+        mob.getNavigation().stop();
+        mob.teleportTo(to.x, to.y, to.z);
+        mob.resetFallDistance();
+        level.sendParticles(ModParticles.ERASURE_MOTE.get(), from.x, from.y + 1.0D, from.z, 20, 0.4D, 0.9D, 0.4D, 0.02D);
+        level.sendParticles(ModParticles.ERASURE_MOTE.get(), to.x, to.y + 1.0D, to.z, 20, 0.4D, 0.9D, 0.4D, 0.02D);
+        level.playSound(null, BlockPos.containing(to), ModSounds.EVENT_FOOTSTEPS.get(), SoundSource.HOSTILE, 1.2F, 0.7F);
+        return 0;
+    }
+
+    /**
+     * Somewhere with a floor and room to stand a few steps from the quarry, on their level (the
+     * undercroft's floor is under a block of water, which is still a floor); with no quarry, or
+     * nowhere near them, somewhere on the arena floor near the altar.
+     */
+    @Nullable
+    private Vec3 besideQuarry(ServerLevel level, Mob mob, @Nullable LivingEntity quarry) {
+        for (int i = 0; i < 24; i++) {
+            boolean nearQuarry = quarry != null && i < 16;
+            double cx = nearQuarry ? quarry.getX() : home.getX() + 0.5D, cz = nearQuarry ? quarry.getZ() : home.getZ() + 0.5D;
+            double angle = random.nextDouble() * Math.PI * 2.0D, dist = 3.0D + random.nextDouble() * 4.0D;
+            int x = Mth.floor(cx + Math.cos(angle) * dist), z = Mth.floor(cz + Math.sin(angle) * dist);
+            if (Math.abs(x - home.getX()) > ARENA_RADIUS - 1 || Math.abs(z - home.getZ()) > ARENA_RADIUS - 1) continue;
+            int startY = nearQuarry ? quarry.getBlockY() + 1 : floorY + 2;
+            for (int y = startY; y >= startY - 3; y--) {
+                BlockPos feet = new BlockPos(x, y, z);
+                if (!level.getBlockState(feet.below()).isFaceSturdy(level, feet.below(), Direction.UP)) continue;
+                Vec3 at = Vec3.atBottomCenterOf(feet);
+                if (level.noCollision(mob, mob.getDimensions(mob.getPose()).makeBoundingBox(at))) return at;
+                break;
+            }
+        }
+        return null;
+    }
+
     private void tickRedaction(ServerLevel level) {
         getNavigation().stop();
         Vec3 hover = Vec3.atBottomCenterOf(home).add(0, 6, 0);
@@ -246,6 +320,7 @@ public class RasureEntity extends Monster implements PalimpsestBoss {
                     if (at == null) continue;
                     r.moveTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, random.nextFloat() * 360, 0);
                     r.finalizeSpawn(level, level.getCurrentDifficultyAt(at), MobSpawnType.MOB_SUMMONED, null, null);
+                    r.getPersistentData().putBoolean(SUMMONED, true);
                     level.addFreshEntity(r);
                 }
             }
