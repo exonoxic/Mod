@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "palimpsest:blotberries"
+    },
+    {
+      "item": "palimpsest:blotberries"
+    },
+    {
+      "item": "palimpsest:blotberries"
+    },
+    {
+      "item": "minecraft:wheat"
+    },
+    {
+      "item": "minecraft:sugar"
+    },
+    {
+      "item": "minecraft:egg"
+    }
+  ],
+  "result": {
+    "item": "palimpsest:blotberry_tart",
+    "count": 1
+  }
+}

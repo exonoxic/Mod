@@ -1,0 +1,16 @@
+{
+  "type": "palimpsest:transcription",
+  "result": {
+    "item": "palimpsest:margin_compass"
+  },
+  "time": 240,
+  "surface": {
+    "item": "palimpsest:blank_vellum"
+  },
+  "ink": {
+    "item": "palimpsest:iron_gall_ink"
+  },
+  "subject": {
+    "item": "minecraft:compass"
+  }
+}

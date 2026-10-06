@@ -1,0 +1,90 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check generated resources against Java registries
+        run: python3 tools/check.py
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build
+        run: |
+          chmod +x gradlew
+          set -o pipefail
+          ./gradlew build --console=plain 2>&1 | tee build.log
+
+      - name: Summarise compiler errors
+        if: failure()
+        run: |
+          grep -E "error:|What went wrong|Could not|Exception" -A4 build.log | head -400 || true
+
+      - name: Game tests (dedicated server, all worldgen and data loaded)
+        run: |
+          set -o pipefail
+          ./gradlew runGameTestServer --console=plain 2>&1 | tee gametest.log
+
+      - name: Summarise game test output
+        if: always()
+        run: |
+          grep -E "ERROR|WARN.*palimpsest|Exception|failed|passed|GameTest|tests" gametest.log | grep -v "^\s*at " | head -300 || true
+
+      - name: Client smoke test (virtual display, software OpenGL)
+        timeout-minutes: 32
+        env:
+          PALIMPSEST_SMOKE: "true"
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb libgl1-mesa-dri > /dev/null
+          set -o pipefail
+          # Forge's early loading window can time out on a slow software-GL display and then
+          # wait forever on a y/n prompt; the game opens its own window fine without it.
+          mkdir -p run/config
+          echo "earlyWindowControl = false" > run/config/fml.toml
+          timeout -k 30 1800 xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClient --console=plain < /dev/null 2>&1 | tee client.log
+          grep -q "PALIMPSEST SMOKE TEST COMPLETE" client.log
+          if grep -q "SMOKE_FAIL" client.log; then echo "Smoke test reported failures"; exit 1; fi
+
+      - name: Summarise client run
+        if: always()
+        run: |
+          grep -E "\[smoke\]|ERROR|SMOKE_FAIL|Missing|missing texture|Unable to|Failed to load|Exception" client.log | grep -v "^\s*at " | head -300 || true
+          if [ -d run/crash-reports ]; then head -c 20000 run/crash-reports/*; fi
+
+      - name: Screenshots (printed for headless review)
+        if: always()
+        run: |
+          pip install -q pillow
+          python3 tools/ci_screens.py run/screenshots
+
+      - name: Upload jar
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: palimpsest
+          path: build/libs/*.jar
+          if-no-files-found: ignore
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs
+          path: run/logs/
+          if-no-files-found: ignore

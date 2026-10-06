@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "BBB"
+  ],
+  "key": {
+    "B": {
+      "item": "palimpsest:blotwood_planks"
+    }
+  },
+  "result": {
+    "item": "palimpsest:blotwood_slab",
+    "count": 6
+  }
+}

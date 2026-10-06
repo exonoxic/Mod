@@ -1,0 +1,30 @@
+# gradle
+.gradle/
+build/
+out/
+classes/
+
+# forge run dirs
+run/
+run-data/
+logs/
+
+# ide
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+bin/
+
+# python
+__pycache__/
+*.pyc
+
+# os
+.DS_Store
+Thumbs.db
+tools/preview/

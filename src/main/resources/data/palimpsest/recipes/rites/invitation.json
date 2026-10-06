@@ -1,0 +1,30 @@
+{
+  "type": "palimpsest:ritual",
+  "offerings": [
+    {
+      "item": "palimpsest:faded_page"
+    },
+    {
+      "item": "palimpsest:faded_page"
+    },
+    {
+      "item": "palimpsest:faded_page"
+    },
+    {
+      "item": "palimpsest:candlewort"
+    },
+    {
+      "item": "minecraft:bread"
+    }
+  ],
+  "catalyst": {
+    "item": "palimpsest:vermilion"
+  },
+  "effect": "summon_rubricator",
+  "time": "night",
+  "dimension": "minecraft:overworld",
+  "duration": 160,
+  "bleed": 10,
+  "backlash_chance": 0.25,
+  "backlash": "lights_out"
+}

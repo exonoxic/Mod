@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "palimpsest:scraped_expanse",
+    "palimpsest:blotwood",
+    "palimpsest:the_gutter",
+    "palimpsest:inkwell_sea",
+    "palimpsest:rubric_wastes",
+    "palimpsest:marginalia"
+  ]
+}

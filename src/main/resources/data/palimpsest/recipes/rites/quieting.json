@@ -1,0 +1,29 @@
+{
+  "type": "palimpsest:ritual",
+  "offerings": [
+    {
+      "item": "palimpsest:candlewort"
+    },
+    {
+      "item": "palimpsest:candlewort"
+    },
+    {
+      "item": "palimpsest:candlewort"
+    },
+    {
+      "item": "palimpsest:sealing_wax"
+    },
+    {
+      "item": "palimpsest:illumine_leaf"
+    }
+  ],
+  "catalyst": {
+    "item": "palimpsest:candlewort_tea"
+  },
+  "effect": "quiet",
+  "time": "night",
+  "duration": 200,
+  "bleed": 0,
+  "backlash_chance": 1.0,
+  "backlash": "longhand_watch"
+}

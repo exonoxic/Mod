@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "BBB",
+    "BBB"
+  ],
+  "key": {
+    "B": {
+      "item": "palimpsest:blotwood_planks"
+    }
+  },
+  "result": {
+    "item": "palimpsest:blotwood_trapdoor",
+    "count": 2
+  }
+}

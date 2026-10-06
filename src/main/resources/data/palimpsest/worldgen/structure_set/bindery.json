@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "palimpsest:bindery",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "salt": 71117013,
+    "spacing": 44,
+    "separation": 18
+  }
+}

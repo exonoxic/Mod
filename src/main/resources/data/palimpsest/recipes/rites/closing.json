@@ -1,0 +1,26 @@
+{
+  "type": "palimpsest:ritual",
+  "offerings": [
+    {
+      "item": "minecraft:honeycomb"
+    },
+    {
+      "item": "palimpsest:vermilion"
+    },
+    {
+      "item": "palimpsest:vermilion"
+    },
+    {
+      "item": "palimpsest:candlewort"
+    }
+  ],
+  "catalyst": {
+    "item": "palimpsest:sealing_wax"
+  },
+  "result": {
+    "item": "palimpsest:seal_of_closing",
+    "count": 2
+  },
+  "duration": 100,
+  "bleed": 3
+}

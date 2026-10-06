@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "QIB",
+    "PPP",
+    "P P"
+  ],
+  "key": {
+    "Q": {
+      "item": "minecraft:feather"
+    },
+    "I": {
+      "item": "palimpsest:iron_gall_ink"
+    },
+    "B": {
+      "item": "minecraft:book"
+    },
+    "P": {
+      "tag": "minecraft:planks"
+    }
+  },
+  "result": {
+    "item": "palimpsest:scriptorium_desk",
+    "count": 1
+  }
+}

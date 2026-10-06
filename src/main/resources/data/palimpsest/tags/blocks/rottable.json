@@ -1,0 +1,14 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:oak_planks",
+    "minecraft:spruce_planks",
+    "minecraft:dark_oak_planks",
+    "minecraft:glass_pane",
+    "minecraft:stone_bricks",
+    "minecraft:cobblestone",
+    "palimpsest:vellum_bricks",
+    "palimpsest:blotwood_planks",
+    "minecraft:bookshelf"
+  ]
+}

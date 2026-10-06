@@ -1,0 +1,33 @@
+{
+  "name": "palimpsest:wray_cabin/start",
+  "fallback": "minecraft:empty",
+  "elements": [
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "palimpsest:wray_cabin/wray_cabin_0",
+        "projection": "rigid",
+        "processors": "palimpsest:decay_light"
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "palimpsest:wray_cabin/wray_cabin_1",
+        "projection": "rigid",
+        "processors": "palimpsest:decay_light"
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "palimpsest:wray_cabin/wray_cabin_2",
+        "projection": "rigid",
+        "processors": "palimpsest:decay_light"
+      }
+    }
+  ]
+}

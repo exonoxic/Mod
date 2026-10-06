@@ -1,0 +1,1014 @@
+{
+  "ambient.undertext.loop": {
+    "sounds": [
+      {
+        "name": "palimpsest:ambient/ambient_undertext_loop"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.ambient.undertext.loop"
+  },
+  "ambient.undertext.additions": {
+    "sounds": [
+      {
+        "name": "palimpsest:ambient/ambient_undertext_additions_0"
+      },
+      {
+        "name": "palimpsest:ambient/ambient_undertext_additions_1"
+      },
+      {
+        "name": "palimpsest:ambient/ambient_undertext_additions_2"
+      },
+      {
+        "name": "palimpsest:ambient/ambient_undertext_additions_3"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.ambient.undertext.additions"
+  },
+  "ambient.undertext.mood": {
+    "sounds": [
+      {
+        "name": "palimpsest:ambient/ambient_undertext_mood_0"
+      },
+      {
+        "name": "palimpsest:ambient/ambient_undertext_mood_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.ambient.undertext.mood"
+  },
+  "music.undertext": {
+    "sounds": [
+      {
+        "name": "palimpsest:music/music_undertext",
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.music.undertext"
+  },
+  "music.rasure": {
+    "sounds": [
+      {
+        "name": "palimpsest:music/music_rasure",
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.music.rasure"
+  },
+  "music_disc.lower_writing": {
+    "sounds": [
+      {
+        "name": "palimpsest:records/music_disc_lower_writing",
+        "stream": true
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.music_disc.lower_writing"
+  },
+  "event.knock": {
+    "sounds": [
+      {
+        "name": "palimpsest:event/event_knock_0"
+      },
+      {
+        "name": "palimpsest:event/event_knock_1"
+      },
+      {
+        "name": "palimpsest:event/event_knock_2"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.event.knock"
+  },
+  "event.footsteps": {
+    "sounds": [
+      {
+        "name": "palimpsest:event/event_footsteps_0"
+      },
+      {
+        "name": "palimpsest:event/event_footsteps_1"
+      },
+      {
+        "name": "palimpsest:event/event_footsteps_2"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.event.footsteps"
+  },
+  "event.whisper": {
+    "sounds": [
+      {
+        "name": "palimpsest:event/event_whisper_0"
+      },
+      {
+        "name": "palimpsest:event/event_whisper_1"
+      },
+      {
+        "name": "palimpsest:event/event_whisper_2"
+      },
+      {
+        "name": "palimpsest:event/event_whisper_3"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.event.whisper"
+  },
+  "event.scream": {
+    "sounds": [
+      {
+        "name": "palimpsest:event/event_scream_0"
+      },
+      {
+        "name": "palimpsest:event/event_scream_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.event.scream"
+  },
+  "event.stinger": {
+    "sounds": [
+      {
+        "name": "palimpsest:event/event_stinger_0"
+      },
+      {
+        "name": "palimpsest:event/event_stinger_1"
+      },
+      {
+        "name": "palimpsest:event/event_stinger_2"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.event.stinger"
+  },
+  "event.heartbeat": {
+    "sounds": [
+      {
+        "name": "palimpsest:event/event_heartbeat"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.event.heartbeat"
+  },
+  "event.tinnitus": {
+    "sounds": [
+      {
+        "name": "palimpsest:event/event_tinnitus"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.event.tinnitus"
+  },
+  "event.breath": {
+    "sounds": [
+      {
+        "name": "palimpsest:event/event_breath_0"
+      },
+      {
+        "name": "palimpsest:event/event_breath_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.event.breath"
+  },
+  "event.door_creak": {
+    "sounds": [
+      {
+        "name": "palimpsest:event/event_door_creak_0"
+      },
+      {
+        "name": "palimpsest:event/event_door_creak_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.event.door_creak"
+  },
+  "event.page_turn_distant": {
+    "sounds": [
+      {
+        "name": "palimpsest:event/event_page_turn_distant_0"
+      },
+      {
+        "name": "palimpsest:event/event_page_turn_distant_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.event.page_turn_distant"
+  },
+  "event.scrape_distant": {
+    "sounds": [
+      {
+        "name": "palimpsest:event/event_scrape_distant_0"
+      },
+      {
+        "name": "palimpsest:event/event_scrape_distant_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.event.scrape_distant"
+  },
+  "event.silence_break": {
+    "sounds": [
+      {
+        "name": "palimpsest:event/event_silence_break"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.event.silence_break"
+  },
+  "item.rasorium.scrape": {
+    "sounds": [
+      {
+        "name": "palimpsest:item/item_rasorium_scrape_0"
+      },
+      {
+        "name": "palimpsest:item/item_rasorium_scrape_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.item.rasorium.scrape"
+  },
+  "item.page_turn": {
+    "sounds": [
+      {
+        "name": "palimpsest:item/item_page_turn_0"
+      },
+      {
+        "name": "palimpsest:item/item_page_turn_1"
+      },
+      {
+        "name": "palimpsest:item/item_page_turn_2"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.item.page_turn"
+  },
+  "item.quill_scratch": {
+    "sounds": [
+      {
+        "name": "palimpsest:item/item_quill_scratch_0"
+      },
+      {
+        "name": "palimpsest:item/item_quill_scratch_1"
+      },
+      {
+        "name": "palimpsest:item/item_quill_scratch_2"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.item.quill_scratch"
+  },
+  "item.bookmark.use": {
+    "sounds": [
+      {
+        "name": "palimpsest:item/item_bookmark_use"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.item.bookmark.use"
+  },
+  "item.lens.focus": {
+    "sounds": [
+      {
+        "name": "palimpsest:item/item_lens_focus"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.item.lens.focus"
+  },
+  "item.censer.swing": {
+    "sounds": [
+      {
+        "name": "palimpsest:item/item_censer_swing_0"
+      },
+      {
+        "name": "palimpsest:item/item_censer_swing_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.item.censer.swing"
+  },
+  "block.tear.ambient": {
+    "sounds": [
+      {
+        "name": "palimpsest:block/block_tear_ambient_0"
+      },
+      {
+        "name": "palimpsest:block/block_tear_ambient_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.block.tear.ambient"
+  },
+  "block.tear.seal": {
+    "sounds": [
+      {
+        "name": "palimpsest:block/block_tear_seal"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.block.tear.seal"
+  },
+  "block.veil.ambient": {
+    "sounds": [
+      {
+        "name": "palimpsest:block/block_veil_ambient_0"
+      },
+      {
+        "name": "palimpsest:block/block_veil_ambient_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.block.veil.ambient"
+  },
+  "block.veil.travel": {
+    "sounds": [
+      {
+        "name": "palimpsest:block/block_veil_travel"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.block.veil.travel"
+  },
+  "block.gate.open": {
+    "sounds": [
+      {
+        "name": "palimpsest:block/block_gate_open"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.block.gate.open"
+  },
+  "block.ritual.begin": {
+    "sounds": [
+      {
+        "name": "palimpsest:block/block_ritual_begin"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.block.ritual.begin"
+  },
+  "block.ritual.complete": {
+    "sounds": [
+      {
+        "name": "palimpsest:block/block_ritual_complete"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.block.ritual.complete"
+  },
+  "block.ritual.fail": {
+    "sounds": [
+      {
+        "name": "palimpsest:block/block_ritual_fail"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.block.ritual.fail"
+  },
+  "block.ward.hum": {
+    "sounds": [
+      {
+        "name": "palimpsest:block/block_ward_hum"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.block.ward.hum"
+  },
+  "block.blank.erase": {
+    "sounds": [
+      {
+        "name": "palimpsest:block/block_blank_erase_0"
+      },
+      {
+        "name": "palimpsest:block/block_blank_erase_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.block.blank.erase"
+  },
+  "block.sealed_door.open": {
+    "sounds": [
+      {
+        "name": "palimpsest:block/block_sealed_door_open"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.block.sealed_door.open"
+  },
+  "entity.blotling.squish": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_blotling_squish_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_blotling_squish_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.blotling.squish"
+  },
+  "entity.blotling.hurt": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_blotling_hurt"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.blotling.hurt"
+  },
+  "entity.blotling.death": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_blotling_death"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.blotling.death"
+  },
+  "entity.smudge.ambient": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_smudge_ambient_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_smudge_ambient_1"
+      },
+      {
+        "name": "palimpsest:entity/entity_smudge_ambient_2"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.smudge.ambient"
+  },
+  "entity.smudge.hurt": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_smudge_hurt"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.smudge.hurt"
+  },
+  "entity.smudge.death": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_smudge_death"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.smudge.death"
+  },
+  "entity.margin_crawler.ambient": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_margin_crawler_ambient_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_margin_crawler_ambient_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.margin_crawler.ambient"
+  },
+  "entity.margin_crawler.hurt": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_margin_crawler_hurt"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.margin_crawler.hurt"
+  },
+  "entity.margin_crawler.death": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_margin_crawler_death"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.margin_crawler.death"
+  },
+  "entity.quillcrow.ambient": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_quillcrow_ambient_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_quillcrow_ambient_1"
+      },
+      {
+        "name": "palimpsest:entity/entity_quillcrow_ambient_2"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.quillcrow.ambient"
+  },
+  "entity.quillcrow.hurt": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_quillcrow_hurt"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.quillcrow.hurt"
+  },
+  "entity.quillcrow.death": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_quillcrow_death"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.quillcrow.death"
+  },
+  "entity.quillcrow.flap": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_quillcrow_flap_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_quillcrow_flap_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.quillcrow.flap"
+  },
+  "entity.pale_stag.ambient": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_pale_stag_ambient_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_pale_stag_ambient_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.pale_stag.ambient"
+  },
+  "entity.pale_stag.hurt": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_pale_stag_hurt"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.pale_stag.hurt"
+  },
+  "entity.pale_stag.death": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_pale_stag_death"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.pale_stag.death"
+  },
+  "entity.inkhound.ambient": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_inkhound_ambient_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_inkhound_ambient_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.inkhound.ambient"
+  },
+  "entity.inkhound.howl": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_inkhound_howl_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_inkhound_howl_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.inkhound.howl"
+  },
+  "entity.inkhound.hurt": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_inkhound_hurt"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.inkhound.hurt"
+  },
+  "entity.inkhound.death": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_inkhound_death"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.inkhound.death"
+  },
+  "entity.foxing_moth.ambient": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_foxing_moth_ambient_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_foxing_moth_ambient_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.foxing_moth.ambient"
+  },
+  "entity.rubricator.ambient": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_rubricator_ambient_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_rubricator_ambient_1"
+      },
+      {
+        "name": "palimpsest:entity/entity_rubricator_ambient_2"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.rubricator.ambient"
+  },
+  "entity.rubricator.yes": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_rubricator_yes"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.rubricator.yes"
+  },
+  "entity.rubricator.no": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_rubricator_no"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.rubricator.no"
+  },
+  "entity.rubricator.hurt": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_rubricator_hurt"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.rubricator.hurt"
+  },
+  "entity.rubricator.death": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_rubricator_death"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.rubricator.death"
+  },
+  "entity.knocker.ambient": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_knocker_ambient"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.knocker.ambient"
+  },
+  "entity.knocker.lunge": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_knocker_lunge_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_knocker_lunge_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.knocker.lunge"
+  },
+  "entity.knocker.hurt": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_knocker_hurt"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.knocker.hurt"
+  },
+  "entity.knocker.death": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_knocker_death"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.knocker.death"
+  },
+  "entity.copyist.reveal": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_copyist_reveal"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.copyist.reveal"
+  },
+  "entity.copyist.ambient": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_copyist_ambient_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_copyist_ambient_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.copyist.ambient"
+  },
+  "entity.copyist.hurt": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_copyist_hurt"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.copyist.hurt"
+  },
+  "entity.copyist.death": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_copyist_death"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.copyist.death"
+  },
+  "entity.longhand.ambient": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_longhand_ambient_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_longhand_ambient_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.longhand.ambient"
+  },
+  "entity.longhand.move": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_longhand_move_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_longhand_move_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.longhand.move"
+  },
+  "entity.longhand.hurt": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_longhand_hurt"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.longhand.hurt"
+  },
+  "entity.longhand.death": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_longhand_death"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.longhand.death"
+  },
+  "entity.squeeze.crack": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_squeeze_crack_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_squeeze_crack_1"
+      },
+      {
+        "name": "palimpsest:entity/entity_squeeze_crack_2"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.squeeze.crack"
+  },
+  "entity.squeeze.drag": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_squeeze_drag_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_squeeze_drag_1"
+      },
+      {
+        "name": "palimpsest:entity/entity_squeeze_drag_2"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.squeeze.drag"
+  },
+  "entity.knocker.tap": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_knocker_tap_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_knocker_tap_1"
+      },
+      {
+        "name": "palimpsest:entity/entity_knocker_tap_2"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.knocker.tap"
+  },
+  "entity.knocker.glass_tap": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_knocker_glass_tap_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_knocker_glass_tap_1"
+      },
+      {
+        "name": "palimpsest:entity/entity_knocker_glass_tap_2"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.knocker.glass_tap"
+  },
+  "entity.knocker.glass_scratch": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_knocker_glass_scratch_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_knocker_glass_scratch_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.knocker.glass_scratch"
+  },
+  "entity.inkhound.hiss": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_inkhound_hiss_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_inkhound_hiss_1"
+      },
+      {
+        "name": "palimpsest:entity/entity_inkhound_hiss_2"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.inkhound.hiss"
+  },
+  "entity.redacted.static": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_redacted_static_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_redacted_static_1"
+      },
+      {
+        "name": "palimpsest:entity/entity_redacted_static_2"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.redacted.static"
+  },
+  "entity.margin_crawler.patter": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_margin_crawler_patter_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_margin_crawler_patter_1"
+      },
+      {
+        "name": "palimpsest:entity/entity_margin_crawler_patter_2"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.margin_crawler.patter"
+  },
+  "entity.pale_stag.rustle": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_pale_stag_rustle_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_pale_stag_rustle_1"
+      },
+      {
+        "name": "palimpsest:entity/entity_pale_stag_rustle_2"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.pale_stag.rustle"
+  },
+  "entity.knocker.scratch": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_knocker_scratch_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_knocker_scratch_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.knocker.scratch"
+  },
+  "entity.redacted.ambient": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_redacted_ambient_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_redacted_ambient_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.redacted.ambient"
+  },
+  "entity.redacted.attack": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_redacted_attack_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_redacted_attack_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.redacted.attack"
+  },
+  "entity.redacted.hurt": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_redacted_hurt"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.redacted.hurt"
+  },
+  "entity.redacted.death": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_redacted_death"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.redacted.death"
+  },
+  "entity.erratum.ambient": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_erratum_ambient"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.erratum.ambient"
+  },
+  "entity.erratum.reveal": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_erratum_reveal"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.erratum.reveal"
+  },
+  "entity.palehand.ambient": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_palehand_ambient"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.palehand.ambient"
+  },
+  "entity.fair_copy.vanish": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_fair_copy_vanish"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.fair_copy.vanish"
+  },
+  "entity.bookbinder.ambient": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_bookbinder_ambient_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_bookbinder_ambient_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.bookbinder.ambient"
+  },
+  "entity.bookbinder.needle": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_bookbinder_needle"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.bookbinder.needle"
+  },
+  "entity.bookbinder.rebind": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_bookbinder_rebind"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.bookbinder.rebind"
+  },
+  "entity.bookbinder.hurt": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_bookbinder_hurt"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.bookbinder.hurt"
+  },
+  "entity.bookbinder.death": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_bookbinder_death"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.bookbinder.death"
+  },
+  "entity.rasure.ambient": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_rasure_ambient"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.rasure.ambient"
+  },
+  "entity.rasure.scrape": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_rasure_scrape_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_rasure_scrape_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.rasure.scrape"
+  },
+  "entity.rasure.phase": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_rasure_phase"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.rasure.phase"
+  },
+  "entity.rasure.hurt": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_rasure_hurt_0"
+      },
+      {
+        "name": "palimpsest:entity/entity_rasure_hurt_1"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.rasure.hurt"
+  },
+  "entity.rasure.death": {
+    "sounds": [
+      {
+        "name": "palimpsest:entity/entity_rasure_death"
+      }
+    ],
+    "subtitle": "subtitles.palimpsest.entity.rasure.death"
+  }
+}

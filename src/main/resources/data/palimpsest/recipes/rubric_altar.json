@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "VCV",
+    "BSB",
+    "BBB"
+  ],
+  "key": {
+    "V": {
+      "item": "palimpsest:vermilion"
+    },
+    "C": {
+      "item": "minecraft:candle"
+    },
+    "B": {
+      "item": "minecraft:stone_bricks"
+    },
+    "S": {
+      "item": "palimpsest:scraped_stone"
+    }
+  },
+  "result": {
+    "item": "palimpsest:rubric_altar",
+    "count": 1
+  }
+}

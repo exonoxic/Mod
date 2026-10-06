@@ -1,0 +1,8 @@
+{
+  "type": "palimpsest:dry_land",
+  "biomes": "#palimpsest:has_structure/crow_roost",
+  "step": "surface_structures",
+  "spawn_overrides": {},
+  "terrain_adaptation": "beard_thin",
+  "structure": "palimpsest:crow_roost_inner"
+}

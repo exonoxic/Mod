@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "item": "palimpsest:rasure_shard"
+    },
+    "title": {
+      "translate": "advancements.palimpsest.rasure.title"
+    },
+    "description": {
+      "translate": "advancements.palimpsest.rasure.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "granted": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "granted"
+    ]
+  ],
+  "parent": "palimpsest:the_last_reading"
+}

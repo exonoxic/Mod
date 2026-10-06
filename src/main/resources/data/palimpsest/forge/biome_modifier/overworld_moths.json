@@ -1,0 +1,16 @@
+{
+  "type": "forge:add_spawns",
+  "biomes": [
+    "minecraft:dark_forest",
+    "minecraft:old_growth_spruce_taiga",
+    "minecraft:swamp"
+  ],
+  "spawners": [
+    {
+      "type": "palimpsest:foxing_moth",
+      "weight": 6,
+      "minCount": 1,
+      "maxCount": 3
+    }
+  ]
+}

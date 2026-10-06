@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "item": "palimpsest:rubric_altar"
+    },
+    "title": {
+      "translate": "advancements.palimpsest.rubrication.title"
+    },
+    "description": {
+      "translate": "advancements.palimpsest.rubrication.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "granted": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "granted"
+    ]
+  ],
+  "parent": "palimpsest:vermilion"
+}

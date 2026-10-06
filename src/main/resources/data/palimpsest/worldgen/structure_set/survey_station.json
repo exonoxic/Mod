@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "palimpsest:survey_station",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "salt": 71117005,
+    "spacing": 64,
+    "separation": 24
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "active=false": {
+      "model": "palimpsest:block/rubric_altar"
+    },
+    "active=true": {
+      "model": "palimpsest:block/rubric_altar"
+    }
+  }
+}

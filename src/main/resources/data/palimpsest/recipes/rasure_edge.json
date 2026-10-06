@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "  S",
+    " S ",
+    "R  "
+  ],
+  "key": {
+    "S": {
+      "item": "palimpsest:rasure_shard"
+    },
+    "R": {
+      "item": "palimpsest:iron_rasorium"
+    }
+  },
+  "result": {
+    "item": "palimpsest:rasure_edge",
+    "count": 1
+  }
+}

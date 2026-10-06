@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "palimpsest:block/scriptorium_desk"
+    },
+    "facing=east": {
+      "model": "palimpsest:block/scriptorium_desk",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "palimpsest:block/scriptorium_desk",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "palimpsest:block/scriptorium_desk",
+      "y": 270
+    }
+  }
+}

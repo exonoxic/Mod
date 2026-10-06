@@ -1,0 +1,9 @@
+{
+  "type": "palimpsest:configurable_features",
+  "biomes": "#minecraft:is_overworld",
+  "toggle": "scars",
+  "features": [
+    "palimpsest:erasure_scar"
+  ],
+  "step": "top_layer_modification"
+}

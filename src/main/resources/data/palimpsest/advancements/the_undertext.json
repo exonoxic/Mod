@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "item": "palimpsest:ruled_vellum"
+    },
+    "title": {
+      "translate": "advancements.palimpsest.the_undertext.title"
+    },
+    "description": {
+      "translate": "advancements.palimpsest.the_undertext.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "granted": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "granted"
+    ]
+  ],
+  "parent": "palimpsest:read_aloud"
+}

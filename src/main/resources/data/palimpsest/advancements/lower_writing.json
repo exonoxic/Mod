@@ -1,0 +1,37 @@
+{
+  "display": {
+    "icon": {
+      "item": "palimpsest:music_disc_lower_writing"
+    },
+    "title": {
+      "translate": "advancements.palimpsest.lower_writing.title"
+    },
+    "description": {
+      "translate": "advancements.palimpsest.lower_writing.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "has": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "palimpsest:music_disc_lower_writing"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has"
+    ]
+  ],
+  "parent": "palimpsest:the_undertext"
+}

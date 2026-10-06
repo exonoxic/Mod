@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "variant=0": {
+      "model": "palimpsest:block/rubric_chalk_0"
+    },
+    "variant=1": {
+      "model": "palimpsest:block/rubric_chalk_1"
+    },
+    "variant=2": {
+      "model": "palimpsest:block/rubric_chalk_2"
+    },
+    "variant=3": {
+      "model": "palimpsest:block/rubric_chalk_3"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "hollow=false": {
+      "model": "palimpsest:block/blank"
+    },
+    "hollow=true": {
+      "model": "palimpsest:block/blank"
+    }
+  }
+}

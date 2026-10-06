@@ -1,0 +1,25 @@
+{
+  "type": "palimpsest:ritual",
+  "offerings": [
+    {
+      "item": "palimpsest:cinnabar"
+    },
+    {
+      "item": "palimpsest:cinnabar"
+    },
+    {
+      "item": "minecraft:coal"
+    }
+  ],
+  "catalyst": {
+    "item": "minecraft:flint_and_steel"
+  },
+  "result": {
+    "item": "palimpsest:vermilion",
+    "count": 6
+  },
+  "consume_catalyst": false,
+  "time": "day",
+  "duration": 80,
+  "bleed": 1
+}

@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:smoking",
+  "category": "misc",
+  "ingredient": {
+    "item": "palimpsest:pale_venison"
+  },
+  "result": "palimpsest:cooked_pale_venison",
+  "experience": 0.35,
+  "cookingtime": 100
+}

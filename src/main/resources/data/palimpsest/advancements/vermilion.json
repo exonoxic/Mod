@@ -1,0 +1,37 @@
+{
+  "display": {
+    "icon": {
+      "item": "palimpsest:vermilion"
+    },
+    "title": {
+      "translate": "advancements.palimpsest.vermilion.title"
+    },
+    "description": {
+      "translate": "advancements.palimpsest.vermilion.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "has": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "palimpsest:vermilion"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has"
+    ]
+  ],
+  "parent": "palimpsest:under_the_surface"
+}

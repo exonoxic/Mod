@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:bone_block"
+    },
+    "title": {
+      "translate": "advancements.palimpsest.the_hand.title"
+    },
+    "description": {
+      "translate": "advancements.palimpsest.the_hand.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "granted": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "granted"
+    ]
+  ],
+  "parent": "palimpsest:the_tear"
+}

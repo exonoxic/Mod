@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "palimpsest:doubled_house",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "salt": 71117007,
+    "spacing": 84,
+    "separation": 32
+  }
+}

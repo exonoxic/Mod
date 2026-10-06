@@ -1,0 +1,15 @@
+{
+  "name": "palimpsest:crow_roost/start",
+  "fallback": "minecraft:empty",
+  "elements": [
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "palimpsest:crow_roost/crow_roost",
+        "projection": "rigid",
+        "processors": "minecraft:empty"
+      }
+    }
+  ]
+}

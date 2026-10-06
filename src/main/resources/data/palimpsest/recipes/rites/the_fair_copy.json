@@ -1,0 +1,40 @@
+{
+  "type": "palimpsest:ritual",
+  "offerings": [
+    {
+      "item": "palimpsest:blank_vellum"
+    },
+    {
+      "item": "palimpsest:blank_vellum"
+    },
+    {
+      "item": "palimpsest:blank_vellum"
+    },
+    {
+      "item": "palimpsest:blank_vellum"
+    },
+    {
+      "item": "minecraft:glass_pane"
+    },
+    {
+      "item": "minecraft:glass_pane"
+    },
+    {
+      "item": "palimpsest:illumine_leaf"
+    },
+    {
+      "item": "palimpsest:illumine_leaf"
+    }
+  ],
+  "catalyst": {
+    "item": "minecraft:enchanted_book"
+  },
+  "effect": "copy_catalyst",
+  "consume_catalyst": true,
+  "moon_phase": 4,
+  "time": "night",
+  "duration": 240,
+  "bleed": 35,
+  "backlash_chance": 0.4,
+  "backlash": "fair_copy"
+}

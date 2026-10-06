@@ -1,0 +1,24 @@
+{
+  "name": "palimpsest:faded_village/start",
+  "fallback": "minecraft:empty",
+  "elements": [
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "palimpsest:faded_village/faded_village_0",
+        "projection": "rigid",
+        "processors": "palimpsest:undertext_fade"
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "palimpsest:faded_village/faded_village_1",
+        "projection": "rigid",
+        "processors": "palimpsest:undertext_fade"
+      }
+    }
+  ]
+}

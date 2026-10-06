@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "lit=false": {
+      "model": "palimpsest:block/rubric_pillar"
+    },
+    "lit=true": {
+      "model": "palimpsest:block/rubric_pillar_lit"
+    }
+  }
+}

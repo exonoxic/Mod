@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cross",
+  "textures": {
+    "cross": "palimpsest:block/binding_thread"
+  },
+  "render_type": "minecraft:cutout"
+}

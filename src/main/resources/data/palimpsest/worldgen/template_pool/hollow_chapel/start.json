@@ -1,0 +1,15 @@
+{
+  "name": "palimpsest:hollow_chapel/start",
+  "fallback": "minecraft:empty",
+  "elements": [
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "palimpsest:hollow_chapel/hollow_chapel",
+        "projection": "rigid",
+        "processors": "palimpsest:decay_heavy"
+      }
+    }
+  ]
+}

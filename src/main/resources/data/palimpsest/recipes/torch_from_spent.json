@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "palimpsest:spent_torch"
+    },
+    {
+      "item": "palimpsest:spent_torch"
+    },
+    {
+      "item": "palimpsest:spent_torch"
+    },
+    {
+      "item": "palimpsest:spent_torch"
+    },
+    {
+      "item": "minecraft:coal"
+    }
+  ],
+  "result": {
+    "item": "minecraft:torch",
+    "count": 4
+  }
+}
